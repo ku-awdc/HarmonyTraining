@@ -27,8 +27,8 @@ TIDYUP = @Rscript -e "sp<-file.remove(gsub('.md','_tmp.md','$<', fixed=TRUE))"
 	
 all: 	$(MD) $(PDF) $(HTML)
 md:		$(MD)
-pdf:	$(PDF)
-html:	$(HTML)
+pdf:	$(MD) $(PDF)
+html:	$(MD) $(HTML)
 clean:
 	-rm -rf Adv*.md
 	-rm -rf Adv*.pdf
