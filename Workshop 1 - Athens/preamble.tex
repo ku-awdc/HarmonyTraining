@@ -1,0 +1,44 @@
+\makeatletter
+\def\verbatim@nolig@list{}
+\makeatother
+
+
+% fontspec requires xelatex which gives problems for me (Matt)
+% \usepackage{fontspec}
+% % \setmainfont[Ligatures=Historic]{TeX Gyre Pagella}
+% \newfontfamily\FiraCode{Fira Code}
+% \setmonofont[Contextuals={Alternate}]{Fira Code}
+% \newfontfamily\Fontify[Path = ../common/]{Fontify-Regular}
+% \else
+% \newcommand{\Fontify}{}
+% \fi
+
+
+
+% \usepackage{fontspec}
+% \setmonofont{FiraCode-Regular}[Contextuals=Alternate]
+% \usepackage{listings}
+% \usepackage[verbatim]{lstfiracode}
+% \lstset{style=FiraCodeStyle,basicstyle=\ttfamily}
+\usepackage{xspace}
+\newcommand{\rlang}[0]{\texttt{R}\xspace}
+
+\newcommand{\rpackage}[1]{\texttt{\{#1\}}}
+\newcommand{\dataset}[1]{\textsl{#1}}
+% \newcommand{\hotkey}[1]{#1}
+
+% this package is conflicted with the keystroke package.
+% \usepackage{statex2}
+
+\usepackage{keystroke}
+\usepackage{fvextra}
+\fvset{samepage=true}
+\fvset{breaklines=true}
+\fvset{baselinestretch=1}
+\fvset{numbers=left}
+\RecustomVerbatimEnvironment{verbatim}{Verbatim}{breaklines}
+\fvset{fontsize=\footnotesize}
+\usepackage{ccfonts}
+\makeatletter
+\beamer@ignorenonframefalse
+\makeatother

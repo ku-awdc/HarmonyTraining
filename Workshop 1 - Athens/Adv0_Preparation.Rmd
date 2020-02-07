@@ -1,0 +1,349 @@
+---
+title: Workshop preparation
+subtitle: Homework and software installation tasks
+date: 2020-02-07
+fontsize: 12pt
+author:
+  - Matt Denwood
+  - Giles Innocent
+theme: metropolis
+aspectratio: 43
+colortheme: seahorse
+header-includes: 
+  - \input{preamble}
+fig_caption: true
+classoption: compress, c
+output:
+    beamer_presentation:
+        pandoc_args: ["-t", "beamer"]
+        slide_level: 2
+---
+
+```{r, echo=FALSE}
+set.seed(2020-02-07)
+```
+
+# Pre-course Homework for ABME Course
+
+The Applied Bayesian modelling for ecologists and epidemiologists course introduces Bayesian statistics and analysis methods, and assumes no prior knowledge of Bayesian statistics (or commonly used Bayesian methods such as MCMC).  However, a basic understanding of classical (frequentist) statistics is assumed as a common starting point for the class, and a basic level of competence with the R statistical software is also required to get the most out of the practical sessions.
+
+The aim of this pre-course work is to revise the elements of frequentist statistics and R programming that you will need during the course.  It is designed so you can run the code shown and check that your results agree with those shown here.  Feel free to play around with the code to see what happens - that is the best way to learn!  If you have not encountered a function before then consult the help file for that function with a question mark followed by the function name, for example:  ?seq   Some prior familiarity with R will be assumed for this exercise but if you need to brush up then there are lots of tutorials online e.g. https://www.datacamp.com/courses/free-introduction-to-r
+
+We will assume that all students have worked through this material in advance of the course, although there will be a short opportunity to discuss these concepts on the first morning.
+
+
+## Probability distributions
+
+Likelihood theory is at the heart of all statistics - it describes the chances of an event happening under certain assumptions, such as the probability distribution and the parameter value(s) that we want to use with that distribution.  Put simply, a likelihood is the probability of observing our data given the distribution that we use to describe the data generating process.  For example, what is the likelihood (i.e. probability) of getting 5 heads from 10 tosses of a fair coin?  Probability theory can help us decide - we can assume:
+
+* The probability distribution describing a number of independent coin tosses is called the Binomial distribution
+* In this case, we would use the parameters:
+	+ Number of coin tosses = 10
+	+ Probability of a head = 'fair' = 0.5
+
+Wikipedia tells us that we can calculate the probability of a Binomial distribution as follows:
+
+```{r}
+tosses <- 10
+probability <- 0.5
+heads <- 5
+likelihood_1 <- choose(tosses, heads) * probability^heads * (1-probability)^(tosses-heads)
+likelihood_1
+```
+
+But R makes our life easier by implementing this using a function called dbinom:
+
+```{r}
+likelihood_2 <- dbinom(heads, tosses, probability)
+likelihood_2
+```
+
+These two numbers are the same, which is reassuring.  R also has a LOT of other distributions, but the ones we will use are mostly:
+
+* Discrete probability distributions
+	+ Binomial:  dbinom
+	+ Poisson:  dpois
+	+ Negative binomial:  dnbinom
+* Continuous probability distributions
+	+ Normal:  dnorm
+	+ Exponential:  dexp
+	+ Gamma:  dgamma
+	+ Beta:  dbeta
+	+ Lognormal:  dlnorm
+	+ Uniform:  dunif
+	
+Have a look at the help files for each of the distributions given - you will notice that the R help files for each of them has the following:
+
+* dxxx:  the probability mass (for discrete distributions) or density (for continuous distributions) - this describes the probability of observing exactly x (the first argument).  These are the functions we will use most often - and mostly with the log=TRUE argument so that the return value is the log likelihood.
+* pxxx:  the cumulative probability (aka distribution function) - this describes the probability of observing a number less than or equal to q (the first argument).
+* qxxx:  the quantile function - this is the exact opposite of the distribution function, i.e. it calculates the value of the distribution corresponding to the given probability p (the first argument) for the cumulative probability.  For example, if you give a number e.g. 6 to the pxxx function, and then give the return value of this as the argument to the qxxx function, you will end up back with 6:
+
+```{r}
+p <- pbinom(6, tosses, probability)
+p
+qbinom(p, tosses, probability)
+```
+
+* rxxx:  the random number generating function.  Remember this function is random, so you will get different numbers every time you run it:
+
+```{r}
+rbinom(1, tosses, probability)
+rbinom(1, tosses, probability)
+```
+
+If you are not familiar with these distributions, then you can take a look them (and their common uses) on the internet.
+
+## Combining probabilities/likelihoods
+
+If we know the individual probabilities of two things happening and want to know what the combined probability is, we can just multiply the two numbers together.  The same is true of likelihoods - if we make two observations then we can calculate the likelihood of each of the two data points individually and multiply them.  This time we have two observations of body weight, and we want to know the likelihood corresponding to the probability of observing these data points from a normal distribution with a mean of 75 and standard deviation of 10:
+
+```{r}
+mean <- 75
+sd <- 10
+data1 <- 84.5
+data2 <- 67.1
+likelihood1 <- dnorm(data1, mean, sd)
+likelihood2 <- dnorm(data2, mean, sd)
+likelihood1 * likelihood2
+```
+
+However we usually work with log likelihoods, which means we can just sum the probabilities (this is easier for the computer).  Also we can use vectorisation in R and the sum() function:
+
+```{r}
+data <- c(84.5, 67.1)
+likelihoods <- dnorm(data, mean, sd, log=TRUE)
+sum(likelihoods)
+log(likelihood1 * likelihood2)
+```
+
+Again, we get the same number using either method, but with large datasets it is MUCH better to use log likelihoods.
+
+
+## Writing functions
+
+Functions are a very useful thing in R, and one useful application is to calculate likelihoods.  Let's write a likelihood function to calculate the probability of observing some fixed data of egg production in turtles given a Poisson distribution and a lambda parameter we can control by a function argument:
+
+```{r}
+data <- c(11, 8, 11, 13, 16, 13, 9, 8, 8, 7, 11, 13, 12, 13, 8, 11, 6, 12, 10, 7)
+likelihood_fun <- function(parameter){
+	log_likelihoods <- dpois(data, parameter, log=TRUE)
+	return(sum(log_likelihoods))
+}
+```
+
+The function doesn't do anything until we ask it to evaluate the likelihood for any given parameter like so:
+
+```{r}
+likelihood_fun(15)
+likelihood_fun(5)
+```
+
+Notice how the log likelihoods are different for the two parameter values?  The first parameter value has a higher log likelihood, which means that it is more consistant with the data than the second parameter value.  But there are probably other parameter values that are even better!  Try and find them (by trial and improvement, or even just trial and error).
+
+## Maximising a likelihood
+
+Finding the parameter value(s) that correspond to the highest likelihood is a theoretically good thing to do, but we need a better technique than trial and error.  Fortunately R has a function called optimise that can help:
+
+```{r}
+optimise(likelihood_fun, interval=c(0, 10000), maximum=TRUE)
+```
+
+This tells us that the maximum likelihood for this data and distribution is -48.06, which corresponds to a parameter value of 10.35.  This is the maximum likelihood.  We could have also got the same using:
+
+```{r}
+model <- glm(data ~  1, family=poisson)
+exp(coef(model))
+```
+
+This is really what is happening when you use a (generalised) linear model in R - it optimises the parameter values to give the highest likelihood for the data and model (distribution with predictors) that you have specified.
+
+## Profiling a likelihood
+
+The parameters corresponding to the maximum likelihood give the highest probability of observing the data given the parameters, but there are other parameter values under which we could observe the data with almost as high a probability.  It is useful to look at the range of parameter values that are consistent with the data, which is why R reports standard errors (and/or confidence intervals) when you run a model.  But we can also look at the full distribution of the likelihood of the data over a range of parameter values using our function above.
+
+```{r}
+parameters <- seq(5, 20, length.out=100)
+log_likelihoods <- numeric(length(parameters))
+for(i in 1:length(parameters)){
+	log_likelihoods[i] <- likelihood_fun(parameters[i])
+}
+plot(parameters, log_likelihoods, type='l')
+abline(h=-48.06, lty='dashed')
+abline(v=10.35, lty='dashed')
+```
+
+The dashed lines show the maximum likelihood (y axis) with corresponding parameter value (x axis), and the solid line is the likelihood of the data given the parameter value on the x axis.  You can see that parameter values near 10 (between approximately 9 and 12) have a likelihood that is almost as high as the maximum.
+
+The following code simulates a dataset from a Poisson distribution with a mean and sample size specified by you, and then computes the full likleihood distribution over a range of parameter values:
+
+```{r}
+mean <- 10
+N <- 20
+lower_parameter <- 0
+upper_parameter <- 30
+
+data <- rpois(N, mean)
+parameters <- seq(lower_parameter, upper_parameter, length.out=100)
+for(i in 1:length(parameters)){
+	log_likelihoods[i] <- likelihood_fun(parameters[i])
+}
+ml <- optimise(likelihood_fun, interval=c(lower_parameter, upper_parameter), maximum=TRUE)
+plot(parameters, log_likelihoods, type='l', main=paste('Maximum log likelihood:', ml$objective))
+abline(v=ml$maximum, lty='dashed')
+```
+
+Change the mean and sample size and re-run the code (you might also need to change the minimum and maximum parameter values).  What happens to:
+
+* The parameter value of the maximum likelihood (dashed line)?
+	+ Is this always exactly the same as the mean you used to simulate the data?
+* The slope of the line around the ML?
+	+ Is this related to the sample size you used?
+* The value of the maximum likelihood (title of the plot)?
+	+ Is this related to the sample size you used?
+
+
+## Multiple parameters
+
+All of the examples so far have just used a single parameter (equivalent to the intercept of a linear model), but it is also possible to use multiple parameters as would more commonly be done for a statistical model in practice.  Let's consider the weights of some adult bats (in grammes), along with their winglength (in mm) and results of an antibody test that indicates their exposure to a disease called EBLV:
+
+```{r, echo=FALSE, eval=FALSE}
+set.seed(2016-10-08)
+N <- 50
+wings <- runif(N, 240, 275)
+wa <- wings - mean(wings)
+dis <- sample(c(0,1), N, replace=TRUE)
+expect <- 12 + 0.2*wa -0.75*dis
+wt <- rnorm(N, expect, sd=0.8)
+weight_data <- data.frame(weight=wt, wing=wa, eblv=factor(dis,levels=c(0,1),labels=c('negative','positive')))
+dump('weight_data','')
+```
+```{r}
+weight_data <-
+structure(list(weight = c(8.53733230300823, 10.9600060923399, 
+10.2589271775222, 9.53144741569843, 14.8810676232115, 11.5364667804435, 
+8.84277670580672, 13.0953089302293, 14.2078891257259, 11.1040159092641, 
+11.3469440165133, 10.4370015150926, 13.7800892562548, 9.34190916867265, 
+10.9448862556531, 11.8941872646006, 12.2629536311588, 11.3686990162189, 
+9.27944117163506, 12.0907706305916, 13.8170777842874, 11.9485929671802, 
+11.936480999186, 11.0572784508933, 14.9426292151823, 8.1983728163356, 
+9.06179055611702, 14.5124096166435, 14.6096236990171, 14.1121611131635, 
+11.0441954107355, 14.1761914055592, 13.5361175674904, 14.1258701403814, 
+13.6639688461228, 11.4465418155552, 10.2946733180927, 9.64812782728025, 
+8.58716973403832, 12.7268305946595, 12.8695525480616, 12.0328975679601, 
+10.8745675993358, 13.6101747489069, 8.2697736653064, 10.9685948940556, 
+14.914808571025, 12.3719072811756, 13.6916628038502, 10.2495043634953
+), wing = c(-15.7559213444358, -7.93380195221397, -15.0024128304096, 
+-15.8259827999165, 15.803161807661, -2.38533682019914, -16.9252559397602, 
+12.9394928976661, 14.8405433335109, -1.76031536834779, -7.6865668414859, 
+-4.83013928697909, -2.73135255153755, -8.58544745079706, 1.35184152338189, 
+2.53455318796915, 8.85452631798108, -4.28422858302946, -12.9113630933454, 
+6.63660222834443, 10.5884849436814, -5.59401229668873, 10.2586530666566, 
+-2.60478816523681, 17.2036659350386, -13.5599696642486, -10.9332983970409, 
+11.6451899037464, 6.7267584817717, 15.2241576957284, -0.159979008068319, 
+14.8397131141508, 9.79509822612164, 13.4998853102559, 1.71610068117735, 
+-5.23287548862862, -10.0281450065551, -12.9609549831832, -13.3835853281664, 
+2.30348503037823, -1.60953981864731, 1.86676743261052, -5.38047018640208, 
+12.9764522419544, -14.7417454323033, 2.48683675827925, 14.9806019482901, 
+8.66880719487091, 10.2299471926643, -15.1638378162635), eblv = structure(c(2L, 
+1L, 1L, 1L, 1L, 1L, 1L, 1L, 2L, 2L, 2L, 2L, 1L, 2L, 2L, 1L, 2L, 
+1L, 1L, 2L, 2L, 1L, 2L, 1L, 2L, 1L, 1L, 1L, 1L, 1L, 2L, 2L, 2L, 
+2L, 1L, 2L, 2L, 1L, 2L, 2L, 1L, 2L, 1L, 2L, 2L, 1L, 2L, 2L, 2L, 
+1L), .Label = c("negative", "positive"), class = "factor")), .Names = c("weight", 
+"wing", "eblv"), row.names = c(NA, -50L), class = "data.frame")
+
+str(weight_data)
+summary(weight_data)
+```
+
+The weights are continuous numbers, the wing lengths are continuous numbers (standardised by the mean), and disease exposure is coded as a factor.  We can use a normal distribution to describe these data, which has two parameters:  the mean and standard deviation.  However, we also have effects of wing length and disease so in total we have 4 parameters - for a linear model we would refer to these as intercept (mean), effect of wing length, effect of disease, and residual sd.  We can write our slightly more complicated likelihood function like so:
+
+```{r}
+weight_data$eblv_level <- as.numeric(weight_data$eblv)
+
+likelihood_fun <- function(parameters){
+
+	intercept <- parameters[1]
+	# The linear effect of wing length
+	wing_effect <- parameters[2]
+	# The effect of each factor level - the first level (non-diseased) is the reference:
+	disease_effect <- c(0, parameters[3])
+	# The residual standard error:
+	sd <- parameters[4]
+	
+	# The sd cannot be negative, so return a likelihood of log(0) if this is the case:
+	if(sd < 0)
+		return(-Inf)
+		
+	# Calculate the expected weights based on the predictors:
+	prediction <- intercept + weight_data$wing * wing_effect + disease_effect[weight_data$eblv_level]
+	
+	# Calculate and return the likelihood:
+	likelihoods <- dnorm(weight_data$weight, prediction, sd, log=TRUE)
+	return(sum(likelihoods))
+
+}
+```
+
+Notice that we first need to convert the disease factor into a number so that we can index the correct level of the effects.  Now we can optimise using the optim function (the optimise function only works with a single parameter value).  The optim function also requires some initial values for the optimisation, and something a bit funny to the control argument (but don't worry about that):
+
+```{r}
+inits <- c(1,1,1,1)
+ml <- optim(inits, likelihood_fun, control=list(fnscale=-1))
+ml$par
+```
+
+Or the same thing using the lm function:
+
+```{r}
+model <- lm(weight ~ wing + eblv, data=weight_data)
+model
+```
+
+Again, we can see that a linear model using lm gives us the same information - the optimisation process is really the same as it was before for one parameter.  We can also look at the full distribution of likelihoods but this time we need to do it for every combination of values chosen over a range for each parameter:
+
+```{r, results="hide"}
+parameters <- expand.grid(log_likelihood=NA, intercept=seq(0,20,length.out=11), wing_effect=seq(-1,1,length.out=11), disease_effect=seq(-1,1,length.out=11), sd=seq(0.1,2,length.out=11))
+pb <- txtProgressBar(style=3)
+for(i in 1:nrow(parameters)){
+	parameters$log_likelihood[i] <- likelihood_fun(as.numeric(parameters[i,2:ncol(parameters)]))
+	setTxtProgressBar(pb, i/nrow(parameters))
+}
+close(pb)
+```
+
+Note that we can still look at a plot but this time it has to be in 4 dimensions:
+
+```{r}
+library('ggplot2')
+ggplot(parameters, aes(x=intercept, y=log_likelihood, col=factor(sd))) + 
+	geom_line() + facet_grid(wing_effect ~ disease_effect)
+```
+
+... and it's very hard to interpret.  The principle is still the same as for a single parameter, but as we add more and more parameters we end up with a much, much larger parameter space and a more difficult problem.  We call this effect the curse of dimentionality.
+
+The R code for multiple parameters is a bit more complicated, so if you're not familiar with these new functions (e.g. expand.grid, as.numeric and txtProgressBar) then take a look at the help files for these functions and familiarise yourself with how to use them.  You will need to use these functions again for the first day of the course.
+
+
+## Software requirements for the course
+
+You need to install R (we recommend version 3.6.1 or later) from https://cran.r-project.org/ and we recommend that you also use Rstudio which can be downloaded separately from https://www.rstudio.com/products/rstudio/download/
+
+Please also install the latest versions of the following R packages:  rjags, runjags, coda, TeachingDemos, ggplot2
+
+You will also need the standalone JAGS software (version 4.3.0 or later) for the course - download the installer for your platform from:  https://sourceforge.net/projects/mcmc-jags/files/JAGS/4.x/
+
+To check that you have installed the software correctly please run the following code within R and make sure that no errors are produced:
+
+```{r, results="hide", message=FALSE}
+stopifnot(require('rjags'))
+stopifnot(require('runjags'))
+stopifnot(require('coda'))
+stopifnot(require('TeachingDemos'))
+stopifnot(require('ggplot2'))
+stopifnot(testjags()$JAGS.available)
+stopifnot(testjags()$JAGS.version >= "4.3.0")
+stopifnot(testjags()$rjags.found)
+stopifnot(testjags()$rjags.version >= "4-8")
+```
+
+If you have any difficulties installing the software or get errors from the code above, please let us know so that we can resolve these before the start of the course.
