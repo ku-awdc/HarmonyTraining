@@ -41,3 +41,5 @@ vignettes/*.pdf
 # Custom
 .DS_Store
 */.DS_Store
+Workshop 1 - Athens/Adv*.md
+Workshop 1 - Athens/Adv*_files/*

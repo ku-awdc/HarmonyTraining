@@ -343,7 +343,7 @@ stopifnot(require('ggplot2'))
 stopifnot(testjags()$JAGS.available)
 stopifnot(testjags()$JAGS.version >= "4.3.0")
 stopifnot(testjags()$rjags.found)
-stopifnot(testjags()$rjags.version >= "4-8")
+#stopifnot(testjags()$rjags.version >= "4-8")
 ```
 
 If you have any difficulties installing the software or get errors from the code above, please let us know so that we can resolve these before the start of the course.
