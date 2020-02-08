@@ -1,39 +1,35 @@
 SRC = $(wildcard *.Rmd)
 
-MD    = $(SRC:.Rmd=.md)
 PDF   = $(SRC:.Rmd=.pdf)
 HTML  = $(SRC:.Rmd=.html)
 
-KNIT =  @Rscript -e "rmarkdown::render('$<', run_pandoc=FALSE, clean=FALSE); sp<-file.rename(gsub('.Rmd','.knit.md','$<', fixed=TRUE), gsub('.Rmd','.md','$<', fixed=TRUE)); sp<-file.remove(gsub('.Rmd','.utf8.md','$<',fixed=TRUE))"
+RENDER_H = @Rscript -e "rmarkdown::render('$<', 'html_document')"
+RENDER_P = @Rscript -e "rmarkdown::render('$<')"
+RENDER_B = @Rscript -e "rmarkdown::render('$<', 'all')"
 
-SETUP = @Rscript -e "sp<-file.copy('$<', gsub('.md','_tmp.md','$<', fixed=TRUE))"
-RENDER_H = @Rscript -e "rmarkdown::render(gsub('.md','_tmp.md','$<',fixed=TRUE), 'html_document'); sp<-file.rename(gsub('.md','_tmp.html','$<', fixed=TRUE), gsub('.md','.html','$<', fixed=TRUE))"
-RENDER_P = @Rscript -e "rmarkdown::render(gsub('.md','_tmp.md','$<',fixed=TRUE)); sp<-file.rename(gsub('.md','_tmp.pdf','$<', fixed=TRUE), gsub('.md','.pdf','$<', fixed=TRUE))"
-TIDYUP = @Rscript -e "sp<-file.remove(gsub('.md','_tmp.md','$<', fixed=TRUE))"
-
-%.md:%.Rmd
-	$(KNIT)
-%.html:%.md
-	$(SETUP)
+%.html:%.Rmd
 	$(RENDER_H)
-	$(TIDYUP)
-%.pdf:%.md
-	$(SETUP)
+%.pdf:%.Rmd
 	$(RENDER_P)
-	$(TIDYUP)
 
 .PHONY: clean
-.PHONY: md
+.PHONY: tidy
 .PHONY: pdf
 .PHONY: html
 .PHONY: all
 	
-all: 	$(MD) $(PDF) $(HTML)
-md:		$(MD)
-pdf:	$(MD) $(PDF)
-html:	$(MD) $(HTML)
+all: 	$(PDF) $(HTML)
+pdf:	$(PDF)
+html:	$(HTML)
 clean:
 	-rm -rf Adv*.md
+	-rm -rf Adv*.tex
 	-rm -rf Adv*.pdf
 	-rm -rf Adv*.html
+	-rm -rf Adv*.log
+	-rm -rf Adv*_files
+tidy:
+	-rm -rf Adv*.md
+	-rm -rf Adv*.tex
+	-rm -rf Adv*.log
 	-rm -rf Adv*_files

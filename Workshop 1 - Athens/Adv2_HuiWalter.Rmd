@@ -1,0 +1,93 @@
+---
+title: Hands-on training session 2
+subtitle: Hui-Walter models for diagnostic test evaluation
+date: "`r Sys.Date()`"
+fontsize: 12pt
+author:
+  - Matt Denwood
+  - Giles Innocent
+theme: metropolis
+aspectratio: 43
+colortheme: seahorse
+header-includes: 
+  - \input{preamble}
+fig_caption: true
+classoption: compress, c
+output:
+    beamer_presentation:
+        pandoc_args: ["-t", "beamer"]
+        slide_level: 2
+    html_document: default
+---
+
+```{r rendering, eval=FALSE, include=FALSE}
+# To render this as both html and PDF (beamer) slides run:
+rmarkdown::render('Adv2_HuiWalter.Rmd', 'all')
+# Or just for html:
+rmarkdown::render('Adv2_HuiWalter.Rmd', 'html_document')
+```
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Introduction
+
+## Overview
+
+Date/time:
+
+  - 19th February 2020
+  - 16.00 - 17.00
+
+Teachers:
+
+  - Matt Denwood (presenter)
+  - Giles Innocent
+
+## Recap
+
+Important points from session 1
+
+
+
+
+# Session 2a:  Hui-Walter models for 2 tests and 1 population
+
+## Model specification
+
+## Exercise
+
+
+# Session 2b:  Hui-Walter models for 2 tests and N populations
+
+## Model specification
+
+Random effect of population vs independent intercepts
+
+## Exercise
+
+
+
+## Session 2 (1 hour: Multiple tests)
+### 2 Tests, 1 Population
+What do we mean by "conditionally independent?"
+Df in the model and in the data
+Use of informative priors
+```{r 2 test 1 population, informative priors}
+# R code simulating data
+# Jags/R code analysing data
+# R code to produce appropriate output
+```
+### Experiments
+What happens as you reduce the information in the priors?
+### 2 tests, 2+ Populations
+Hui Walter model
+```{r 2 test 2 poulation}
+# R code simulating data
+# Jags/R code analysing data
+# R code to produce appropriate output
+```
+### Experiment
+Try setting both prevalences very close to 0.5
+Noting that there are 2 solutions and model can jump between solutions. Restricting the solution to teh preferred one by forcing Se+Sp>1

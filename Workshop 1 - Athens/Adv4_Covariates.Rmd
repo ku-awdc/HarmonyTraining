@@ -1,0 +1,53 @@
+---
+title: Hands-on training session 4
+subtitle: BLCMs for Se & Sp estimation with covariates
+date: "`r Sys.Date()`"
+fontsize: 12pt
+author:
+  - Sonja Hartnack
+  - Eleftherios Meletis
+theme: metropolis
+aspectratio: 43
+colortheme: seahorse
+header-includes: 
+  - \input{preamble}
+fig_caption: true
+classoption: compress, c
+output:
+    beamer_presentation:
+        pandoc_args: ["-t", "beamer"]
+        slide_level: 2
+    html_document: default
+---
+
+```{r rendering, eval=FALSE, include=FALSE}
+# To render this as both html and PDF (beamer) slides run:
+rmarkdown::render('Adv4_Covariates.Rmd', 'all')
+# Or just for html:
+rmarkdown::render('Adv4_Covariates.Rmd', 'html_document')
+```
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Session 4:  BLCMs for Se & Sp estimation with covariates
+
+## Overview
+
+Date/time:
+
+  - 20th February 2020
+  - 16.00 - 17.00
+
+Teachers:
+
+  - Sonja Hartnack (presenter)
+  - Eleftherios Meletis
+  
+## Slide
+
+
+## Exercise
+
+## Solution

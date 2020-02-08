@@ -1,0 +1,53 @@
+---
+title: Hands-on training session 5
+subtitle: BLCM models for continuous tests
+date: "`r Sys.Date()`"
+fontsize: 12pt
+author:
+  - Sonja Hartnack
+  - Eleftherios Meletis
+theme: metropolis
+aspectratio: 43
+colortheme: seahorse
+header-includes: 
+  - \input{preamble}
+fig_caption: true
+classoption: compress, c
+output:
+    beamer_presentation:
+        pandoc_args: ["-t", "beamer"]
+        slide_level: 2
+    html_document: default
+---
+
+```{r rendering, eval=FALSE, include=FALSE}
+# To render this as both html and PDF (beamer) slides run:
+rmarkdown::render('Adv5_ContinuousTests.Rmd', 'all')
+# Or just for html:
+rmarkdown::render('Adv5_ContinuousTests.Rmd', 'html_document')
+```
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Session 5:  BLCM models for continuous tests
+
+## Overview
+
+Date/time:
+
+  - 21st February 2020
+  - 14.00 - 15.30
+
+Teachers:
+
+  - Sonja Hartnack (presenter)
+  - Eleftherios Meletis
+
+## Slide
+
+
+## Exercise
+
+## Solution

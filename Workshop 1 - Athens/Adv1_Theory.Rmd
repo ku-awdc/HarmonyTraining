@@ -1,12 +1,13 @@
 ---
-title: Introduction
-subtitle: Overview of the course and review of homework tasks
-date: 2019-09-02
-institute: IVH, KU
+title: Hands-on training session 1
+subtitle: Introduction, revision and running basic models
+date: "`r Sys.Date()`"
 fontsize: 12pt
-author: Matt Denwood
+author:
+  - Matt Denwood
+  - Giles Innocent
 theme: metropolis
-aspectratio: 1610
+aspectratio: 43
 colortheme: seahorse
 header-includes: 
   - \input{preamble}
@@ -16,124 +17,283 @@ output:
     beamer_presentation:
         pandoc_args: ["-t", "beamer"]
         slide_level: 2
+    html_document: default
 ---
 
-# Course Outline and Practicalities
-
+```{r rendering, eval=FALSE, include=FALSE}
+# To render this as both html and PDF (beamer) slides run:
+rmarkdown::render('Adv1_Theory.Rmd', 'all')
+# Or just for html:
+rmarkdown::render('Adv1_Theory.Rmd', 'html_document')
+```
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
-## Session 1 (1 hour 30 mins: Introduction and basics)
-### Bayes Rule
-$P(A.B) = P(A)\times P(B|A) = P(B)\times P(A|B)$
-$\implies P(B|A) = \frac{P(B)\times P(A|B)}{P(A)}$
-Or, in our case:
+
+# Course Outline and Practicalities
+
+## Overview
+
+Date/time:
+
+  - 19th February 2020
+  - 14.00 - 15.30
+
+Teachers:
+
+  - Matt Denwood (presenter)
+  - Giles Innocent
+
+## Accessing the teaching material
+
+Demonstration of GitHub and where the files are...
+
+## Preparation
+
+- Do we all have R and JAGS installed?
+
+- Have we all looked at the preparation material?
+
+
+
+# Session 1a:  Theory and application of MCMC
+
+## Bayes Rule
+
+Bayes' theorem is at the heart of Bayesian statistics.  This states that:
+
 $P(\theta|Y) = \frac{P(\theta)\times P(Y|\theta)}{P(Y)}$
 Where:
-$P(\theta|Y)$ is the posterior probability of the parameters, given the data;
-$P(\theta)$ is the (prior) probability of the parameters;
-$P(Y|\theta)$ is the likelihood of the data, given a set of parameters; and
+$\theta$ is our parameter value(s);
+$Y$ is the data that we have observed;
+$P(\theta|Y)$ is the posterior probability of the parameter value(s) given the data and priors;
+$P(\theta)$ is the prior probability of the parameters BEFORE we had observed the data;
+$P(Y|\theta)$ is the likelihood of the data given the parameters value(s), as discussed above; and
 $P(Y)$ is the probability of the data, integrated over all parameter space.
-Note that $P(Y)$ is rarely calculable except in the simplest of cases, but is a constant for a given model.
-As a specific example, if we test 10 animals with known positive status, and 8 of them test positive what is our posterior knowledge for the test's sensitivity? If we have no prior knowledge of the true sensitivity then we might chose to use a uniform(0,1) distribution, or equivalently a beta(1,1). Then our posterior is a beta(9,3). In general, if the prior for a binomial observation with s successes and f failures is beta(a, b), then our posterior is beta(a+s, b+f).
-### Exercise
-If we test a further 20 known positive animals and 15 test positive, what is our new posterior belief about the distribution of the sensitivity?
-### Imperfect tests
+
+---
+
+Note that $P(Y)$ is rarely calculable except in the simplest of cases, but is a constant for a given model.  So in practice we usually work with the following:
+
+$P(\theta|Y) \propto P(\theta)\times P(Y|\theta)$
+
+Our Bayesian posterior is therefore always a combination of the likelihood of the data, and the parameter priors
+
+But for more complex models the distinction between what is 'data' and 'parameters' can get blurred!
+
+## MCMC (revision)
+
+TODO
+
+- Brief highlight of important points re convergence and effective sample size
+
+## Exercise
+
+TODO
+
+Using the same function to estimate prevalence for different priors and datas
+
+Including positives = 0
+
+Care with convergence and sample size
+
+## Solution
+
+TODO
+
+# Session 1b:  Working with basic models (apparent prevalence)
+
+## MCMC software
+
+We have seen that we can write a Metropolis algorithm but this is complex and inefficient
+
+There are a number of general purpose langauages that allow us to define the problem in a faily intuitive manner and leave the details to the software. Among the latter are BUGS (Bayesian inference Using Gibbs Sampling) JAGS (Just another Gibbs Sampler) and STAN (named in honour of Stanislaw Ulam, pioneer of the Monte Carlo method).
+
+## JAGS
+
+JAGS is a declarative (non-procedural) programming language. That is the order of statements does not matter. When implemented the interpreted just considers the appropriate line of code to interpret in terms of likelihood and prior. That is why you can only define each variable (LHS) once.
+
+---
+
+A simple JAGS model might look like this:
+
+```{r eval=FALSE}
+model{
+  # Likelihood part:
+  Positives ~ dbinom(prevalence, TotalTests)
+  
+  # Prior part:
+  prevalence ~ dbeta(2, 2)
+  
+  # Hooks for automatic integration with R:
+  #data# Positives, TotalTests
+  #monitor# prevalence
+  #inits# prevalence
+}
+```
+
+```{r include=FALSE}
+model_definition <- "
+model{
+  # Likelihood part:
+  Positives ~ dbinom(prevalence, TotalTests)
+  
+  # Prior part:
+  prevalence ~ dbeta(2, 2)
+  
+  # Hooks for automatic integration with R:
+  #data# Positives, TotalTests
+  #monitor# prevalence
+  #inits# prevalence
+}
+"
+```
+
+---
+
+There are two model statements:
+
+```{r eval=FALSE}
+Positives ~ dbinom(prevalence, TotalTests)
+```
+
+states that the number of $Positive$ test samples is Binomially distributed with probability parameter $prevalence$ and total trials $TotalTests$
+
+```{r eval=FALSE}
+prevalence ~ dbeta(2,2)
+```
+
+states that our prior probability distribution for the parameter $prevalence$ is Beta(2,2)
+
+These are very similar to the likelihood and prior functions defined in the preparatory exercise
+
+---
+
+The other lines in this model are automated hooks to allow the runjags package to make sure that the correct R objects are passed to R as data, and that we get samples for the parameter we want to monitor. These statements are ignored by JAGS.
+
+One of the advantages of using something like JAGS or STANis that much of the detail of the coding is shielded from us which means that the code is accessible to a wider variety of audiences. Running this model is much easier (and more efficient) than the Metropolis algorithm code.
+
+---
+
+To run this model, copy/paste the code above into a new text file called "basicjags.bug" in the same folder as your current working directory.
+
+```{r include=FALSE}
+cat(model_definition, file='basicjags.bug')
+```
+
+Then run:
+
+```{r}
+library('runjags')
+
+# data to be retrieved by runjags:
+Positives <- 7
+TotalTests <- 10
+
+# initial values to be retrieved by runjags:
+prevalence <- list(chain1=0.05, chain2=0.95)
+```
+
+---
+
+```{r}
+results <- run.jags('basicjags.bug', n.chains=2)
+```
+
+You should see some updates then it will be finished
+
+```{r include=FALSE}
+unlink('basicjags.bug')
+runjags.options(silent.jags=TRUE)
+```
+
+---
+
+First check for convergence based on trace plots:
+
+```{r eval=FALSE, include=TRUE}
+plot(results)
+```
+
+```{r include=FALSE}
+pt <- plot(results)
+```
+
+---
+
+```{r echo=FALSE}
+print(pt[[1]])
+```
+
+---
+
+```{r echo=FALSE}
+print(pt[[2]])
+```
+
+---
+
+```{r echo=FALSE}
+print(pt[[3]])
+```
+
+---
+
+```{r echo=FALSE}
+print(pt[[4]])
+```
+
+---
+
+Then check the effective sample size (SSeff) and Gelman-Rubin statistic (psrf):
+
+```{r}
+results
+```
+
+If these both look OK (psrf < 1.05 and SSeff > 1000) then you can use the posterior summary statistics.
+
+
+
+## Exercise
+
+TODO
+
+Run this model for yourselves
+
+Adjust data and priors
+
+
+## Solution
+
+TODO
+
+# Session 1c:  Basics of latent-class models (imperfect test)
+
+## Imperfect tests
+
+TODO
+
 Usually, however, we do not have a perfect test to know how many are truly positive (negative).
 Say we have a test with known sensitiveity of 0.8, and known specificity of 0.95. We know therefore that:
 $Prev_{obs} = (Prev_{true}\times Se) + ((1-Prev_{true})\times (1-Sp))$
 $\implies Prev_{true} = \frac{Prev_{obs}-(1-Sp)}{Se-(1-Sp)}$
-Which is fine as far as it goes, but we would like a full posterior distribution for this. Now read on...
-### MCMC
-One approach to examining the full posterior distribution is to produce a Markovian process that will converge on the true posterior distribution. A Markovian chain is a probablistic process where the probabilities only depend on the present state of the process. Where we use simulation to produce the next step in the chain we refer to this as a Markov chain Mont$\rm\'e$ Carlo or MCMC.
-There are a number of ways of producing such a chain, but that is beyond this course. We merely note that there are a number of ways of doing this, and that there are a number of general purpose langauages that allow us to define the problem in a faily intuitive manner and leave the details to the software. Among the latter are BUGS (Bayesian inference Using Gibbs Sampling) JAGS (Just another Gibbs Sampler) and STAN (named in honour of Stanislaw Ulam, pioneer of the Monte Carlo method).
-### JAGS as a language
-JAGS is a declarative (non-procedural) programming language. That is the order of statements does not matter. When implemented the interpreted just considers the appropriate line of code to interpret in terms of likelihood and prior. That is why you can only define each variable (LHS) once.
-The statement:
-\verb|Y ~ Dnorm(mu, 1/var)|
-states that y is normally distributed with mean mu and precision 1/var. If Y is passed as data, then JAGS returns the posterior for mu and var. If mu and var are passed as data tehn JAGS will return the posterior for Y, i.e. it will simulate Y. So JAGS code can be used both for data simulation and to infer the posterior distribution of parameters. Note that throughout, to avoid confusion we will use R to simulate data then JAGS to make the inference.
-One of the advantages of using something like JAGS or STANis that much of the detail of the coding is shielded from us which means that the code is accessible to a wider variety of audiences. They also can be linked to R code, which allows us to produce a wide variety of post-analysis summaries and graphical representations.
-```{r 1 population, 1 test}
-# R code simulating data
-# Parameters
-Prev1 <- 0.8  # prevalence
-Se1 <- 0.8    # test sensitivity
-Sp1 <- 0.95   # test specificity
-n.obs <- 50   # Number of individuals tested (number of observations)
-n.burnin <- 2000  # number of burn-in iterations for MCMC
-n.sample <- 2000  # number of samples to take after burn-in
-# simulation
-true.positive <- rbinom(1, n.obs, Prev1)
-test.positive <- rbinom(1, true.positive, Se1)
-test.positive <- test.positive + rbinom(1, n.obs-true.positive, 1-Sp1)
-# Jags/R code analysing data
-library(rjags)
-model.jags.1 <- "model {
- 
- n.test.positive ~dbin(Prev.1*Se.1 + (1-Prev.1)*(1-Sp.1), n.obs)
-# priors
- Prev.1 ~dbeta(1,1)
-}"
-model <- jags.model(textConnection(model.jags.1), data = list(n.obs = n.obs,
-                                                                Se.1 = Se1,
-                                                                Sp.1 = Sp1,
-                                                                n.test.positive =test.positive
-                                                                ),
-                         #inits = list(Prev.1 = 0.5),
-                         n.chains = 3, n.adapt= n.burnin)
-  # notice that we don't supply inits
-mcmc.samples <- coda.samples(model, variable.names=c("Prev.1"), n.iter=n.sample) 
-# R code to produce some appropriate output
-summary(mcmc.samples)
-```
-```{R plot results}
-plot(mcmc.samples)
-```
-Testing for convergence Something about the Gelman-Rubin statistic here...
-```{R test convergence}
-gelman.diag(mcmc.samples)
-```
-### Experiments
-What happens if $Se = Sp = 0.8$
-Try $Se= Sp = 0.5$
-Try $Se=Sp= 0.2$
-## Session 2 (1 hour: Multiple tests)
-### 2 Tests, 1 Population
-What do we mean by "conditionally independent?"
-Df in the model and in the data
-Use of informative priors
-```{r 2 test 1 population, informative priors}
-# R code simulating data
-# Jags/R code analysing data
-# R code to produce appropriate output
-```
-### Experiments
-What happens as you reduce the information in the priors?
-### 2 tests, 2+ Populations
-Hui Walter model
-```{r 2 test 2 poulation}
-# R code simulating data
-# Jags/R code analysing data
-# R code to produce appropriate output
-```
-### Experiment
-Try setting both prevalences very close to 0.5
-Noting that there are 2 solutions and model can jump between solutions. Restricting the solution to teh preferred one by forcing Se+Sp>1
-## Session 3 (1 hour 30 mins: Developing skills)
-### 3 tests 1 population
-Conditional independence
-```{r 3 test 1 pop}
-# R code simulating data
-# Jags/R code analysing data
-# R code to produce appropriate output
-```
-### 3 tests 1 population: conditional dependence
-How do we code conditional dependence?
-```{r 3 test 1 pop dependence}
-# R code simulating data
-# Jags/R code analysing data
-# R code to produce appropriate output
-```
-### Model Selection
-Not my problem: that's for you and Sonja, but presumably you'll talk about AIC/BIC/DIC and why (not) to use them and then Bayes factors
+
+
+## Model specification
+
+How to write the model in JAGS, and specify priors for Se and Sp
+
+## Priors
+
+Where to get priors in real life
+
+PriorGen pacakge
+
+## Exercise
+
+Run the same model in runjags with imperfect Se/Sp with priors we give them based on mean and 95% CI
+
+Compare results
+

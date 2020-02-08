@@ -1,0 +1,54 @@
+---
+title: Hands-on training session 6
+subtitle: Meta-analysis for studies that use BLCMs
+date: "`r Sys.Date()`"
+fontsize: 12pt
+author:
+  - Paolo Eusebi
+  - Giles Innocent
+theme: metropolis
+aspectratio: 43
+colortheme: seahorse
+header-includes: 
+  - \input{preamble}
+fig_caption: true
+classoption: compress, c
+output:
+    beamer_presentation:
+        pandoc_args: ["-t", "beamer"]
+        slide_level: 2
+    html_document: default
+---
+
+```{r rendering, eval=FALSE, include=FALSE}
+# To render this as both html and PDF (beamer) slides run:
+rmarkdown::render('Adv6_MetaAnalysis.Rmd', 'all')
+# Or just for html:
+rmarkdown::render('Adv6_MetaAnalysis.Rmd', 'html_document')
+```
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Session 6:  Meta-analysis for studies that use BLCMs
+
+## Overview
+
+Date/time:
+
+  - 21st February 2020
+  - 16.00 - 17.00
+
+Teachers:
+
+  - Paolo Eusebi (presenter)
+  - Giles Innocent
+
+
+## Slide
+
+
+## Exercise
+
+## Solution
