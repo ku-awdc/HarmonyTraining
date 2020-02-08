@@ -474,7 +474,7 @@ Up to now we have not changed the parameter $sigma$.  For the Metropolis algorit
 
 Run the following code with different values of sigma and see how it affects the autocorrelation.  Make sure you understand the relationship between autocorrelation, the length of the burnin period, and the effective sample size.  Here are some examples to get you started:
 
-```{r}
+```{r, eval=FALSE}
 samples <- metropolis(sigma=10)
 cat("Autocorrelation: ", coda::autocorr(samples, lags=1)[1,1,1], '\n')
 cat("Effective sample size: ", coda::effectiveSize(samples), '\n')
