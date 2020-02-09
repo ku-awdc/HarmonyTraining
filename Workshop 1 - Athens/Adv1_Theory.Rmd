@@ -114,6 +114,13 @@ There are a number of general purpose langauages that allow us to define the pro
 
 JAGS is a declarative (non-procedural) programming language. That is the order of statements does not matter. When implemented the interpreted just considers the appropriate line of code to interpret in terms of likelihood and prior. That is why you can only define each variable (LHS) once.
 
+Different ways to run JAGS from R:
+
+  - rjags
+  - runjags
+  - R2jags
+  - jagsUI
+
 ---
 
 A simple JAGS model might look like this:
@@ -254,6 +261,13 @@ results
 
 If these both look OK (psrf < 1.05 and SSeff > 1000) then you can use the posterior summary statistics.
 
+## Other runjags options
+
+Using .RNG.seed
+
+Parallel chains
+
+extend.jags
 
 
 ## Exercise
