@@ -286,7 +286,7 @@ In order to solve this problem we need a new approach.  Rather than evaluating a
 
 ```{r}
 metropolis <- function(burnin = 0, sample = 10000, sigma = 0.05, 
-              initial_value = 0.05){
+              initial_value = 0.05, plot=TRUE){
   stopifnot(initial_value > 0, initial_value < 1)
   stopifnot(sigma > 0)
   burnin <- as.integer(burnin)
@@ -317,13 +317,13 @@ metropolis <- function(burnin = 0, sample = 10000, sigma = 0.05,
     parameters[i] <- current
   }
   
-  if(burnin > 0){
+  if(plot && burnin > 0){
     plot(1:burnin, parameters[1:burnin], type='l', col='red', 
          xlim=c(1,burnin+sample), ylim=c(0,1), 
          main='Parameter values (red:burnin, blue:sample)', 
          ylab='prevalence', xlab='Iteration')
     lines((burnin+1):(burnin+sample), parameters[-(1:burnin)], col='blue')
-  }else{
+  }else if(plot){
     plot(1:sample, parameters, type='l', col='blue', 
          xlim=c(1,burnin+sample), ylim=c(0,1), 
          main='Parameter values (red:burnin, blue:sample)', 
@@ -446,15 +446,15 @@ cat("95% CI of samples: ", sci[1,1], '-', sci[1,2], '\n')
 cat('True posterior 95% CI:', ci[1], '-', ci[2], '\n')
 ```
 
-Our sampled posterior is now much closer to the true posterior, although there is still a small difference due to the inherent randomness of the Monte Carlo integration.  This also means that every time we run this simulation we will get a slightly different anser - if we want to ensure we get precisely the same result then we need to set the random number generator seed in R using the set seed function before running the simulation:
+Our sampled posterior is now much closer to the true posterior, although there is still a small difference due to the inherent randomness of the Monte Carlo integration.  This also means that every time we run this simulation we will get a slightly different answer - if we want to ensure we get precisely the same result then we need to set the random number generator seed in R using the set seed function before running the simulation:
 
 ```{r}
 set.seed(2020-02-08)
-samples <- metropolis(burnin = 100, sample = 1000, initial_value=0.99)
+samples <- metropolis(burnin = 100, sample = 1000, initial_value=0.99, plot=FALSE)
 cat("Mean of samples: ", mean(samples), '\n')
 
 set.seed(2020-02-08)
-samples <- metropolis(burnin = 100, sample = 1000, initial_value=0.99)
+samples <- metropolis(burnin = 100, sample = 1000, initial_value=0.99, plot=FALSE)
 cat("Mean of samples: ", mean(samples), '\n')
 ```
 
@@ -466,7 +466,7 @@ cat("Mean of samples: ", mean(samples), '\n')
 
 Run the code below with different values of $sample$.  Make sure you understand the relationship between the number of samples, the effective sample size, and the accuracy of your estimates from the sampled posterior:
 
-```{r}
+```{r, eval=FALSE}
 samples <- metropolis(burnin = 100, sample = 10000)
 cat("Mean of samples: ", mean(samples), '\n')
 cat('True posterior mean:', mn, '\n')
@@ -482,9 +482,10 @@ cat('True posterior 95% CI:', ci[1], '-', ci[2], '\n')
 
 ## Exercise 2
 
-Up to now we have not changed the parameter $sigma$.  For the Metropolis algorithm, the value of $sigma$ has a big effect on the degree of autocorrelation in the chains.  If the value is either too large or too small, then there will be a lot of autocorrelation in the chain, which will result in two thing:
+Up to now we have not changed the parameter $sigma$.  For the Metropolis algorithm, the value of $sigma$ has a big effect on the degree of autocorrelation in the chains.  If the value is either too large or too small, then there will be a lot of autocorrelation in the chain, which will result in two things:
 
 1 - The chain might take longer to burn in (particularly if sigma is too small)
+
 2 - The effective sample size will be reduced
 
 Run the following code with different values of sigma and see how it affects the autocorrelation.  Make sure you understand the relationship between autocorrelation, the length of the burnin period, and the effective sample size.  Here are some examples to get you started:
