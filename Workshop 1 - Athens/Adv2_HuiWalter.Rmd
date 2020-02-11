@@ -54,40 +54,88 @@ Important points from session 1
 
 # Session 2a:  Hui-Walter models for 2 tests and 1 population
 
-## Model specification
+## Hui-Walter Model
+
+Background (not necessarily Bayesian)
+
+Rabbits and hats
+
+## Model Specification
+
+Care with order of combinations in dmultinom
+
+
+## Practicalities
+
+Works best with strong priors for one of the tests
+
+Label switching (se+sp > 0.5)
+
+Lots of data needed
+
+Convergence tricky
+
+## Simulating data
+
+How to simulate data for this and checking we can recover parameter values
+
+
+```{r}
+# R code simulating data
+# Parameters
+Prev1 <- 0.8  # prevalence
+Se1 <- 0.8    # test sensitivity
+Sp1 <- 0.95   # test specificity
+n.obs <- 50   # Number of individuals tested (number of observations)
+n.burnin <- 2000  # number of burn-in iterations for MCMC
+n.sample <- 2000  # number of samples to take after burn-in
+# simulation
+true.positive <- rbinom(1, n.obs, Prev1)
+test.positive <- rbinom(1, true.positive, Se1)
+test.positive <- test.positive + rbinom(1, n.obs-true.positive, 1-Sp1)
+# Jags/R code analysing data
+```
+
 
 ## Exercise
+
+Simulate data and recover parameters
+
+Play around with different priors and watch autocorrelation etc
 
 
 # Session 2b:  Hui-Walter models for 2 tests and N populations
 
-## Model specification
+## Model specification 1
 
-Random effect of population vs independent intercepts
+Independent intercepts for populations
+
+
+## Model specification 2
+
+Random effect of population
+
+
+## Practicalities
+
+Need to be very careful with tabulating the data
+
+Works best when populations have very different prevalences
+
+
+## Auto Hui-Walter
+
+Show autohuiwalter.R
+
+Disable correlations by default
+
+Modify so it allows Se/Sp priors to be defined as matrices?
+
+And correlations on/off as matrices?
+
+Will be in runjags at some point
 
 ## Exercise
 
+Play around with the autohuiwalter function
 
-
-## Session 2 (1 hour: Multiple tests)
-### 2 Tests, 1 Population
-What do we mean by "conditionally independent?"
-Df in the model and in the data
-Use of informative priors
-```{r 2 test 1 population, informative priors}
-# R code simulating data
-# Jags/R code analysing data
-# R code to produce appropriate output
-```
-### Experiments
-What happens as you reduce the information in the priors?
-### 2 tests, 2+ Populations
-Hui Walter model
-```{r 2 test 2 poulation}
-# R code simulating data
-# Jags/R code analysing data
-# R code to produce appropriate output
-```
-### Experiment
-Try setting both prevalences very close to 0.5
-Noting that there are 2 solutions and model can jump between solutions. Restricting the solution to teh preferred one by forcing Se+Sp>1

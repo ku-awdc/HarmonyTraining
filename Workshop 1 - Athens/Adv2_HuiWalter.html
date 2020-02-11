@@ -1,10 +1,11 @@
 <!DOCTYPE html>
 
-<html>
+<html xmlns="http://www.w3.org/1999/xhtml">
 
 <head>
 
 <meta charset="utf-8" />
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 <meta name="generator" content="pandoc" />
 <meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
 
@@ -12,7 +13,7 @@
 <meta name="author" content="Matt Denwood" />
 <meta name="author" content="Giles Innocent" />
 
-<meta name="date" content="2020-02-08" />
+<meta name="date" content="2020-02-11" />
 
 <title>Hands-on training session 2</title>
 
@@ -332,7 +333,6 @@ summary {
   border: none;
   display: inline-block;
   border-radius: 4px;
-  background-color: transparent;
 }
 
 .tabset-dropdown > .nav-tabs.nav-tabs-open > li {
@@ -368,7 +368,7 @@ summary {
 <h3 class="subtitle">Hui-Walter models for diagnostic test evaluation</h3>
 <h4 class="author">Matt Denwood</h4>
 <h4 class="author">Giles Innocent</h4>
-<h4 class="date">2020-02-08</h4>
+<h4 class="date">2020-02-11</h4>
 
 </div>
 
@@ -395,42 +395,71 @@ summary {
 </div>
 <div id="session-2a-hui-walter-models-for-2-tests-and-1-population" class="section level1">
 <h1>Session 2a: Hui-Walter models for 2 tests and 1 population</h1>
+<div id="hui-walter-model" class="section level2">
+<h2>Hui-Walter Model</h2>
+<p>Background (not necessarily Bayesian)</p>
+<p>Rabbits and hats</p>
+</div>
 <div id="model-specification" class="section level2">
-<h2>Model specification</h2>
+<h2>Model Specification</h2>
+<p>Care with order of combinations in dmultinom</p>
+</div>
+<div id="practicalities" class="section level2">
+<h2>Practicalities</h2>
+<p>Works best with strong priors for one of the tests</p>
+<p>Label switching (se+sp &gt; 0.5)</p>
+<p>Lots of data needed</p>
+<p>Convergence tricky</p>
+</div>
+<div id="simulating-data" class="section level2">
+<h2>Simulating data</h2>
+<p>How to simulate data for this and checking we can recover parameter values</p>
+<pre class="r"><code># R code simulating data
+# Parameters
+Prev1 &lt;- 0.8  # prevalence
+Se1 &lt;- 0.8    # test sensitivity
+Sp1 &lt;- 0.95   # test specificity
+n.obs &lt;- 50   # Number of individuals tested (number of observations)
+n.burnin &lt;- 2000  # number of burn-in iterations for MCMC
+n.sample &lt;- 2000  # number of samples to take after burn-in
+# simulation
+true.positive &lt;- rbinom(1, n.obs, Prev1)
+test.positive &lt;- rbinom(1, true.positive, Se1)
+test.positive &lt;- test.positive + rbinom(1, n.obs-true.positive, 1-Sp1)
+# Jags/R code analysing data</code></pre>
 </div>
 <div id="exercise" class="section level2">
 <h2>Exercise</h2>
+<p>Simulate data and recover parameters</p>
+<p>Play around with different priors and watch autocorrelation etc</p>
 </div>
 </div>
 <div id="session-2b-hui-walter-models-for-2-tests-and-n-populations" class="section level1">
 <h1>Session 2b: Hui-Walter models for 2 tests and N populations</h1>
 <div id="model-specification-1" class="section level2">
-<h2>Model specification</h2>
-<p>Random effect of population vs independent intercepts</p>
+<h2>Model specification 1</h2>
+<p>Independent intercepts for populations</p>
+</div>
+<div id="model-specification-2" class="section level2">
+<h2>Model specification 2</h2>
+<p>Random effect of population</p>
+</div>
+<div id="practicalities-1" class="section level2">
+<h2>Practicalities</h2>
+<p>Need to be very careful with tabulating the data</p>
+<p>Works best when populations have very different prevalences</p>
+</div>
+<div id="auto-hui-walter" class="section level2">
+<h2>Auto Hui-Walter</h2>
+<p>Show autohuiwalter.R</p>
+<p>Disable correlations by default</p>
+<p>Modify so it allows Se/Sp priors to be defined as matrices?</p>
+<p>And correlations on/off as matrices?</p>
+<p>Will be in runjags at some point</p>
 </div>
 <div id="exercise-1" class="section level2">
 <h2>Exercise</h2>
-</div>
-<div id="session-2-1-hour-multiple-tests" class="section level2">
-<h2>Session 2 (1 hour: Multiple tests)</h2>
-<div id="tests-1-population" class="section level3">
-<h3>2 Tests, 1 Population</h3>
-<p>What do we mean by “conditionally independent?” Df in the model and in the data Use of informative priors</p>
-<pre class="r"><code># R code simulating data
-# Jags/R code analysing data
-# R code to produce appropriate output</code></pre>
-</div>
-<div id="experiments" class="section level3">
-<h3>Experiments</h3>
-<p>What happens as you reduce the information in the priors? ### 2 tests, 2+ Populations Hui Walter model</p>
-<pre class="r"><code># R code simulating data
-# Jags/R code analysing data
-# R code to produce appropriate output</code></pre>
-</div>
-<div id="experiment" class="section level3">
-<h3>Experiment</h3>
-<p>Try setting both prevalences very close to 0.5 Noting that there are 2 solutions and model can jump between solutions. Restricting the solution to teh preferred one by forcing Se+Sp&gt;1</p>
-</div>
+<p>Play around with the autohuiwalter function</p>
 </div>
 </div>
 

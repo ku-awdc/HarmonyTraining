@@ -57,20 +57,54 @@ Important points from sessions 1 and 2
 
 # Session 3a:  Hui-Walter models for multiple tests with conditional indepdendence
 
+## What exactly is our latent class?
+
+What do we mean by "conditionally independent?"
+
+Example:  three antibody tests
+
+Rabbits and hats 2
+
 ## Model specification
+
+Extreme care with multinomial tabulation
+
+Use autohuiwalter!
+
+## Missing data in test results
+
+Use autohuiwalter!
+
+## GLM specification
+
+Combining Hui-Walter part with template.jags
+
+Will likely be included in template.jags in future
 
 ## Exercise
 
+Simulate data from 3 or 4 tests and analyse
 
 # Session 3b:  Hui-Walter models for multiple tests with conditional depdendence
 
+## Branching of processes leading to test results
+
+Example:  two antibody tests and one antigen test
+
+Or three antibody tests where one has a different target to the others
+
 ## Model specification
 
-Being careful!
+Use autohuiwalter!
 
-Give them my function
 
 ## Exercise
+
+Simulate data with a dependence between 2 tests
+
+Model assuming conditional independence biases the estimates
+
+Model with conditional depdendence has bigger CI but unbiased
 
 
 # Session 3c:  Model selection
@@ -81,50 +115,14 @@ DIC works fine for hierarchical normal models
 
 Bayes factors work well if you can count them
 
-WAIC works better for a wide range of models, although perhaps not these unless specifying the model in a different way (loop over individuals)
+WAIC works better for a wide range of models
+	
+	* Probably won't work for Hui-Walter though due to lack of independent data
+	* Could be useful if using the GLM version (untested!)
 
 Models tend to be sensitive to priors
 
 Simulating data and testing that your model recovers the parameters is a good idea
 
-## Exercise
-
-
-
-## Session 3 (1 hour 30 mins: Developing skills)
-### 3 tests 1 population
-Conditional independence
-```{r 3 test 1 pop}
-# R code simulating data
-# Jags/R code analysing data
-# R code to produce appropriate output
-```
-### 3 tests 1 population: conditional dependence
-How do we code conditional dependence?
-```{r 3 test 1 pop dependence}
-# R code simulating data
-# Jags/R code analysing data
-# R code to produce appropriate output
-```
-### Model Selection
-Not my problem: that's for you and Sonja, but presumably you'll talk about AIC/BIC/DIC and why (not) to use them and 
-then Bayes factors
-
-They also can be linked to R code, which allows us to produce a wide variety of post-analysis summaries and graphical representations.
-
-```{r 1 population, 1 test}
-# R code simulating data
-# Parameters
-Prev1 <- 0.8  # prevalence
-Se1 <- 0.8    # test sensitivity
-Sp1 <- 0.95   # test specificity
-n.obs <- 50   # Number of individuals tested (number of observations)
-n.burnin <- 2000  # number of burn-in iterations for MCMC
-n.sample <- 2000  # number of samples to take after burn-in
-# simulation
-true.positive <- rbinom(1, n.obs, Prev1)
-test.positive <- rbinom(1, true.positive, Se1)
-test.positive <- test.positive + rbinom(1, n.obs-true.positive, 1-Sp1)
-# Jags/R code analysing data
-```
+## Discussion and free practical time
 

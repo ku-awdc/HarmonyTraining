@@ -1,10 +1,11 @@
 <!DOCTYPE html>
 
-<html>
+<html xmlns="http://www.w3.org/1999/xhtml">
 
 <head>
 
 <meta charset="utf-8" />
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 <meta name="generator" content="pandoc" />
 <meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
 
@@ -13,7 +14,7 @@
 <meta name="author" content="Giles Innocent" />
 <meta name="author" content="Sonja Hartnack" />
 
-<meta name="date" content="2020-02-08" />
+<meta name="date" content="2020-02-11" />
 
 <title>Hands-on training session 3</title>
 
@@ -333,7 +334,6 @@ summary {
   border: none;
   display: inline-block;
   border-radius: 4px;
-  background-color: transparent;
 }
 
 .tabset-dropdown > .nav-tabs.nav-tabs-open > li {
@@ -370,7 +370,7 @@ summary {
 <h4 class="author">Matt Denwood</h4>
 <h4 class="author">Giles Innocent</h4>
 <h4 class="author">Sonja Hartnack</h4>
-<h4 class="date">2020-02-08</h4>
+<h4 class="date">2020-02-11</h4>
 
 </div>
 
@@ -398,22 +398,47 @@ summary {
 </div>
 <div id="session-3a-hui-walter-models-for-multiple-tests-with-conditional-indepdendence" class="section level1">
 <h1>Session 3a: Hui-Walter models for multiple tests with conditional indepdendence</h1>
+<div id="what-exactly-is-our-latent-class" class="section level2">
+<h2>What exactly is our latent class?</h2>
+<p>What do we mean by “conditionally independent?”</p>
+<p>Example: three antibody tests</p>
+<p>Rabbits and hats 2</p>
+</div>
 <div id="model-specification" class="section level2">
 <h2>Model specification</h2>
+<p>Extreme care with multinomial tabulation</p>
+<p>Use autohuiwalter!</p>
+</div>
+<div id="missing-data-in-test-results" class="section level2">
+<h2>Missing data in test results</h2>
+<p>Use autohuiwalter!</p>
+</div>
+<div id="glm-specification" class="section level2">
+<h2>GLM specification</h2>
+<p>Combining Hui-Walter part with template.jags</p>
+<p>Will likely be included in template.jags in future</p>
 </div>
 <div id="exercise" class="section level2">
 <h2>Exercise</h2>
+<p>Simulate data from 3 or 4 tests and analyse</p>
 </div>
 </div>
 <div id="session-3b-hui-walter-models-for-multiple-tests-with-conditional-depdendence" class="section level1">
 <h1>Session 3b: Hui-Walter models for multiple tests with conditional depdendence</h1>
+<div id="branching-of-processes-leading-to-test-results" class="section level2">
+<h2>Branching of processes leading to test results</h2>
+<p>Example: two antibody tests and one antigen test</p>
+<p>Or three antibody tests where one has a different target to the others</p>
+</div>
 <div id="model-specification-1" class="section level2">
 <h2>Model specification</h2>
-<p>Being careful!</p>
-<p>Give them my function</p>
+<p>Use autohuiwalter!</p>
 </div>
 <div id="exercise-1" class="section level2">
 <h2>Exercise</h2>
+<p>Simulate data with a dependence between 2 tests</p>
+<p>Model assuming conditional independence biases the estimates</p>
+<p>Model with conditional depdendence has bigger CI but unbiased</p>
 </div>
 </div>
 <div id="session-3c-model-selection" class="section level1">
@@ -422,47 +447,14 @@ summary {
 <h2>Methods of selecting models</h2>
 <p>DIC works fine for hierarchical normal models</p>
 <p>Bayes factors work well if you can count them</p>
-<p>WAIC works better for a wide range of models, although perhaps not these unless specifying the model in a different way (loop over individuals)</p>
+<p>WAIC works better for a wide range of models</p>
+<pre><code>* Probably won&#39;t work for Hui-Walter though due to lack of independent data
+* Could be useful if using the GLM version (untested!)</code></pre>
 <p>Models tend to be sensitive to priors</p>
 <p>Simulating data and testing that your model recovers the parameters is a good idea</p>
 </div>
-<div id="exercise-2" class="section level2">
-<h2>Exercise</h2>
-</div>
-<div id="session-3-1-hour-30-mins-developing-skills" class="section level2">
-<h2>Session 3 (1 hour 30 mins: Developing skills)</h2>
-<div id="tests-1-population" class="section level3">
-<h3>3 tests 1 population</h3>
-<p>Conditional independence</p>
-<pre class="r"><code># R code simulating data
-# Jags/R code analysing data
-# R code to produce appropriate output</code></pre>
-</div>
-<div id="tests-1-population-conditional-dependence" class="section level3">
-<h3>3 tests 1 population: conditional dependence</h3>
-<p>How do we code conditional dependence?</p>
-<pre class="r"><code># R code simulating data
-# Jags/R code analysing data
-# R code to produce appropriate output</code></pre>
-</div>
-<div id="model-selection" class="section level3">
-<h3>Model Selection</h3>
-<p>Not my problem: that’s for you and Sonja, but presumably you’ll talk about AIC/BIC/DIC and why (not) to use them and then Bayes factors</p>
-<p>They also can be linked to R code, which allows us to produce a wide variety of post-analysis summaries and graphical representations.</p>
-<pre class="r"><code># R code simulating data
-# Parameters
-Prev1 &lt;- 0.8  # prevalence
-Se1 &lt;- 0.8    # test sensitivity
-Sp1 &lt;- 0.95   # test specificity
-n.obs &lt;- 50   # Number of individuals tested (number of observations)
-n.burnin &lt;- 2000  # number of burn-in iterations for MCMC
-n.sample &lt;- 2000  # number of samples to take after burn-in
-# simulation
-true.positive &lt;- rbinom(1, n.obs, Prev1)
-test.positive &lt;- rbinom(1, true.positive, Se1)
-test.positive &lt;- test.positive + rbinom(1, n.obs-true.positive, 1-Sp1)
-# Jags/R code analysing data</code></pre>
-</div>
+<div id="discussion-and-free-practical-time" class="section level2">
+<h2>Discussion and free practical time</h2>
 </div>
 </div>
 
