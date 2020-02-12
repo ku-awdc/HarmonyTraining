@@ -2,7 +2,6 @@
 title: Hands-on training session 6
 subtitle: Meta-analysis for studies that use BLCMs
 date: "`r Sys.Date()`"
-fontsize: 12pt
 author:
   - Paolo Eusebi
   - Giles Innocent
@@ -11,25 +10,31 @@ aspectratio: 43
 colortheme: seahorse
 header-includes: 
   - \input{preamble}
-fig_caption: true
-classoption: compress, c
+params:
+  presentation: TRUE
 output:
-    beamer_presentation:
-        pandoc_args: ["-t", "beamer"]
-        slide_level: 2
-    html_document: default
+  beamer_presentation:
+      pandoc_args: ["-t", "beamer"]
+      slide_level: 2
+  html_document: default
 ---
 
 ```{r rendering, eval=FALSE, include=FALSE}
-# To render this as both html and PDF (beamer) slides run:
-rmarkdown::render('Adv6_MetaAnalysis.Rmd', 'all')
-# Or just for html:
-rmarkdown::render('Adv6_MetaAnalysis.Rmd', 'html_document')
+# To render this as PDF (beamer) slides run:
+rmarkdown::render('Adv6_MetaAnalysis.Rmd', 'beamer_presentation', params=list(presentation=TRUE))
+# And for html:
+rmarkdown::render('Adv6_MetaAnalysis.Rmd', 'html_document', params=list(presentation=FALSE))
 ```
 
 ```{r setup, include=FALSE}
+# Reduce the width of R code output for PDF only:
+if(params$presentation) options(width=60)
 knitr::opts_chunk$set(echo = TRUE)
+
+library('runjags')
+runjags.options(silent.jags=TRUE)
 ```
+
 
 # Session 6:  Meta-analysis for studies that use BLCMs
 
@@ -51,4 +56,5 @@ Teachers:
 
 ## Exercise
 
-## Solution
+Instructions here
+

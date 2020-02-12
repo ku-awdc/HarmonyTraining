@@ -1,11 +1,10 @@
 <!DOCTYPE html>
 
-<html xmlns="http://www.w3.org/1999/xhtml">
+<html>
 
 <head>
 
 <meta charset="utf-8" />
-<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 <meta name="generator" content="pandoc" />
 <meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
 
@@ -13,7 +12,7 @@
 <meta name="author" content="Sonja Hartnack" />
 <meta name="author" content="Eleftherios Meletis" />
 
-<meta name="date" content="2020-02-11" />
+<meta name="date" content="2020-02-12" />
 
 <title>Hands-on training session 4</title>
 
@@ -333,6 +332,7 @@ summary {
   border: none;
   display: inline-block;
   border-radius: 4px;
+  background-color: transparent;
 }
 
 .tabset-dropdown > .nav-tabs.nav-tabs-open > li {
@@ -368,7 +368,7 @@ summary {
 <h3 class="subtitle">BLCMs for Se &amp; Sp estimation with covariates</h3>
 <h4 class="author">Sonja Hartnack</h4>
 <h4 class="author">Eleftherios Meletis</h4>
-<h4 class="date">2020-02-11</h4>
+<h4 class="date">2020-02-12</h4>
 
 </div>
 
@@ -388,14 +388,227 @@ summary {
 <li>Eleftherios Meletis</li>
 </ul>
 </div>
-<div id="slide" class="section level2">
-<h2>Slide</h2>
+<div id="recap" class="section level2">
+<h2>Recap</h2>
+<p>We looked at a GLM-type formulation of this model yesterday:</p>
+<pre><code>model{
+
+  for(i in 1:N){
+    Status ~ dcat(prob[i, ])
+  
+      prob[i,1] &lt;- (prev[i] * ((1-se[1])*(1-se[2]))) + 
+                  ((1-prev[i]) * ((sp[1])*(sp[2])))
+      prob[i,2] &lt;- (prev[i] * ((se[1])*(1-se[2]))) + 
+                  ((1-prev[i]) * ((1-sp[1])*(sp[2])))
+      prob[i,3] &lt;- (prev[i] * ((1-se[1])*(se[2]))) + 
+                  ((1-prev[i]) * ((sp[1])*(1-sp[2])))
+      prob[i,4] &lt;- (prev[i] * ((se[1])*(se[2]))) + 
+                  ((1-prev[i]) * ((1-sp[1])*(1-sp[2])))
+      
+      logit(prev[i]) &lt;- intercept + population_effect[Population[i]]
+  }
+
+  intercept ~ dnorm(0, 0.33)
+  population_effect[1] &lt;- 0
+  for(p in 2:Pops){
+    population_effect[p] ~ dnorm(0, 0.1)
+  }
+  se[1] ~ dbeta(HPSe[1,1], HPSe[1,2])T(1-sp[1], )
+  sp[1] ~ dbeta(HPSp[1,1], HPSp[1,2])
+  se[2] ~ dbeta(HPSe[2,1], HPSe[2,2])T(1-sp[2], )
+  sp[2] ~ dbeta(HPSp[2,1], HPSp[2,2])
+
+  #data# Status, N, Population, Pops, HPSe, HPSp
+  #monitor# intercept, population_effect, se, sp
+  #inits# intercept, population_effect, se, sp
+}</code></pre>
+<hr />
+<p>We can think of “Population” as a covariate, and add others. For example:</p>
+<pre class="r"><code>se1 &lt;- 0.9
+sp1 &lt;- 0.95
+sp2 &lt;- 0.99
+se2 &lt;- 0.8
+
+int &lt;- -1.5
+pop_eff &lt;- c(0, 1.5, 3)
+sex_eff &lt;- c(0, 0.2)
+age_eff &lt;- 0.1
+N &lt;- 300
+
+simdata &lt;- data.frame(
+  Population = sample(seq_along(pop_eff), N, replace=TRUE),
+  Sex = sample(seq_along(sex_eff), N, replace=TRUE),
+  Age = runif(N, -3, 3)
+  )
+simdata$logitprob &lt;- with(simdata, int + pop_eff[Population] + sex_eff[Sex] + age_eff*Age)
+
+simdata$status &lt;- rbinom(N, 1, plogis(simdata$logitprob))
+simdata$Test1 &lt;- rbinom(N, 1, (simdata$status * se1) + ((1-simdata$status) * (1-sp1)))
+simdata$Test2 &lt;- rbinom(N, 1, (simdata$status * se2) + ((1-simdata$status) * (1-sp2)))
+  
+head(simdata)</code></pre>
+<pre><code>##   Population Sex        Age   logitprob status Test1 Test2
+## 1          2   2 -2.9126654 -0.09126654      1     1     1
+## 2          1   1 -2.0484078 -1.70484078      0     0     0
+## 3          2   1  1.9729907  0.19729907      1     1     0
+## 4          2   1  0.3878932  0.03878932      1     1     1
+## 5          1   1 -0.4714362 -1.54714362      0     0     0
+## 6          1   1  0.7964522 -1.42035478      0     0     0</code></pre>
+<hr />
+<p>We can cheat a bit and use template.jags to help set up part of the model:</p>
+<pre class="r"><code>simdata$Population &lt;- factor(simdata$Population, levels=seq_along(pop_eff), labels=paste0(&#39;Pop_&#39;, seq_along(pop_eff)))
+simdata$Sex &lt;- factor(simdata$Sex, levels=seq_along(sex_eff), labels=c(&#39;female&#39;,&#39;male&#39;))
+
+runjags::template.jags(status ~ Population + Sex + Age, data=simdata, file=&#39;glmtemplate.bug&#39;, family=&#39;binomial&#39;, effect.prior = &#39;dnorm(0, 0.1)&#39;, write.data=FALSE)</code></pre>
+<pre><code>## Your model template was created at &quot;glmtemplate.bug&quot; - it is highly advisable to examine the model syntax to be sure it is as intended
+## You can then run the model using run.jags(&quot;glmtemplate.bug&quot;, data=data) - where &quot;data&quot; is the same data frame specified to the template.jags function</code></pre>
+<p>The lines you need from this auto-generated model are #17:</p>
+<pre><code>##  logit(regression_prob[i]) &lt;- intercept + Age_coefficient * Age[i] + Population_effect[Population[i]] + Sex_effect[Sex[i]]</code></pre>
+<p>[And change <code>regression_prob´ to</code>prev`]</p>
+<hr />
+<p>And also lines 21:27 - changing priors as needed:</p>
+<pre><code>## intercept ~ dnorm(0, 0.1)
+## Age_coefficient ~ dnorm(0, 0.1)
+## Population_effect[1] &lt;- 0    # Factor level &quot;Pop_1&quot;
+## Population_effect[2] ~ dnorm(0, 0.1)    # Factor level &quot;Pop_2&quot;
+## Population_effect[3] ~ dnorm(0, 0.1)    # Factor level &quot;Pop_3&quot;
+## Sex_effect[1] &lt;- 0    # Factor level &quot;female&quot;
+## Sex_effect[2] ~ dnorm(0, 0.1)    # Factor level &quot;male&quot;</code></pre>
+<hr />
+<p>Line 33 may also be helpful (we don’t need deviance, dic or resid.sum.sq):</p>
+<pre><code>## #monitor# intercept, Age_coefficient, Population_effect, Sex_effect, deviance, dic, resid.sum.sq</code></pre>
+<hr />
+<p>And lines 39-57 for initial values:</p>
+<pre><code>## inits{
+## &quot;intercept&quot; &lt;- 1
+## &quot;Age_coefficient&quot; &lt;- -1
+## &quot;Population_effect&quot; &lt;- c(NA, -1, -1)
+## &quot;Sex_effect&quot; &lt;- c(NA, 1)
+## }
+## 
+## inits{
+## &quot;intercept&quot; &lt;- 1
+## &quot;Age_coefficient&quot; &lt;- -1
+## &quot;Population_effect&quot; &lt;- c(NA, -1, -1)
+## &quot;Sex_effect&quot; &lt;- c(NA, -1)
+## }</code></pre>
+<hr />
+<p>Combine the two models, add initial values for se and sp, and also add a `#data# N, Status, Age, Population, Sex´ block, and modify the priors for test1 se/sp.</p>
+<pre><code>## model{
+## 
+##   for(i in 1:N){
+##      Status[i] ~ dcat(prob[i, ])
+##   
+##      prob[i,1] &lt;- (prev[i] * ((1-se[1])*(1-se[2]))) + 
+##                ((1-prev[i]) * ((sp[1])*(sp[2])))
+##      prob[i,2] &lt;- (prev[i] * ((se[1])*(1-se[2]))) + 
+##                ((1-prev[i]) * ((1-sp[1])*(sp[2])))
+##      prob[i,3] &lt;- (prev[i] * ((1-se[1])*(se[2]))) + 
+##                ((1-prev[i]) * ((sp[1])*(1-sp[2])))
+##      prob[i,4] &lt;- (prev[i] * ((se[1])*(se[2]))) + 
+##                ((1-prev[i]) * ((1-sp[1])*(1-sp[2])))
+##    
+##      logit(prev[i]) &lt;- intercept + Age_coefficient * Age[i] + Population_effect[Population[i]] + Sex_effect[Sex[i]]
+##  }
+## 
+##  se[1] ~ dbeta(148.43, 16.49)T(1-sp[1], )
+##  sp[1] ~ dbeta(240.03, 12.63)
+## 
+##  se[2] ~ dbeta(1,1)T(1-sp[2], )
+##  sp[2] ~ dbeta(1,1)
+## 
+## 
+##  intercept ~ dnorm(0, 0.33)
+##  Age_coefficient ~ dnorm(0, 0.1)
+##  Population_effect[1] &lt;- 0    # Factor level &quot;Pop_1&quot;
+##  Population_effect[2] ~ dnorm(0, 0.1)    # Factor level &quot;Pop_2&quot;
+##  Population_effect[3] ~ dnorm(0, 0.1)    # Factor level &quot;Pop_3&quot;
+##  Sex_effect[1] &lt;- 0    # Factor level &quot;female&quot;
+##  Sex_effect[2] ~ dnorm(0, 0.1)    # Factor level &quot;male&quot;
+## }
+## 
+## #monitor# intercept, Age_coefficient, Population_effect, Sex_effect, se, sp
+## #data# N, Status, Age, Population, Sex
+## 
+## 
+## ######################################################################################################
+## ######################################################################################################
+## #### Initial values 
+## ######################################################################################################
+## ######################################################################################################
+## 
+## inits{
+## &quot;intercept&quot; &lt;- -1
+## &quot;Age_coefficient&quot; &lt;- 1
+## &quot;Population_effect&quot; &lt;- c(NA, 1, -1)
+## &quot;Sex_effect&quot; &lt;- c(NA, 1)
+## &quot;se&quot; &lt;- c(0.5, 0.99)
+## &quot;sp&quot; &lt;- c(0.99, 0.5)
+## }
+## 
+## inits{
+## &quot;intercept&quot; &lt;- 1
+## &quot;Age_coefficient&quot; &lt;- -1
+## &quot;Population_effect&quot; &lt;- c(NA, -1, 1)
+## &quot;Sex_effect&quot; &lt;- c(NA, -1)
+## &quot;se&quot; &lt;- c(0.99, 0.5)
+## &quot;sp&quot; &lt;- c(0.5, 0.99)
+## }</code></pre>
+<hr />
+<p>To run the model:</p>
+<pre class="r"><code>N &lt;- nrow(simdata)
+simdata$Status &lt;- with(simdata, factor(interaction(Test1, Test2), levels=c(&#39;0.0&#39;,&#39;1.0&#39;,&#39;0.1&#39;,&#39;1.1&#39;)))</code></pre>
+<pre class="r"><code>results &lt;- run.jags(&#39;HW_GLM_coefs.bug&#39;, data=simdata)
+results</code></pre>
+<hr />
+<pre><code>## 
+## JAGS model summary statistics from 20000 samples (chains = 2; adapt+burnin = 5000):
+##                                                                        
+##                        Lower95  Median Upper95    Mean       SD    Mode
+## intercept              -2.5118 -1.8129 -1.1484 -1.8198  0.34224 -1.8047
+## Age_coefficient       -0.06389 0.11134 0.28753 0.11173  0.08933 0.10934
+## Population_effect[1]         0       0       0       0        0       0
+## Population_effect[2]    1.0971  1.8202  2.6101  1.8276  0.38769  1.8211
+## Population_effect[3]    1.5928  2.3509  3.0997  2.3543  0.38546  2.3499
+## Sex_effect[1]                0       0       0       0        0       0
+## Sex_effect[2]        -0.048858 0.52302  1.1071 0.52299  0.29648 0.54568
+## se[1]                  0.84597 0.88955  0.9296 0.88868 0.021614 0.89163
+## se[2]                  0.73011 0.80753 0.88197 0.80619 0.038814 0.81177
+## sp[1]                  0.92561 0.95236 0.97479 0.95117 0.012773  0.9536
+## sp[2]                  0.89179 0.94748  0.9951  0.9449 0.027802 0.95169
+##                                                                 
+##                           MCerr MC%ofSD SSeff      AC.10    psrf
+## intercept              0.008943     2.6  1465    0.22868   1.001
+## Age_coefficient      0.00082667     0.9 11677   0.011045  1.0001
+## Population_effect[1]         --      --    --         --      --
+## Population_effect[2]  0.0086571     2.2  2006    0.16987  1.0003
+## Population_effect[3]  0.0087032     2.3  1962    0.17016  1.0005
+## Sex_effect[1]                --      --    --         --      --
+## Sex_effect[2]         0.0042663     1.4  4829   0.012605  1.0005
+## se[1]                0.00024169     1.1  7997 0.00056384 0.99996
+## se[2]                0.00039459       1  9676 -0.0091075  1.0001
+## sp[1]                0.00012924       1  9768  0.0047124 0.99996
+## sp[2]                0.00033421     1.2  6920  0.0096925  1.0001
+## 
+## Total time taken: 2.1 minutes</code></pre>
+<hr />
+<p>Compare these to the simulation parameters:</p>
+<pre><code>## int:  -1.5</code></pre>
+<pre><code>## age_eff:  0.1</code></pre>
+<pre><code>## pop_eff:  0, 1.5, 3</code></pre>
+<pre><code>## sex_eff:  0, 0.2</code></pre>
+<pre><code>## se1:  0.9</code></pre>
+<pre><code>## se2:  0.8</code></pre>
+<pre><code>## sp1:  0.95</code></pre>
+<pre><code>## sp2:  0.99</code></pre>
 </div>
 <div id="exercise" class="section level2">
 <h2>Exercise</h2>
+<p>Instructions here</p>
 </div>
-<div id="solution" class="section level2">
-<h2>Solution</h2>
+<div id="summary" class="section level2">
+<h2>Summary</h2>
+<p>Take-away points</p>
 </div>
 </div>
 

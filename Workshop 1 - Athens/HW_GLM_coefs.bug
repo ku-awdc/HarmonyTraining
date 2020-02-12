@@ -1,0 +1,60 @@
+model{
+
+  for(i in 1:N){
+		Status[i] ~ dcat(prob[i, ])
+  
+		prob[i,1] <- (prev[i] * ((1-se[1])*(1-se[2]))) + 
+	              ((1-prev[i]) * ((sp[1])*(sp[2])))
+		prob[i,2] <- (prev[i] * ((se[1])*(1-se[2]))) + 
+	              ((1-prev[i]) * ((1-sp[1])*(sp[2])))
+		prob[i,3] <- (prev[i] * ((1-se[1])*(se[2]))) + 
+	              ((1-prev[i]) * ((sp[1])*(1-sp[2])))
+		prob[i,4] <- (prev[i] * ((se[1])*(se[2]))) + 
+	              ((1-prev[i]) * ((1-sp[1])*(1-sp[2])))
+	  
+		logit(prev[i]) <- intercept + Age_coefficient * Age[i] + Population_effect[Population[i]] + Sex_effect[Sex[i]]
+	}
+
+	se[1] ~ dbeta(148.43, 16.49)T(1-sp[1], )
+	sp[1] ~ dbeta(240.03, 12.63)
+
+	se[2] ~ dbeta(1,1)T(1-sp[2], )
+	sp[2] ~ dbeta(1,1)
+
+
+	intercept ~ dnorm(0, 0.33)
+	Age_coefficient ~ dnorm(0, 0.1)
+	Population_effect[1] <- 0    # Factor level "Pop_1"
+	Population_effect[2] ~ dnorm(0, 0.1)    # Factor level "Pop_2"
+	Population_effect[3] ~ dnorm(0, 0.1)    # Factor level "Pop_3"
+	Sex_effect[1] <- 0    # Factor level "female"
+	Sex_effect[2] ~ dnorm(0, 0.1)    # Factor level "male"
+}
+
+#monitor# intercept, Age_coefficient, Population_effect, Sex_effect, se, sp
+#data# N, Status, Age, Population, Sex
+
+
+######################################################################################################
+######################################################################################################
+#### Initial values 
+######################################################################################################
+######################################################################################################
+
+inits{
+"intercept" <- -1
+"Age_coefficient" <- 1
+"Population_effect" <- c(NA, 1, -1)
+"Sex_effect" <- c(NA, 1)
+"se" <- c(0.5, 0.99)
+"sp" <- c(0.99, 0.5)
+}
+
+inits{
+"intercept" <- 1
+"Age_coefficient" <- -1
+"Population_effect" <- c(NA, -1, 1)
+"Sex_effect" <- c(NA, -1)
+"se" <- c(0.99, 0.5)
+"sp" <- c(0.5, 0.99)
+}

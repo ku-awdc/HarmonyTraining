@@ -2,7 +2,6 @@
 title: Hands-on training session 2
 subtitle: Hui-Walter models for diagnostic test evaluation
 date: "`r Sys.Date()`"
-fontsize: 12pt
 author:
   - Matt Denwood
   - Giles Innocent
@@ -11,24 +10,29 @@ aspectratio: 43
 colortheme: seahorse
 header-includes: 
   - \input{preamble}
-fig_caption: true
-classoption: compress, c
+params:
+  presentation: TRUE
 output:
-    beamer_presentation:
-        pandoc_args: ["-t", "beamer"]
-        slide_level: 2
-    html_document: default
+  beamer_presentation:
+      pandoc_args: ["-t", "beamer"]
+      slide_level: 2
+  html_document: default
 ---
 
 ```{r rendering, eval=FALSE, include=FALSE}
-# To render this as both html and PDF (beamer) slides run:
-rmarkdown::render('Adv2_HuiWalter.Rmd', 'all')
-# Or just for html:
-rmarkdown::render('Adv2_HuiWalter.Rmd', 'html_document')
+# To render this as PDF (beamer) slides run:
+rmarkdown::render('Adv2_HuiWalter.Rmd', 'beamer_presentation', params=list(presentation=TRUE))
+# And for html:
+rmarkdown::render('Adv2_HuiWalter.Rmd', 'html_document', params=list(presentation=FALSE))
 ```
 
 ```{r setup, include=FALSE}
+# Reduce the width of R code output for PDF only:
+if(params$presentation) options(width=60)
 knitr::opts_chunk$set(echo = TRUE)
+
+library('runjags')
+runjags.options(silent.jags=TRUE)
 ```
 
 # Introduction
@@ -49,7 +53,7 @@ Teachers:
 
 Important points from session 1
 
-
+TODO
 
 
 # Session 2a:  Hui-Walter models for 2 tests and 1 population
@@ -62,18 +66,121 @@ Rabbits and hats
 
 ## Model Specification
 
-Care with order of combinations in dmultinom
+
+```{r include=FALSE}
+hw_definition <- "model{
+  Tally ~ dmulti(prob, TotalTests)
+  
+  # Test1- Test2-
+	prob[1] <- (prev * ((1-se[1])*(1-se[2]))) + ((1-prev) * ((sp[1])*(sp[2])))
+
+  # Test1+ Test2-
+	prob[2] <- (prev * ((se[1])*(1-se[2]))) + ((1-prev) * ((1-sp[1])*(sp[2])))
+
+  # Test1- Test2+
+	prob[3] <- (prev * ((1-se[1])*(se[2]))) + ((1-prev) * ((sp[1])*(1-sp[2])))
+
+  # Test1+ Test2+
+	prob[4] <- (prev * ((se[1])*(se[2]))) + ((1-prev) * ((1-sp[1])*(1-sp[2])))
+ 
+  prev ~ dbeta(1, 1)
+  se[1] ~ dbeta(1, 1)
+  sp[1] ~ dbeta(1, 1)
+  se[2] ~ dbeta(1, 1)
+  sp[2] ~ dbeta(1, 1)
+
+  #data# Tally, TotalTests
+  #monitor# prev, prob, se, sp
+  #inits# prev, se, sp
+}
+"
+cat(hw_definition, file='basic_hw.bug')
+```
+
+```{r comment='', echo=FALSE}
+cat(hw_definition, sep='\n')
+```
+
+---
+
+- And run it:
+
+```{r}
+twoXtwo <- matrix(c(48, 12, 4, 36), ncol=2, nrow=2)
+twoXtwo
+
+library('runjags')
+
+Tally <- as.numeric(twoXtwo)
+TotalTests <- sum(Tally)
+
+prev <- list(chain1=0.05, chain2=0.95)
+se <- list(chain1=c(0.5,0.99), chain2=c(0.99,0.5))
+sp <- list(chain1=c(0.5,0.99), chain2=c(0.99,0.5))
+
+results <- run.jags('basic_hw.bug', n.chains=2)
+```
+
+[Remember to check convergence and effective sample size!]
+
+---
+
+```{r}
+results
+```
+
+---
+
+```{r echo=FALSE}
+res <- summary(results)[,c(1:3,9,11)]
+res[] <- round(res, 3)
+knitr::kable(res)
+```
+
+- Note wide confidence intervals
 
 
 ## Practicalities
 
-Works best with strong priors for one of the tests
-
-Label switching (se+sp > 0.5)
+Care with order of combinations in dmultinom
 
 Lots of data needed
 
-Convergence tricky
+  * And/or strong priors for one of the tests
+
+Convergence can be tricky
+
+
+## Label Switching
+
+How to interpret a test with Se=0% and Sp=0%?
+
+...
+
+The test is perfect - we are just holding it upside down...
+
+...
+
+We can force se+sp >= 1:
+
+```{r eval=FALSE}
+  se[1] ~ dbeta(1, 1)
+  sp[1] ~ dbeta(1, 1)T(1-se[1], )
+```
+
+...
+
+Or:
+
+```{r eval=FALSE}
+  se[1] ~ dbeta(1, 1)T(1-sp[1], )
+  sp[1] ~ dbeta(1, 1)
+```
+
+But not both!
+
+This allows the test to be useless, but not worse than useless
+
 
 ## Simulating data
 
@@ -81,39 +188,139 @@ How to simulate data for this and checking we can recover parameter values
 
 
 ```{r}
-# R code simulating data
-# Parameters
-Prev1 <- 0.8  # prevalence
-Se1 <- 0.8    # test sensitivity
-Sp1 <- 0.95   # test specificity
-n.obs <- 50   # Number of individuals tested (number of observations)
-n.burnin <- 2000  # number of burn-in iterations for MCMC
-n.sample <- 2000  # number of samples to take after burn-in
-# simulation
-true.positive <- rbinom(1, n.obs, Prev1)
-test.positive <- rbinom(1, true.positive, Se1)
-test.positive <- test.positive + rbinom(1, n.obs-true.positive, 1-Sp1)
-# Jags/R code analysing data
+se1 <- 0.9
+sp1 <- 0.95
+sp2 <- 0.99
+se2 <- 0.8
+prevalence <- 0.5
+N <- 100
+
+status <- rbinom(N, 1, prevalence)
+Test1 <- rbinom(N, 1, (status * se1) + ((1-status) * (1-sp1)))
+Test2 <- rbinom(N, 1, (status * se2) + ((1-status) * (1-sp2)))
+
+twoXtwo <- table(Test1, Test2)
+twoXtwo
+Tally <- as.numeric(twoXtwo)
 ```
 
 
 ## Exercise
 
+Modify code to force tests to be better than useless
+
 Simulate data and recover parameters
 
-Play around with different priors and watch autocorrelation etc
+  * N=10, N=100, N=1000
+
+
+## Optional Exercise
+
+Use priors for test1 taken from session 1 and look again at the results
+
+
+## Solution
+
+Model definition:
+
+```{r include=FALSE}
+hw_definition <- "model{
+  Tally ~ dmulti(prob, TotalTests)
+  
+  # Test1- Test2-
+	prob[1] <- (prev * ((1-se[1])*(1-se[2]))) + ((1-prev) * ((sp[1])*(sp[2])))
+
+  # Test1+ Test2-
+	prob[2] <- (prev * ((se[1])*(1-se[2]))) + ((1-prev) * ((1-sp[1])*(sp[2])))
+
+  # Test1- Test2+
+	prob[3] <- (prev * ((1-se[1])*(se[2]))) + ((1-prev) * ((sp[1])*(1-sp[2])))
+
+  # Test1+ Test2+
+	prob[4] <- (prev * ((se[1])*(se[2]))) + ((1-prev) * ((1-sp[1])*(1-sp[2])))
+ 
+  prev ~ dbeta(1, 1)
+  se[1] ~ dbeta(HPSe[1,1], HPSe[1,2])T(1-sp[1], )
+  sp[1] ~ dbeta(HPSp[1,1], HPSp[1,2])
+  se[2] ~ dbeta(HPSe[2,1], HPSe[2,2])T(1-sp[2], )
+  sp[2] ~ dbeta(HPSp[2,1], HPSp[2,2])
+
+  #data# Tally, TotalTests, HPSe, HPSp
+  #monitor# prev, prob, se, sp
+  #inits# prev, se, sp
+}
+"
+cat(hw_definition, file='basic_hw.bug')
+```
+
+```{r comment='', echo=FALSE}
+cat(hw_definition, sep='\n')
+```
+
+Note that we specify the prior hyperparameters as data so we can change these from R without havíng to edit the model file (this is optional!)
+
+```{r}
+se1 <- 0.9
+sp1 <- 0.95
+sp2 <- 0.99
+se2 <- 0.8
+prevalence <- 0.5
+
+N <- 100
+
+status <- rbinom(N, 1, prevalence)
+Test1 <- rbinom(N, 1, (status * se1) + ((1-status) * (1-sp1)))
+Test2 <- rbinom(N, 1, (status * se2) + ((1-status) * (1-sp2)))
+
+twoXtwo <- table(Test1, Test2)
+twoXtwo
+
+library('runjags')
+
+Tally <- as.numeric(twoXtwo)
+TotalTests <- sum(Tally)
+HPSe <- matrix(c(1,1,1,1), nrow=2, ncol=2)
+HPSp <- matrix(c(1,1,1,1), nrow=2, ncol=2)
+
+prev <- list(chain1=0.05, chain2=0.95)
+se <- list(chain1=c(0.5,0.99), chain2=c(0.99,0.5))
+sp <- list(chain1=c(0.5,0.99), chain2=c(0.99,0.5))
+
+results <- run.jags('basic_hw.bug', n.chains=2)
+results
+```
+
+
+## Optional Solution
+
+```{r}
+HPSe[1,] <- c(148.43, 16.49)
+HPSp[1,] <- c(240.03, 12.63)
+
+HPSe
+HPSp
+
+results <- run.jags('basic_hw.bug', n.chains=2)
+results
+```
 
 
 # Session 2b:  Hui-Walter models for 2 tests and N populations
 
 ## Model specification 1
 
-Independent intercepts for populations
+Independent intercepts for populations (standard)
 
 
 ## Model specification 2
 
-Random effect of population
+GLM-style with fixed effects of populations
+
+Or random effects of populations
+  
+  * Or covariates
+
+Note it runs slower
 
 
 ## Practicalities
@@ -135,7 +342,45 @@ And correlations on/off as matrices?
 
 Will be in runjags at some point
 
+Add force tests to be better than useless
+
+```{r}
+se1 <- 0.9
+sp1 <- 0.95
+sp2 <- 0.99
+se2 <- 0.8
+prevalences <- 0.5#c(0.1, 0.5, 0.9)
+N <- 100
+
+simdata <- data.frame(
+  Population = rep(seq_along(prevalences), each=N),
+  probability = rep(prevalences, each=N)
+  )
+simdata$status <- rbinom(N, 1, simdata$probability)
+simdata$Test1 <- rbinom(N, 1, (simdata$status * se1) + ((1-simdata$status) * (1-sp1)))
+simdata$Test2 <- rbinom(N, 1, (simdata$status * se2) + ((1-simdata$status) * (1-sp2)))
+  
+head(simdata)
+```
+
+---
+
+```{r}
+source("autohuiwalter.R")
+auto_huiwalter(simdata[,c('Population','Test1','Test2')], outfile='automodel.bug')
+```
+
+
 ## Exercise
 
 Play around with the autohuiwalter function
 
+Notice the model and data and initial values are in a self contained file
+
+Ignore the covse and covsp for now
+
+
+What would be useful to add to the function?
+
+
+## Summary

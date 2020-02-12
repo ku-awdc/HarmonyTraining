@@ -2,7 +2,6 @@
 title: Hands-on training session 4
 subtitle: BLCMs for Se & Sp estimation with covariates
 date: "`r Sys.Date()`"
-fontsize: 12pt
 author:
   - Sonja Hartnack
   - Eleftherios Meletis
@@ -11,25 +10,31 @@ aspectratio: 43
 colortheme: seahorse
 header-includes: 
   - \input{preamble}
-fig_caption: true
-classoption: compress, c
+params:
+  presentation: TRUE
 output:
-    beamer_presentation:
-        pandoc_args: ["-t", "beamer"]
-        slide_level: 2
-    html_document: default
+  beamer_presentation:
+      pandoc_args: ["-t", "beamer"]
+      slide_level: 2
+  html_document: default
 ---
 
 ```{r rendering, eval=FALSE, include=FALSE}
-# To render this as both html and PDF (beamer) slides run:
-rmarkdown::render('Adv4_Covariates.Rmd', 'all')
-# Or just for html:
-rmarkdown::render('Adv4_Covariates.Rmd', 'html_document')
+# To render this as PDF (beamer) slides run:
+rmarkdown::render('Adv4_Covariates.Rmd', 'beamer_presentation', params=list(presentation=TRUE))
+# And for html:
+rmarkdown::render('Adv4_Covariates.Rmd', 'html_document', params=list(presentation=FALSE))
 ```
 
 ```{r setup, include=FALSE}
+# Reduce the width of R code output for PDF only:
+if(params$presentation) options(width=60)
 knitr::opts_chunk$set(echo = TRUE)
+
+library('runjags')
+runjags.options(silent.jags=TRUE)
 ```
+
 
 # Session 4:  BLCMs for Se & Sp estimation with covariates
 
@@ -45,9 +50,190 @@ Teachers:
   - Sonja Hartnack (presenter)
   - Eleftherios Meletis
   
-## Slide
+## Recap
+
+We looked at a GLM-type formulation of this model yesterday:
+
+```{r include=FALSE}
+glmhw_definition <- "model{
+
+  for(i in 1:N){
+    Status ~ dcat(prob[i, ])
+  
+	  prob[i,1] <- (prev[i] * ((1-se[1])*(1-se[2]))) + 
+	              ((1-prev[i]) * ((sp[1])*(sp[2])))
+	  prob[i,2] <- (prev[i] * ((se[1])*(1-se[2]))) + 
+	              ((1-prev[i]) * ((1-sp[1])*(sp[2])))
+	  prob[i,3] <- (prev[i] * ((1-se[1])*(se[2]))) + 
+	              ((1-prev[i]) * ((sp[1])*(1-sp[2])))
+	  prob[i,4] <- (prev[i] * ((se[1])*(se[2]))) + 
+	              ((1-prev[i]) * ((1-sp[1])*(1-sp[2])))
+	  
+	  logit(prev[i]) <- intercept + population_effect[Population[i]]
+  }
+
+  intercept ~ dnorm(0, 0.33)
+  population_effect[1] <- 0
+  for(p in 2:Pops){
+    population_effect[p] ~ dnorm(0, 0.1)
+  }
+  se[1] ~ dbeta(HPSe[1,1], HPSe[1,2])T(1-sp[1], )
+  sp[1] ~ dbeta(HPSp[1,1], HPSp[1,2])
+  se[2] ~ dbeta(HPSe[2,1], HPSe[2,2])T(1-sp[2], )
+  sp[2] ~ dbeta(HPSp[2,1], HPSp[2,2])
+
+  #data# Status, N, Population, Pops, HPSe, HPSp
+  #monitor# intercept, population_effect, se, sp
+  #inits# intercept, population_effect, se, sp
+}
+"
+cat(glmhw_definition, file='glm_hw.bug')
+```
+
+
+```{r comment='', echo=FALSE}
+cat(glmhw_definition, sep='\n')
+```
+
+---
+
+We can think of "Population" as a covariate, and add others.  For example:
+
+```{r echo=FALSE}
+set.seed(2020-02-12)
+```
+
+```{r}
+se1 <- 0.9
+sp1 <- 0.95
+sp2 <- 0.99
+se2 <- 0.8
+
+int <- -1.5
+pop_eff <- c(0, 1.5, 3)
+sex_eff <- c(0, 0.2)
+age_eff <- 0.1
+N <- 300
+
+simdata <- data.frame(
+  Population = sample(seq_along(pop_eff), N, replace=TRUE),
+  Sex = sample(seq_along(sex_eff), N, replace=TRUE),
+  Age = runif(N, -3, 3)
+  )
+simdata$logitprob <- with(simdata, int + pop_eff[Population] + sex_eff[Sex] + age_eff*Age)
+
+simdata$status <- rbinom(N, 1, plogis(simdata$logitprob))
+simdata$Test1 <- rbinom(N, 1, (simdata$status * se1) + ((1-simdata$status) * (1-sp1)))
+simdata$Test2 <- rbinom(N, 1, (simdata$status * se2) + ((1-simdata$status) * (1-sp2)))
+  
+head(simdata)
+```
+
+
+---
+
+We can cheat a bit and use template.jags to help set up part of the model:
+
+```{r}
+simdata$Population <- factor(simdata$Population, levels=seq_along(pop_eff), labels=paste0('Pop_', seq_along(pop_eff)))
+simdata$Sex <- factor(simdata$Sex, levels=seq_along(sex_eff), labels=c('female','male'))
+
+runjags::template.jags(status ~ Population + Sex + Age, data=simdata, file='glmtemplate.bug', family='binomial', effect.prior = 'dnorm(0, 0.1)', write.data=FALSE)
+```
+
+The lines you need from this auto-generated model are #17:
+
+```{r echo=FALSE}
+cat(readLines('glmtemplate.bug')[17], sep='\n')
+```
+
+[And change `regression_prob´ to `prev`]
+
+---
+
+And also lines 21:27 - changing priors as needed:
+
+```{r echo=FALSE}
+cat(readLines('glmtemplate.bug')[21:27], sep='\n')
+```
+
+---
+
+Line 33 may also be helpful (we don't need deviance, dic or resid.sum.sq):
+
+```{r echo=FALSE}
+cat(readLines('glmtemplate.bug')[33], sep='\n')
+```
+
+---
+
+And lines 39-57 for initial values:
+
+```{r echo=FALSE}
+cat(readLines('glmtemplate.bug')[45:57], sep='\n')
+```
+
+---
+
+Combine the two models, add initial values for se and sp, and also add a `#data# N, Status, Age, Population, Sex´ block, and modify the priors for test1 se/sp.
+
+```{r echo=FALSE}
+if(!params$presentation) cat(readLines('HW_GLM_coefs.bug'), sep='\n')
+```
+
+
+---
+
+To run the model:
+
+```{r}
+N <- nrow(simdata)
+simdata$Status <- with(simdata, factor(interaction(Test1, Test2), levels=c('0.0','1.0','0.1','1.1')))
+```
+
+```{r, eval=FALSE}
+results <- run.jags('HW_GLM_coefs.bug', data=simdata)
+results
+```
+
+---
+
+```{r, echo=FALSE}
+# Takes a long time to run so here are some pre-determined results:
+# save(results, file='HM_GLM_coefs.Rdata')
+load('HM_GLM_coefs.Rdata')
+results
+```
+
+---
+
+Compare these to the simulation parameters:
+
+```{r echo=FALSE}
+cat('int: ', int, '\n')
+cat('age_eff: ', paste(age_eff, collapse=', '), '\n')
+cat('pop_eff: ', paste(pop_eff, collapse=', '), '\n')
+cat('sex_eff: ', paste(sex_eff, collapse=', '), '\n')
+cat('se1: ', se1, '\n')
+cat('se2: ', se2, '\n')
+cat('sp1: ', sp1, '\n')
+cat('sp2: ', sp2, '\n')
+```
 
 
 ## Exercise
 
-## Solution
+Instructions here
+
+
+
+
+## Summary
+
+Take-away points
+
+```{r cleanup, include=FALSE}
+unlink('glmtemplate.bug')
+unlink('basic_hw.bug')
+unlink('automodel.bug')
+```

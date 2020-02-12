@@ -1,0 +1,31 @@
+model{
+
+  for(i in 1:N){
+    Status ~ dcat(prob[i, ])
+  
+	  prob[i,1] <- (prev[i] * ((1-se[1])*(1-se[2]))) + 
+	              ((1-prev[i]) * ((sp[1])*(sp[2])))
+	  prob[i,2] <- (prev[i] * ((se[1])*(1-se[2]))) + 
+	              ((1-prev[i]) * ((1-sp[1])*(sp[2])))
+	  prob[i,3] <- (prev[i] * ((1-se[1])*(se[2]))) + 
+	              ((1-prev[i]) * ((sp[1])*(1-sp[2])))
+	  prob[i,4] <- (prev[i] * ((se[1])*(se[2]))) + 
+	              ((1-prev[i]) * ((1-sp[1])*(1-sp[2])))
+	  
+	  logit(prev[i]) <- intercept + population_effect[Population[i]]
+  }
+
+  intercept ~ dnorm(0, 0.33)
+  population_effect[1] <- 0
+  for(p in 2:Pops){
+    population_effect[p] ~ dnorm(0, 0.1)
+  }
+  se[1] ~ dbeta(HPSe[1,1], HPSe[1,2])T(1-sp[1], )
+  sp[1] ~ dbeta(HPSp[1,1], HPSp[1,2])
+  se[2] ~ dbeta(HPSe[2,1], HPSe[2,2])T(1-sp[2], )
+  sp[2] ~ dbeta(HPSp[2,1], HPSp[2,2])
+
+  #data# Status, N, Population, Pops, HPSe, HPSp
+  #monitor# intercept, population_effect, se, sp
+  #inits# intercept, population_effect, se, sp
+}

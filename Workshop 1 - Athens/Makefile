@@ -3,8 +3,8 @@ SRC = $(wildcard *.Rmd)
 PDF   = $(SRC:.Rmd=.pdf)
 HTML  = $(SRC:.Rmd=.html)
 
-RENDER_H = @Rscript -e "rmarkdown::render('$<', 'html_document', params=list(solutions=TRUE))"
-RENDER_P = @Rscript -e "rmarkdown::render('$<', 'beamer_presentation', params=list(solutions=FALSE))"
+RENDER_H = @Rscript -e "rmarkdown::render('$<', 'html_document', params=list(presentation=FALSE))"
+RENDER_P = @Rscript -e "rmarkdown::render('$<', 'beamer_presentation', params=list(presentation=TRUE))"
 RENDER_B = @Rscript -e "rmarkdown::render('$<', 'all')"
 
 %.html:%.Rmd

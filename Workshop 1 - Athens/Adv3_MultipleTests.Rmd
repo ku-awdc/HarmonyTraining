@@ -2,7 +2,6 @@
 title: Hands-on training session 3
 subtitle: Hui-Walter models with more than two diagnostic tests
 date: "`r Sys.Date()`"
-fontsize: 12pt
 author:
   - Matt Denwood
   - Giles Innocent
@@ -12,25 +11,31 @@ aspectratio: 43
 colortheme: seahorse
 header-includes: 
   - \input{preamble}
-fig_caption: true
-classoption: compress, c
+params:
+  presentation: TRUE
 output:
-    beamer_presentation:
-        pandoc_args: ["-t", "beamer"]
-        slide_level: 2
-    html_document: default
+  beamer_presentation:
+      pandoc_args: ["-t", "beamer"]
+      slide_level: 2
+  html_document: default
 ---
 
 ```{r rendering, eval=FALSE, include=FALSE}
-# To render this as both html and PDF (beamer) slides run:
-rmarkdown::render('Adv3_MultipleTests.Rmd', 'all')
-# Or just for html:
-rmarkdown::render('Adv3_MultipleTests.Rmd', 'html_document')
+# To render this as PDF (beamer) slides run:
+rmarkdown::render('Adv3_MultipleTests.Rmd', 'beamer_presentation', params=list(presentation=TRUE))
+# And for html:
+rmarkdown::render('Adv3_MultipleTests.Rmd', 'html_document', params=list(presentation=FALSE))
 ```
 
 ```{r setup, include=FALSE}
+# Reduce the width of R code output for PDF only:
+if(params$presentation) options(width=60)
 knitr::opts_chunk$set(echo = TRUE)
+
+library('runjags')
+runjags.options(silent.jags=TRUE)
 ```
+
 
 # Introduction
 
@@ -84,6 +89,12 @@ Will likely be included in template.jags in future
 ## Exercise
 
 Simulate data from 3 or 4 tests and analyse
+
+
+## Optional Exercise
+
+What happens if some data is missing for 1 (or more) tests?
+
 
 # Session 3b:  Hui-Walter models for multiple tests with conditional depdendence
 

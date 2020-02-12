@@ -4,7 +4,7 @@
 
 
 # Function to be read in:
-auto_huiwalter <- function(testdata, outfile='huiwalter_model.txt', covon=TRUE, se_priors='dbeta(1,1)', sp_priors='dbeta(1,1)'){
+auto_huiwalter <- function(testdata, outfile='huiwalter_model.txt', covon=FALSE, se_priors='dbeta(1,1)', sp_priors='dbeta(1,1)'){
 
 	version <- 0.1 # 2019-05-16
 
@@ -76,7 +76,7 @@ auto_huiwalter <- function(testdata, outfile='huiwalter_model.txt', covon=TRUE, 
 	testcombos <- unique(na.omit(t(apply(expand.grid(1:ntests, 1:ntests), 1, function(x) if(x[1]==x[2]) c(NA,NA) else sort(x)))))
 	covcombs <- apply(testcombos,1,paste,collapse='')
 	testagree <- apply(testcombos,1,function(x) outcomes[[x[1]]] == outcomes[[x[2]]])
-	dimnames(testagree)[[2]] <- paste0('cc', covcombs)
+	dimnames(testagree) <- list(NULL, paste0('cc', covcombs))
 
 
 	datablock <- dump.format(list(Populations=npop))
@@ -187,7 +187,7 @@ auto_huiwalter <- function(testdata, outfile='huiwalter_model.txt', covon=TRUE, 
 	cat('\n#monitor# se, sp, prev', apply(expand.grid(c('covse','covsp'), apply(testcombos,1,paste,collapse='')),1,paste,collapse=''), sep=', ', file=outfile, append=TRUE)
 
 
-	warning("Inits for prev are wrong - follows ntests not npops??")
+	# TODO: Inits for prev are wrong - follows ntests not npops??
 
 	## Initial values:
 	alternate <- function(x,len){

@@ -11,7 +11,7 @@ colortheme: seahorse
 header-includes: 
   - \input{preamble}
 params:
-  solutions: TRUE
+  presentation: TRUE
 output:
   beamer_presentation:
       pandoc_args: ["-t", "beamer"]
@@ -21,12 +21,14 @@ output:
 
 ```{r rendering, eval=FALSE, include=FALSE}
 # To render this as PDF (beamer) slides run:
-rmarkdown::render('Adv1_Theory.Rmd', 'beamer_presentation', params=list(solutions=FALSE))
+rmarkdown::render('Adv1_Theory.Rmd', 'beamer_presentation', params=list(presentation=TRUE))
 # And for html:
-rmarkdown::render('Adv1_Theory.Rmd', 'html_document', params=list(solutions=TRUE))
+rmarkdown::render('Adv1_Theory.Rmd', 'html_document', params=list(presentation=FALSE))
 ```
 
 ```{r setup, include=FALSE}
+# Reduce the width of R code output for PDF only:
+if(params$presentation) options(width=60)
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
@@ -193,7 +195,7 @@ runjags.options(silent.jags=TRUE)
 
 ---
 
-First check for convergence based on trace plots:
+First check the plots for convergence:
 
 ```{r eval=FALSE, include=TRUE}
 plot(results)
@@ -205,11 +207,15 @@ pt <- plot(results)
 
 ---
 
+Trace plots: the two chains should be stationary:
+
 ```{r echo=FALSE}
 print(pt[[1]])
 ```
 
 ---
+
+ECDF plots: the two chains should be very close to each other:
 
 ```{r echo=FALSE}
 print(pt[[2]])
@@ -217,11 +223,15 @@ print(pt[[2]])
 
 ---
 
+Histogram of the combined chains should appear smooth:
+
 ```{r echo=FALSE}
 print(pt[[3]])
 ```
 
 ---
+
+Autocorrelation plot tells you how well behaved the model is:
 
 ```{r echo=FALSE}
 print(pt[[4]])
@@ -235,7 +245,8 @@ Then check the effective sample size (SSeff) and Gelman-Rubin statistic (psrf):
 results
 ```
 
-If these both look OK (psrf < 1.05 and SSeff > 1000) then you can use the posterior summary statistics.
+
+Reminder:  we want psrf < 1.05 and SSeff > 1000.  If these both look OK then you can use the posterior summary statistics.
 
 
 ## Exercise
@@ -258,7 +269,7 @@ If these both look OK (psrf < 1.05 and SSeff > 1000) then you can use the poster
   * Try using the `run.jags` argument `method='parallel'` - what affect does this have?
 
 
-`r if(!params$solutions) {"\\begin{comment}"}`
+`r if(params$presentation) {"\\begin{comment}"}`
 
 ## Solution
 
@@ -369,7 +380,7 @@ results4p
 Each chain is run in parallel, so as long as you have at least as many processors as chains then you will reduce the run time.  [Note: the run time is not reduced for this example because the model already runs very quickly and there is a small fixed overhead cost with parallelising chains - but as long as the model takes >= 30 seconds to run parallelising is worthwhile!]
   
 
-`r if(!params$solutions) {"\\end{comment}"}`
+`r if(params$presentation) {"\\end{comment}"}`
 
 
 # Session 1b:  Working with basic models (apparent prevalence)
@@ -400,7 +411,7 @@ model{
 }
 "
 
-run.jags(mt, n.chains=2)
+results <- run.jags(mt, n.chains=2)
 ```
 
 - But this makes the model harder to read, so I would generally stick to using a separate text file!
@@ -423,7 +434,7 @@ model{
 "
 .RNG.name <- "lecuyer::RngStream"
 .RNG.seed <- list(chain1=1, chain2=2)
-run.jags(mt, n.chains=2)
+results <- run.jags(mt, n.chains=2)
 ```
 
 
@@ -478,7 +489,7 @@ loop_definition <- "model{
   }
 
   # Prior part:
-  prevalence ~ dbeta(2, 2)
+  prevalence ~ dbeta(1, 1)
   
   # Hooks for automatic integration with R:
   #data# Status, TotalTests
@@ -537,7 +548,8 @@ cat(glm_definition, sep='\n')
 
 - We introduce a new distribution `dnorm()` - notice this is mean and precision, not mean and sd!
 
-- For a complete list of the distributions available see:  https://sourceforge.net/projects/mcmc-jags/files/Manuals/4.x/
+- For a complete list of the distributions available see:
+  * https://sourceforge.net/projects/mcmc-jags/files/Manuals/4.x/
   * This document is also provided on the GitHub repository
 
 - However, notice that the prior is specified differently...
@@ -563,7 +575,7 @@ One way to do this is to make all of the response data (i.e. either Positives or
   - The GLM model with prior `intercept ~ dnorm(0, 0.33)`
 
 
-`r if(!params$solutions) {"\\begin{comment}"}`
+`r if(params$presentation) {"\\begin{comment}"}`
 
 
 ## Solution
@@ -574,7 +586,7 @@ TODO
 
 TODO
 
-`r if(!params$solutions) {"\\end{comment}"}`
+`r if(params$presentation) {"\\end{comment}"}`
 
 
 # Session 1c:  Basics of latent-class models (imperfect test)
@@ -596,16 +608,15 @@ $$\implies Prev_{true} = \frac{Prev_{obs}-(1-Sp)}{Se-(1-Sp)}$$
 
 ```{r include=FALSE}
 imperfect_definition <- "model{
-  Positives ~ dbinom(obsprevalence, TotalTests)
-  obsprevalence <- (prevalence * se) + ((1-prevalence) * (1-sp))
+  Positives ~ dbinom(obsprev, TotalTests)
+  obsprev <- (prevalence * se) + ((1-prevalence) * (1-sp))
   
   prevalence ~ dbeta(1, 1)
   se ~ dbeta(1, 1)
   sp ~ dbeta(1, 1)
   
-  # Hooks for automatic integration with R:
   #data# Positives, TotalTests
-  #monitor# prevalence, obsprevalence, se, sp
+  #monitor# prevalence, obsprev, se, sp
   #inits# prevalence, se, sp
 }
 "
@@ -627,7 +638,16 @@ sp <- list(chain1=0.5, chain2=0.99)
 Positives <- 70
 TotalTests <- 100
 results <- run.jags('basicimperfect.bug', n.chains=2, burnin=0, sample=10000)
-results
+```
+
+[Remember to check convergence and effective sample size!]
+
+---
+
+```{r echo=FALSE}
+res <- summary(results)[,c(1:3,9,11)]
+res[] <- round(res, 3)
+knitr::kable(res)
 ```
 
 - What do these results tell us?
@@ -646,14 +666,14 @@ results
 - We can use the PriorGen package to generate Beta priors based on published results, for example:
 
 ```{r}
-library('PriorGen')
-
-findbeta(themean=0.9, percentile = 0.975, percentile.value = 0.8)
+PriorGen::findbeta(themean=0.9, percentile = 0.975, percentile.value = 0.8)
 ```
 
+---
+
 ```{r}
+qbeta(c(0.025, 0.5, 0.975), 41.82, 4.65)
 curve(dbeta(x, 41.82, 4.65), from=0, to=1)
-qbeta(c(0.025, 0.975), 41.82, 4.65)
 ```
 
 
@@ -673,7 +693,20 @@ Run the same model with se and sp fixed to the mean estimate - how does this aff
 Run the same model with se and sp fixed to 1 - how does this affect estimates and CI for prevalence?
 
 
+## Solution
 
+```{r}
+PriorGen::findbeta(themean=0.9, percentile = 0.975, percentile.value = 0.85)
+qbeta(c(0.025, 0.5, 0.975), 148.43, 16.49)
+curve(dbeta(x, 148.43, 16.49), from=0, to=1)
+
+PriorGen::findbeta(themean=0.95, percentile = 0.975, percentile.value = 0.92)
+qbeta(c(0.025, 0.5, 0.975), 240.03, 12.63)
+curve(dbeta(x, 240.03, 12.63), from=0, to=1)
+```
+
+
+## Summary
 
 ```{r cleanup, include=FALSE}
 unlink('basicjags.bug')
