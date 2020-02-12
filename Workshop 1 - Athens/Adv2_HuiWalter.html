@@ -454,30 +454,30 @@ results &lt;- run.jags(&#39;basic_hw.bug&#39;, n.chains=2)</code></pre>
 <pre class="r"><code>results</code></pre>
 <pre><code>## 
 ## JAGS model summary statistics from 20000 samples (chains = 2; adapt+burnin = 5000):
-##                                                                                
-##          Lower95   Median Upper95     Mean       SD     Mode      MCerr MC%ofSD
-## prev     0.31142  0.44151 0.57415  0.44224 0.067791  0.44177  0.0010443     1.5
-## prob[1]  0.36465  0.46222 0.55517  0.46202 0.048874  0.46179 0.00042405     0.9
-## prob[2]   0.0742  0.13248   0.203  0.13506  0.03349   0.1283 0.00028731     0.9
-## prob[3] 0.018655 0.055289 0.10376 0.058229 0.022938 0.051881 0.00023958       1
-## prob[4]  0.24975  0.34337 0.43414   0.3447 0.047034  0.34159 0.00039742     0.8
-## se[1]    0.82103  0.93161       1  0.92275 0.054032  0.96547 0.00071856     1.3
-## se[2]    0.68661  0.84529 0.99996   0.8422 0.091737  0.84763  0.0015737     1.7
-## sp[1]    0.74711  0.87786 0.99995  0.87479 0.073895  0.88234  0.0012869     1.7
-## sp[2]    0.86245  0.94768 0.99999   0.9407 0.041897  0.97132 0.00056717     1.4
+##                                                                               
+##          Lower95  Median Upper95     Mean       SD     Mode      MCerr MC%ofSD
+## prev     0.30941 0.44221  0.5765  0.44286 0.069032  0.44762  0.0010637     1.5
+## prob[1]  0.36895 0.46171 0.56227  0.46197 0.049206  0.46081 0.00042177     0.9
+## prob[2] 0.072874 0.13272 0.20142  0.13502 0.033459  0.12928 0.00028395     0.8
+## prob[3] 0.016534 0.05485 0.10169 0.057816 0.022826 0.051018 0.00023493       1
+## prob[4]  0.24911 0.34404 0.43408   0.3452 0.047247  0.34075 0.00041444     0.9
+## se[1]    0.82184 0.93192 0.99999  0.92318 0.053794  0.96082 0.00072562     1.3
+## se[2]     0.6858 0.84539 0.99999  0.84228 0.091698  0.84136  0.0015872     1.7
+## sp[1]    0.74725 0.87883 0.99989  0.87521 0.074273  0.88833  0.0012945     1.7
+## sp[2]    0.86315  0.9482 0.99999  0.94133 0.041414  0.97395 0.00054193     1.3
 ##                                 
 ##         SSeff      AC.10    psrf
-## prev     4214   0.033046  1.0003
-## prob[1] 13284 0.00090142 0.99999
-## prob[2] 13587  0.0087457 0.99996
-## prob[3]  9167 -0.0020017  1.0008
-## prob[4] 14006  0.0021518  1.0003
-## se[1]    5654  0.0090132   1.001
-## se[2]    3398   0.066355  1.0003
-## sp[1]    3297   0.065934       1
-## sp[2]    5457  0.0045147  1.0008
+## prev     4212   0.022115  1.0002
+## prob[1] 13611 -0.0069932 0.99995
+## prob[2] 13885 -0.0047928       1
+## prob[3]  9440 0.00067902 0.99996
+## prob[4] 12997  -0.014004  1.0002
+## se[1]    5496   0.012811  1.0004
+## se[2]    3338   0.039709       1
+## sp[1]    3292   0.044063 0.99996
+## sp[2]    5840   0.015344  1.0003
 ## 
-## Total time taken: 1.1 seconds</code></pre>
+## Total time taken: 1.4 seconds</code></pre>
 <hr />
 <table>
 <thead>
@@ -493,75 +493,75 @@ results &lt;- run.jags(&#39;basic_hw.bug&#39;, n.chains=2)</code></pre>
 <tbody>
 <tr class="odd">
 <td>prev</td>
-<td align="right">0.311</td>
+<td align="right">0.309</td>
 <td align="right">0.442</td>
-<td align="right">0.574</td>
-<td align="right">4214</td>
-<td align="right">1.000</td>
+<td align="right">0.576</td>
+<td align="right">4212</td>
+<td align="right">1</td>
 </tr>
 <tr class="even">
 <td>prob[1]</td>
-<td align="right">0.365</td>
+<td align="right">0.369</td>
 <td align="right">0.462</td>
-<td align="right">0.555</td>
-<td align="right">13284</td>
-<td align="right">1.000</td>
+<td align="right">0.562</td>
+<td align="right">13611</td>
+<td align="right">1</td>
 </tr>
 <tr class="odd">
 <td>prob[2]</td>
-<td align="right">0.074</td>
-<td align="right">0.132</td>
-<td align="right">0.203</td>
-<td align="right">13587</td>
-<td align="right">1.000</td>
+<td align="right">0.073</td>
+<td align="right">0.133</td>
+<td align="right">0.201</td>
+<td align="right">13885</td>
+<td align="right">1</td>
 </tr>
 <tr class="even">
 <td>prob[3]</td>
-<td align="right">0.019</td>
+<td align="right">0.017</td>
 <td align="right">0.055</td>
-<td align="right">0.104</td>
-<td align="right">9167</td>
-<td align="right">1.001</td>
+<td align="right">0.102</td>
+<td align="right">9440</td>
+<td align="right">1</td>
 </tr>
 <tr class="odd">
 <td>prob[4]</td>
-<td align="right">0.250</td>
-<td align="right">0.343</td>
+<td align="right">0.249</td>
+<td align="right">0.344</td>
 <td align="right">0.434</td>
-<td align="right">14006</td>
-<td align="right">1.000</td>
+<td align="right">12997</td>
+<td align="right">1</td>
 </tr>
 <tr class="even">
 <td>se[1]</td>
-<td align="right">0.821</td>
+<td align="right">0.822</td>
 <td align="right">0.932</td>
 <td align="right">1.000</td>
-<td align="right">5654</td>
-<td align="right">1.001</td>
+<td align="right">5496</td>
+<td align="right">1</td>
 </tr>
 <tr class="odd">
 <td>se[2]</td>
-<td align="right">0.687</td>
+<td align="right">0.686</td>
 <td align="right">0.845</td>
 <td align="right">1.000</td>
-<td align="right">3398</td>
-<td align="right">1.000</td>
+<td align="right">3338</td>
+<td align="right">1</td>
 </tr>
 <tr class="even">
 <td>sp[1]</td>
 <td align="right">0.747</td>
-<td align="right">0.878</td>
+<td align="right">0.879</td>
 <td align="right">1.000</td>
-<td align="right">3297</td>
-<td align="right">1.000</td>
+<td align="right">3292</td>
+<td align="right">1</td>
 </tr>
 <tr class="odd">
 <td>sp[2]</td>
-<td align="right">0.862</td>
+<td align="right">0.863</td>
 <td align="right">0.948</td>
 <td align="right">1.000</td>
-<td align="right">5457</td>
-<td align="right">1.001</td>
+<td align="right">5840</td>
+<td align="right">1</td>
 </tr>
 </tbody>
 </table>
@@ -596,7 +596,8 @@ results &lt;- run.jags(&#39;basic_hw.bug&#39;, n.chains=2)</code></pre>
 </div>
 <div id="simulating-data" class="section level2">
 <h2>Simulating data</h2>
-<p>How to simulate data for this and checking we can recover parameter values</p>
+<p>Analysing simulated data is useful to check that we can recover parameter values.</p>
+<p>Some simultion code:</p>
 <pre class="r"><code>se1 &lt;- 0.9
 sp1 &lt;- 0.95
 sp2 &lt;- 0.99
@@ -604,29 +605,29 @@ se2 &lt;- 0.8
 prevalence &lt;- 0.5
 N &lt;- 100
 
-status &lt;- rbinom(N, 1, prevalence)
-Test1 &lt;- rbinom(N, 1, (status * se1) + ((1-status) * (1-sp1)))
-Test2 &lt;- rbinom(N, 1, (status * se2) + ((1-status) * (1-sp2)))
+truestatus &lt;- rbinom(N, 1, prevalence)
+Test1 &lt;- rbinom(N, 1, (truestatus * se1) + ((1-truestatus) * (1-sp1)))
+Test2 &lt;- rbinom(N, 1, (truestatus * se2) + ((1-truestatus) * (1-sp2)))
 
 twoXtwo &lt;- table(Test1, Test2)
 twoXtwo</code></pre>
 <pre><code>##      Test2
 ## Test1  0  1
-##     0 49  4
-##     1 13 34</code></pre>
+##     0 44  5
+##     1 16 35</code></pre>
 <pre class="r"><code>Tally &lt;- as.numeric(twoXtwo)</code></pre>
 </div>
 <div id="exercise" class="section level2">
 <h2>Exercise</h2>
-<p>Modify code to force tests to be better than useless</p>
-<p>Simulate data and recover parameters</p>
+<p>Modify JAGS code to force tests to be better than useless</p>
+<p>Simulate data and recover parameters for:</p>
 <ul>
 <li>N=10, N=100, N=1000</li>
 </ul>
 </div>
 <div id="optional-exercise" class="section level2">
 <h2>Optional Exercise</h2>
-<p>Use priors for test1 taken from session 1 and look again at the results</p>
+<p>Use priors for test1 taken from session 1 and compare the results</p>
 </div>
 <div id="solution" class="section level2">
 <h2>Solution</h2>
@@ -665,16 +666,16 @@ prevalence &lt;- 0.5
 
 N &lt;- 100
 
-status &lt;- rbinom(N, 1, prevalence)
-Test1 &lt;- rbinom(N, 1, (status * se1) + ((1-status) * (1-sp1)))
-Test2 &lt;- rbinom(N, 1, (status * se2) + ((1-status) * (1-sp2)))
+truestatus &lt;- rbinom(N, 1, prevalence)
+Test1 &lt;- rbinom(N, 1, (truestatus * se1) + ((1-truestatus) * (1-sp1)))
+Test2 &lt;- rbinom(N, 1, (truestatus * se2) + ((1-truestatus) * (1-sp2)))
 
 twoXtwo &lt;- table(Test1, Test2)
 twoXtwo</code></pre>
 <pre><code>##      Test2
 ## Test1  0  1
-##     0 45  5
-##     1  8 42</code></pre>
+##     0 40  7
+##     1 13 40</code></pre>
 <pre class="r"><code>library(&#39;runjags&#39;)
 
 Tally &lt;- as.numeric(twoXtwo)
@@ -693,28 +694,28 @@ results &lt;- run.jags(&#39;basic_hw.bug&#39;, n.chains=2)</code></pre>
 ## JAGS model summary statistics from 20000 samples (chains = 2; adapt+burnin = 5000):
 ##                                                                                
 ##          Lower95   Median Upper95     Mean       SD     Mode      MCerr MC%ofSD
-## prev     0.36343  0.48242 0.60477  0.48274  0.06254  0.48321 0.00083998     1.3
-## prob[1]  0.33908   0.4314 0.52971  0.43162 0.048984  0.43398 0.00042042     0.9
-## prob[2] 0.042827 0.094565 0.15402 0.097341 0.029052 0.091011 0.00025559     0.9
-## prob[3] 0.023513 0.065531 0.11593 0.068139 0.024494 0.060181 0.00023532       1
-## prob[4]  0.30967  0.40224 0.49792   0.4029 0.048462  0.39976 0.00042394     0.9
-## se[1]    0.82846  0.93301 0.99998  0.92502 0.051633  0.96601 0.00076449     1.5
-## se[2]    0.77881  0.90369 0.99999  0.89761 0.066091  0.93351   0.001002     1.5
-## sp[1]    0.78673  0.90173 0.99999  0.89758 0.063251  0.91035 0.00093376     1.5
-## sp[2]    0.83384  0.93264 0.99997  0.92543 0.049892  0.95666 0.00066864     1.3
-##                                
-##         SSeff     AC.10    psrf
-## prev     5543  0.033475  1.0003
-## prob[1] 13575  0.005055  1.0009
-## prob[2] 12920  0.001709 0.99999
-## prob[3] 10834 0.0077988  1.0005
-## prob[4] 13067 0.0045425  1.0002
-## se[1]    4561  0.041172  1.0002
-## se[2]    4351  0.019443  1.0005
-## sp[1]    4588  0.028817  1.0002
-## sp[2]    5568  0.016282  1.0019
+## prev     0.33934  0.49293 0.64509  0.49249 0.078751  0.48648   0.001411     1.8
+## prob[1]  0.28829  0.38021 0.47325  0.38129 0.047191  0.37621 0.00039683     0.8
+## prob[2] 0.080197    0.144 0.21319  0.14638 0.034397   0.1408 0.00028662     0.8
+## prob[3] 0.038235 0.085727 0.14442 0.088392 0.028006 0.082032 0.00026263     0.9
+## prob[4]  0.29074  0.38315 0.47647  0.38394 0.047509  0.38204 0.00040976     0.9
+## se[1]    0.78555  0.90902 0.99999  0.90157 0.063895  0.93453 0.00092855     1.5
+## se[2]    0.70137  0.85638 0.99999  0.85269 0.087919  0.86365   0.001549     1.8
+## sp[1]    0.68666  0.83295 0.99995  0.83436 0.089773  0.81888  0.0016035     1.8
+## sp[2]    0.77559  0.89865 0.99999  0.89278 0.065798  0.91243 0.00094843     1.4
+##                                 
+##         SSeff      AC.10    psrf
+## prev     3115   0.072441  1.0007
+## prob[1] 14142 -0.0083834  1.0001
+## prob[2] 14402  0.0036764       1
+## prob[3] 11372  0.0028355 0.99996
+## prob[4] 13443  0.0065047  1.0003
+## se[1]    4735   0.021639  1.0004
+## se[2]    3221   0.040957  1.0004
+## sp[1]    3134   0.065103  1.0005
+## sp[2]    4813   0.027844  1.0001
 ## 
-## Total time taken: 1.1 seconds</code></pre>
+## Total time taken: 1.5 seconds</code></pre>
 </div>
 <div id="optional-solution" class="section level2">
 <h2>Optional Solution</h2>
@@ -736,96 +737,344 @@ HPSe</code></pre>
 ## JAGS model summary statistics from 20000 samples (chains = 2; adapt+burnin = 5000):
 ##                                                                                
 ##          Lower95   Median Upper95     Mean       SD     Mode      MCerr MC%ofSD
-## prev     0.40494  0.51297 0.62358   0.5127 0.055929  0.51271  0.0005687       1
-## prob[1]  0.34343  0.44147 0.53481  0.44181 0.049172  0.43964 0.00045773     0.9
-## prob[2] 0.037763 0.084235 0.14173 0.086896 0.027428 0.078371 0.00027012       1
-## prob[3]  0.03339 0.066248 0.10953 0.069104 0.020482  0.06008 0.00021491       1
-## prob[4]  0.31222  0.40163 0.49309  0.40219 0.046468  0.40005 0.00041078     0.9
-## se[1]     0.8645  0.90737 0.94491  0.90597    0.021  0.90891 0.00020452       1
-## se[2]    0.74953  0.86841 0.97366  0.86421 0.058054  0.87287 0.00059147       1
-## sp[1]    0.92156  0.95077 0.97417  0.94949 0.013714  0.95191 0.00013935       1
-## sp[2]    0.85984  0.95001       1  0.94154 0.042595  0.97486 0.00050279     1.2
+## prev      0.4455  0.55736 0.67084  0.55689 0.057663  0.56376 0.00057046       1
+## prob[1]  0.30036   0.3916 0.48884  0.39259 0.048243  0.38649 0.00042606     0.9
+## prob[2] 0.071408  0.13198 0.20062  0.13454 0.033652  0.12728 0.00032538       1
+## prob[3] 0.039993 0.079557 0.13212 0.082806 0.024715 0.072281 0.00025509       1
+## prob[4]  0.29658  0.38921 0.47859  0.39007  0.04682  0.38532 0.00040421     0.9
+## se[1]    0.85903  0.90342 0.94334  0.90201 0.021745  0.90479 0.00021268       1
+## se[2]    0.64837  0.77606 0.89153  0.77345 0.063117  0.78044 0.00061282       1
+## sp[1]    0.92196  0.95073 0.97482  0.94941 0.013842  0.95345  0.0001374       1
+## sp[2]    0.79737  0.91239 0.99997  0.90548 0.058657  0.92492 0.00066533     1.1
 ##                                  
 ##         SSeff       AC.10    psrf
-## prev     9672   0.0030117  1.0003
-## prob[1] 11540  -0.0039582  1.0002
-## prob[2] 10310 0.000073195  1.0002
-## prob[3]  9083  -0.0067662 0.99997
-## prob[4] 12796    0.002825       1
-## se[1]   10543   0.0075331       1
-## se[2]    9634  -0.0083624  1.0002
-## sp[1]    9685 0.000013005  1.0002
-## sp[2]    7177  0.00063536 0.99996
+## prev    10217  -0.0010942 0.99995
+## prob[1] 12821 -0.00061128 0.99997
+## prob[2] 10697  -0.0033548 0.99999
+## prob[3]  9387   0.0009157  1.0001
+## prob[4] 13417  -0.0020182 0.99997
+## se[1]   10453   -0.013926  1.0001
+## se[2]   10608  -0.0018821 0.99997
+## sp[1]   10150   0.0063265 0.99998
+## sp[2]    7773  -0.0050204  1.0001
 ## 
-## Total time taken: 1 seconds</code></pre>
+## Total time taken: 1.2 seconds</code></pre>
 </div>
 </div>
 <div id="session-2b-hui-walter-models-for-2-tests-and-n-populations" class="section level1">
 <h1>Session 2b: Hui-Walter models for 2 tests and N populations</h1>
-<div id="model-specification-1" class="section level2">
-<h2>Model specification 1</h2>
-<p>Independent intercepts for populations (standard)</p>
-</div>
-<div id="model-specification-2" class="section level2">
-<h2>Model specification 2</h2>
-<p>GLM-style with fixed effects of populations</p>
-<p>Or random effects of populations</p>
-<ul>
-<li>Or covariates</li>
-</ul>
-<p>Note it runs slower</p>
-</div>
-<div id="practicalities-1" class="section level2">
-<h2>Practicalities</h2>
-<p>Need to be very careful with tabulating the data</p>
-<p>Works best when populations have very different prevalences</p>
+<div id="independent-intercepts-for-populations" class="section level2">
+<h2>Independent intercepts for populations</h2>
+<pre class="r"><code>model{
+  for(p in 1:Populations){
+    Tally[1:4, p] ~ dmulti(prob[1:4, p], TotalTests[p])
+  
+    # Test1- Test2- Pop1
+      prob[1, p] &lt;- (prev[p] * ((1-se[1])*(1-se[2]))) + ((1-prev[p]) * ((sp[1])*(sp[2])))
+
+    ## etc ##
+
+    prev[p] ~ dbeta(1, 1)
+  }
+
+  se[1] ~ dbeta(HPSe[1,1], HPSe[1,2])T(1-sp[1], )
+  sp[1] ~ dbeta(HPSp[1,1], HPSp[1,2])
+  se[2] ~ dbeta(HPSe[2,1], HPSe[2,2])T(1-sp[2], )
+  sp[2] ~ dbeta(HPSp[2,1], HPSp[2,2])
+
+  #data# Tally, TotalTests, Populations, HPSe, HPSp
+  #monitor# prev, prob, se, sp
+  #inits# prev, se, sp
+}</code></pre>
+<p>…</p>
+<p>Data and initial values start to get complicated…</p>
 </div>
 <div id="auto-hui-walter" class="section level2">
 <h2>Auto Hui-Walter</h2>
-<p>Show autohuiwalter.R</p>
-<p>Disable correlations by default</p>
-<p>Modify so it allows Se/Sp priors to be defined as matrices?</p>
-<p>And correlations on/off as matrices?</p>
-<p>Will be in runjags at some point</p>
-<p>Add force tests to be better than useless</p>
+<p>We would usually start with individual-level data in a dataframe e.g.:</p>
 <pre class="r"><code>se1 &lt;- 0.9
 sp1 &lt;- 0.95
 sp2 &lt;- 0.99
 se2 &lt;- 0.8
-prevalences &lt;- 0.5#c(0.1, 0.5, 0.9)
+prevalences &lt;- c(0.1, 0.5, 0.9)
 N &lt;- 100
 
-simdata &lt;- data.frame(
-  Population = rep(seq_along(prevalences), each=N),
-  probability = rep(prevalences, each=N)
-  )
-simdata$status &lt;- rbinom(N, 1, simdata$probability)
-simdata$Test1 &lt;- rbinom(N, 1, (simdata$status * se1) + ((1-simdata$status) * (1-sp1)))
-simdata$Test2 &lt;- rbinom(N, 1, (simdata$status * se2) + ((1-simdata$status) * (1-sp2)))
+simdata &lt;- data.frame(Population = sample(seq_along(prevalences), N, replace=TRUE))
+simdata$probability &lt;- prevalences[simdata$Population]
+simdata$truestatus &lt;- rbinom(N, 1, simdata$probability)
+simdata$Test1 &lt;- rbinom(N, 1, (simdata$truestatus * se1) + ((1-simdata$truestatus) * (1-sp1)))
+simdata$Test2 &lt;- rbinom(N, 1, (simdata$truestatus * se2) + ((1-simdata$truestatus) * (1-sp2)))
   
 head(simdata)</code></pre>
-<pre><code>##   Population probability status Test1 Test2
-## 1          1         0.5      0     0     0
-## 2          1         0.5      1     0     0
-## 3          1         0.5      0     1     0
-## 4          1         0.5      1     1     1
-## 5          1         0.5      1     1     1
-## 6          1         0.5      0     0     0</code></pre>
+<pre><code>##   Population probability truestatus Test1 Test2
+## 1          2         0.5          1     1     1
+## 2          1         0.1          0     0     0
+## 3          2         0.5          1     1     1
+## 4          3         0.9          1     0     1
+## 5          3         0.9          0     0     0
+## 6          3         0.9          1     1     1</code></pre>
+<p>[Except that probability and truestatus would not normally be known!]</p>
 <hr />
-<pre class="r"><code>source(&quot;autohuiwalter.R&quot;)
-auto_huiwalter(simdata[,c(&#39;Population&#39;,&#39;Test1&#39;,&#39;Test2&#39;)], outfile=&#39;automodel.bug&#39;)</code></pre>
-<pre><code>## The model and data have been written to automodel.bug in the current working directory
+<p>The model code and data format for an arbitrary number of populations (and tests) can be determined automatically</p>
+<p>There is a function (soon to be included in the runjags package, but for now provided in the GitHub repo) that can do this for us:</p>
+<pre class="r"><code>simdata$Population &lt;- factor(simdata$Population, levels=seq_along(prevalences), labels=paste0(&#39;Pop_&#39;, seq_along(prevalences)))
+
+source(&quot;autohuiwalter.R&quot;)
+auto_huiwalter(simdata[,c(&#39;Population&#39;,&#39;Test1&#39;,&#39;Test2&#39;)], outfile=&#39;autohw.bug&#39;)</code></pre>
+<pre><code>## The model and data have been written to autohw.bug in the current working directory
 ## You should check and alter priors before running the model</code></pre>
+<hr />
+<p>This generates self-contained model/data/initial values etc (ignore covse and covsp for now):</p>
+<pre><code>## ## Auto-generated Hui-Walter model created by script version 0.1 on 2020-02-12
+## 
+## model{
+## 
+##  ## Observation layer:
+## 
+##  # Complete observations (N=100):
+##  for(p in 1:Populations){
+##      Tally_RR[1:4,p] ~ dmulti(prob_RR[1:4,p], N_RR[p])
+## 
+##      prob_RR[1:4,p] &lt;- se_prob[1:4,p] + sp_prob[1:4,p]
+##  }
+## 
+## 
+##  ## Observation probabilities:
+## 
+##  for(p in 1:Populations){
+## 
+##      # Probability of observing Test1- Test2- from a true positive::
+##      se_prob[1,p] &lt;- prev[p] * ((1-se[1])*(1-se[2]) +covse12)
+##      # Probability of observing Test1- Test2- from a true negative::
+##      sp_prob[1,p] &lt;- (1-prev[p]) * (sp[1]*sp[2] +covsp12)
+## 
+##      # Probability of observing Test1+ Test2- from a true positive::
+##      se_prob[2,p] &lt;- prev[p] * (se[1]*(1-se[2]) -covse12)
+##      # Probability of observing Test1+ Test2- from a true negative::
+##      sp_prob[2,p] &lt;- (1-prev[p]) * ((1-sp[1])*sp[2] -covsp12)
+## 
+##      # Probability of observing Test1- Test2+ from a true positive::
+##      se_prob[3,p] &lt;- prev[p] * ((1-se[1])*se[2] -covse12)
+##      # Probability of observing Test1- Test2+ from a true negative::
+##      sp_prob[3,p] &lt;- (1-prev[p]) * (sp[1]*(1-sp[2]) -covsp12)
+## 
+##      # Probability of observing Test1+ Test2+ from a true positive::
+##      se_prob[4,p] &lt;- prev[p] * (se[1]*se[2] +covse12)
+##      # Probability of observing Test1+ Test2+ from a true negative::
+##      sp_prob[4,p] &lt;- (1-prev[p]) * ((1-sp[1])*(1-sp[2]) +covsp12)
+## 
+##  }
+## 
+## 
+##  ## Priors:
+## 
+##  # Prevalence in population Pop_1:
+##  prev[1] ~ dbeta(1,1)
+## 
+##  # Prevalence in population Pop_2:
+##  prev[2] ~ dbeta(1,1)
+## 
+##  # Prevalence in population Pop_3:
+##  prev[3] ~ dbeta(1,1)
+## 
+## 
+##  # Sensitivity of Test1 test:
+##  se[1] ~ dbeta(1,1)T(1-sp[1], )
+##  # Specificity of Test1 test:
+##  sp[1] ~ dbeta(1,1)
+## 
+##  # Sensitivity of Test2 test:
+##  se[2] ~ dbeta(1,1)T(1-sp[2], )
+##  # Specificity of Test2 test:
+##  sp[2] ~ dbeta(1,1)
+## 
+## 
+##  # Covariance in sensitivity between Test1 and Test2 tests:
+##  # covse12 ~ dunif( (se[1]-1)*(1-se[2]) , min(se[1],se[2]) - se[1]*se[2] )  ## if the sensitivity of these tests may be correlated
+##   covse12 &lt;- 0  ## if the sensitivity of these tests can be assumed to be independent
+##  # Covariance in specificity between Test1 and Test2 tests:
+##  # covsp12 ~ dunif( (sp[1]-1)*(1-sp[2]) , min(sp[1],sp[2]) - sp[1]*sp[2] )  ## if the specificity of these tests may be correlated
+##   covsp12 &lt;- 0  ## if the specificity of these tests can be assumed to be independent
+## 
+## }
+## 
+## #monitor# se, sp, prev, covse12, covsp12
+## 
+## ## Inits:
+## inits{
+## &quot;se&quot; &lt;- c(0.5, 0.99)
+## &quot;sp&quot; &lt;- c(0.99, 0.75)
+## &quot;prev&quot; &lt;- c(0.05, 0.95, 0.05)
+## # &quot;covse12&quot; &lt;- 0
+## # &quot;covsp12&quot; &lt;- 0
+## }
+## inits{
+## &quot;se&quot; &lt;- c(0.99, 0.5)
+## &quot;sp&quot; &lt;- c(0.75, 0.99)
+## &quot;prev&quot; &lt;- c(0.95, 0.05, 0.95)
+## # &quot;covse12&quot; &lt;- 0
+## # &quot;covsp12&quot; &lt;- 0
+## }
+## 
+## ## Data:
+## data{
+## &quot;Populations&quot; &lt;- 3
+## &quot;N_RR&quot; &lt;- c(36, 27, 37)
+## &quot;Tally_RR&quot; &lt;- structure(c(31, 4, 1, 0, 12, 1, 0, 14, 5, 6, 1, 25), .Dim = c(4, 3))
+## }</code></pre>
+<hr />
+<p>And can be run directly from R:</p>
+<pre class="r"><code>results &lt;- run.jags(&#39;autohw.bug&#39;)</code></pre>
+<pre><code>## Note: The monitored variables &#39;covse12&#39; and &#39;covsp12&#39; appear to be
+## non-stochastic; they will not be included in the convergence diagnostic
+## Finished running the simulation</code></pre>
+<hr />
+<pre class="r"><code>results</code></pre>
+<pre><code>## 
+## JAGS model summary statistics from 20000 samples (chains = 2; adapt+burnin = 5000):
+##                                                                           
+##            Lower95   Median  Upper95     Mean       SD     Mode      MCerr
+## se[1]      0.88599  0.96213  0.99999  0.95446 0.034867  0.97841 0.00044935
+## se[2]      0.73293  0.85689  0.96437  0.85217 0.060215  0.86351 0.00064035
+## sp[1]      0.78597  0.89204  0.97257  0.88624 0.049603  0.89879 0.00053566
+## sp[2]        0.904  0.96511  0.99979  0.95885 0.028583   0.9758 0.00034703
+## prev[1] 6.3908e-06 0.024309 0.097749 0.033968 0.032299 0.010787 0.00050078
+## prev[2]    0.35442  0.54014  0.71995  0.53926 0.094518  0.53964 0.00084093
+## prev[3]    0.67639   0.8257  0.94999  0.81839 0.072342  0.83654 0.00078125
+## covse12          0        0        0        0        0        0         --
+## covsp12          0        0        0        0        0        0         --
+##                                        
+##         MC%ofSD SSeff      AC.10   psrf
+## se[1]       1.3  6021  0.0013261 1.0009
+## se[2]       1.1  8843 -0.0079832 1.0006
+## sp[1]       1.1  8575 0.00084404 1.0004
+## sp[2]       1.2  6784 -0.0027277 1.0001
+## prev[1]     1.6  4160   0.025419 1.0001
+## prev[2]     0.9 12633 -0.0031081      1
+## prev[3]     1.1  8574   0.001218 1.0001
+## covse12      --    --         --     --
+## covsp12      --    --         --     --
+## 
+## Total time taken: 1.5 seconds</code></pre>
+</div>
+<div id="observation-level-model-specification" class="section level2">
+<h2>Observation-level model specification</h2>
+<pre><code>model{
+
+  for(i in 1:N){
+    Status[i] ~ dcat(prob[i, ])
+  
+      prob[i,1] &lt;- (prev[i] * ((1-se[1])*(1-se[2]))) + 
+                  ((1-prev[i]) * ((sp[1])*(sp[2])))
+      prob[i,2] &lt;- (prev[i] * ((se[1])*(1-se[2]))) + 
+                  ((1-prev[i]) * ((1-sp[1])*(sp[2])))
+      prob[i,3] &lt;- (prev[i] * ((1-se[1])*(se[2]))) + 
+                  ((1-prev[i]) * ((sp[1])*(1-sp[2])))
+      prob[i,4] &lt;- (prev[i] * ((se[1])*(se[2]))) + 
+                  ((1-prev[i]) * ((1-sp[1])*(1-sp[2])))
+      
+      logit(prev[i]) &lt;- intercept + population_effect[Population[i]]
+  }
+
+  intercept ~ dnorm(0, 0.33)
+  population_effect[1] &lt;- 0
+  for(p in 2:Pops){
+    population_effect[p] ~ dnorm(0, 0.1)
+  }
+  se[1] ~ dbeta(1, 1)T(1-sp[1], )
+  sp[1] ~ dbeta(1, 1)
+  se[2] ~ dbeta(1, 1)T(1-sp[2], )
+  sp[2] ~ dbeta(1, 1)
+
+  #data# Status, N, Population, Pops
+  #monitor# intercept, population_effect, se, sp
+  #inits# intercept, population_effect, se, sp
+}</code></pre>
+<hr />
+<p>Just like in session 1, the main difference is the prior for prevalence (this time in each population)</p>
+<p>We also need to give initial values for intercept and population_effect rather than prev, and tell run.jags the data frame from which to extract the data (except N and Pops):</p>
+<pre class="r"><code>intercept &lt;- list(chain1=-1, chain2=1)
+population_effect &lt;- list(chain1=c(NA, 1, -1), chain2=c(NA, -1, 1))
+se &lt;- list(chain1=c(0.5,0.99), chain2=c(0.99,0.5))
+sp &lt;- list(chain1=c(0.5,0.99), chain2=c(0.99,0.5))
+
+simdata$Status &lt;- with(simdata, factor(interaction(Test1, Test2), levels=c(&#39;0.0&#39;,&#39;1.0&#39;,&#39;0.1&#39;,&#39;1.1&#39;)))
+N &lt;- nrow(simdata)
+Pops &lt;- length(levels(simdata$Population))
+glm_results &lt;- run.jags(&#39;glm_hw.bug&#39;, n.chains=2, data=simdata)</code></pre>
+<pre><code>## Note: The monitored variable &#39;population_effect[1]&#39; appears to be
+## non-stochastic; it will not be included in the convergence diagnostic
+## Finished running the simulation</code></pre>
+<hr />
+<p>Also like in session 1, the estimates for se/sp should be similar, although this model runs more slowly.</p>
+<pre><code>## Results from the HW model:</code></pre>
+<pre><code>## 
+## JAGS model summary statistics from 20000 samples (chains = 2; adapt+burnin = 5000):
+##                                                                           
+##            Lower95   Median  Upper95     Mean       SD     Mode      MCerr
+## se[1]      0.88599  0.96213  0.99999  0.95446 0.034867  0.97841 0.00044935
+## se[2]      0.73293  0.85689  0.96437  0.85217 0.060215  0.86351 0.00064035
+## sp[1]      0.78597  0.89204  0.97257  0.88624 0.049603  0.89879 0.00053566
+## sp[2]        0.904  0.96511  0.99979  0.95885 0.028583   0.9758 0.00034703
+## prev[1] 6.3908e-06 0.024309 0.097749 0.033968 0.032299 0.010787 0.00050078
+## prev[2]    0.35442  0.54014  0.71995  0.53926 0.094518  0.53964 0.00084093
+## prev[3]    0.67639   0.8257  0.94999  0.81839 0.072342  0.83654 0.00078125
+## covse12          0        0        0        0        0        0         --
+## covsp12          0        0        0        0        0        0         --
+##                                        
+##         MC%ofSD SSeff      AC.10   psrf
+## se[1]       1.3  6021  0.0013261 1.0009
+## se[2]       1.1  8843 -0.0079832 1.0006
+## sp[1]       1.1  8575 0.00084404 1.0004
+## sp[2]       1.2  6784 -0.0027277 1.0001
+## prev[1]     1.6  4160   0.025419 1.0001
+## prev[2]     0.9 12633 -0.0031081      1
+## prev[3]     1.1  8574   0.001218 1.0001
+## covse12      --    --         --     --
+## covsp12      --    --         --     --
+## 
+## Total time taken: 1.5 seconds</code></pre>
+<pre><code>## Results from the GLM model:</code></pre>
+<pre><code>## 
+## JAGS model summary statistics from 20000 samples (chains = 2; adapt+burnin = 5000):
+##                                                                      
+##                      Lower95  Median Upper95    Mean       SD    Mode
+## intercept            -4.4784 -2.8532 -1.4924 -2.9163  0.77314 -2.8066
+## population_effect[1]       0       0       0       0        0       0
+## population_effect[2]  1.4665    2.99  4.8149  3.0468  0.85577  2.9326
+## population_effect[3]  2.8313  4.5094  6.3801  4.5744  0.91068  4.4397
+## se[1]                0.88344 0.96142 0.99998 0.95319  0.03555 0.97632
+## se[2]                0.72455 0.85018 0.96291 0.84604 0.061345 0.85633
+## sp[1]                0.79341 0.89783 0.98302   0.892 0.050122 0.90756
+## sp[2]                 0.9045 0.96578 0.99999 0.95963 0.028746 0.97656
+##                                                               
+##                           MCerr MC%ofSD SSeff     AC.10   psrf
+## intercept              0.025053     3.2   952   0.39031 1.0007
+## population_effect[1]         --      --    --        --     --
+## population_effect[2]   0.026368     3.1  1053   0.35103 1.0006
+## population_effect[3]   0.025807     2.8  1245   0.30104 1.0003
+## se[1]                0.00045315     1.3  6155 0.0069304 1.0002
+## se[2]                0.00065536     1.1  8762  0.010241      1
+## sp[1]                0.00056382     1.1  7903 0.0094732      1
+## sp[2]                0.00036448     1.3  6220  0.014534      1
+## 
+## Total time taken: 5.9 seconds</code></pre>
+<p>Note: this model could be used as the basis for adding covariates</p>
+<p>For a handy way to generate a GLM model see runjags::template.jags</p>
+<ul>
+<li>Look out for integration with autohuiwalter in the near (ish) future…</li>
+</ul>
+</div>
+<div id="practicalities-1" class="section level2">
+<h2>Practicalities</h2>
+<p>Need to be very careful with tabulating the data, or use automatically generated code</p>
+<p>Works best when populations have very different prevalences</p>
 </div>
 <div id="exercise-1" class="section level2">
 <h2>Exercise</h2>
 <p>Play around with the autohuiwalter function</p>
 <p>Notice the model and data and initial values are in a self contained file</p>
 <p>Ignore the covse and covsp for now</p>
-<p>What would be useful to add to the function?</p>
-</div>
-<div id="summary" class="section level2">
-<h2>Summary</h2>
 </div>
 </div>
 

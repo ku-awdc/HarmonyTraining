@@ -402,21 +402,20 @@ summary {
 <h2>What exactly is our latent class?</h2>
 <p>What do we mean by “conditionally independent?”</p>
 <p>Example: three antibody tests</p>
-<p>Rabbits and hats 2</p>
+<p>The latent status is actually ‘producing antibodies’ not ‘diseased’</p>
+<p>We’re actually pulling <strong>something</strong> out of a hat, and deciding to call it a rabbit</p>
 </div>
 <div id="model-specification" class="section level2">
 <h2>Model specification</h2>
-<p>Extreme care with multinomial tabulation</p>
-<p>Use autohuiwalter!</p>
+<p>If doing this manually, take <strong>extreme</strong> care with multinomial tabulation</p>
+<p>Or use autohuiwalter!</p>
+<ul>
+<li>This will also deal gracefully with missing data in one or more test results</li>
+</ul>
 </div>
-<div id="missing-data-in-test-results" class="section level2">
-<h2>Missing data in test results</h2>
-<p>Use autohuiwalter!</p>
-</div>
-<div id="glm-specification" class="section level2">
-<h2>GLM specification</h2>
-<p>Combining Hui-Walter part with template.jags</p>
-<p>Will likely be included in template.jags in future</p>
+<div id="simulating-data" class="section level2">
+<h2>Simulating data</h2>
+<p>Show how to simulate data for arbitrary numbers of test results</p>
 </div>
 <div id="exercise" class="section level2">
 <h2>Exercise</h2>
@@ -424,7 +423,10 @@ summary {
 </div>
 <div id="optional-exercise" class="section level2">
 <h2>Optional Exercise</h2>
-<p>What happens if some data is missing for 1 (or more) tests?</p>
+<p>Make some data missing for one or more tests and re-generate the model</p>
+<ul>
+<li>Can you see what has changed in the code?</li>
+</ul>
 </div>
 </div>
 <div id="session-3b-hui-walter-models-for-multiple-tests-with-conditional-depdendence" class="section level1">
@@ -436,7 +438,13 @@ summary {
 </div>
 <div id="model-specification-1" class="section level2">
 <h2>Model specification</h2>
+<p>Introduce correlations between se and sp</p>
 <p>Use autohuiwalter!</p>
+</div>
+<div id="simulating-data-1" class="section level2">
+<h2>Simulating data</h2>
+<p>Show how to simulate data using an explicit branching process, and correct Se/Sp estimates</p>
+<p>[Steal code from ABME course: ABME_hui_walter_complete.R]</p>
 </div>
 <div id="exercise-1" class="section level2">
 <h2>Exercise</h2>
@@ -447,8 +455,16 @@ summary {
 </div>
 <div id="session-3c-model-selection" class="section level1">
 <h1>Session 3c: Model selection</h1>
-<div id="methods-of-selecting-models" class="section level2">
-<h2>Methods of selecting models</h2>
+<div id="motivation" class="section level2">
+<h2>Motivation</h2>
+<p>[Planning for this session to be a general discussion between all instructors and students, as I am not entirely sure what to recommend in terms of model selection - except that I dislike DIC!!!]</p>
+</div>
+<div id="background-to-dic" class="section level2">
+<h2>Background to DIC</h2>
+<p>[Some theory slides stolen from ABME course: ABME_Model selection.pptx]</p>
+</div>
+<div id="other-methods" class="section level2">
+<h2>Other methods</h2>
 <p>DIC works fine for hierarchical normal models</p>
 <p>Bayes factors work well if you can count them</p>
 <p>WAIC works better for a wide range of models</p>
@@ -457,8 +473,30 @@ summary {
 <p>Models tend to be sensitive to priors</p>
 <p>Simulating data and testing that your model recovers the parameters is a good idea</p>
 </div>
+<div id="calculating-dic" class="section level2">
+<h2>Calculating DIC</h2>
+<p>Add dic and ped to the monitors in runjags</p>
+<p>But don’t trust the results</p>
+<p>Also bear in mind you can’t parallelise</p>
+</div>
+<div id="calculating-waic" class="section level2">
+<h2>Calculating WAIC</h2>
+<p>Currently a pain - steal code from ABME course: ABME_waic_example.R</p>
+</div>
+<div id="future-updates" class="section level2">
+<h2>Future Updates</h2>
+<p>Model criticism will get better in JAGS 5, and the next update of runjags</p>
+<p>Installing development version of runjags:</p>
+<pre class="r"><code># Put on drat server and supply code here</code></pre>
+<p>WAIC is also calculable from Stan models (easily?)</p>
+</div>
 <div id="discussion-and-free-practical-time" class="section level2">
 <h2>Discussion and free practical time</h2>
+<p>What would be useful to add to the autohuiwalter function?</p>
+<ul>
+<li>Modify so it allows Se/Sp priors to be defined as matrices?</li>
+<li>And correlations on/off as matrices?</li>
+</ul>
 </div>
 </div>
 

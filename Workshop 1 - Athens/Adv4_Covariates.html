@@ -394,7 +394,7 @@ summary {
 <pre><code>model{
 
   for(i in 1:N){
-    Status ~ dcat(prob[i, ])
+    Status[i] ~ dcat(prob[i, ])
   
       prob[i,1] &lt;- (prev[i] * ((1-se[1])*(1-se[2]))) + 
                   ((1-prev[i]) * ((sp[1])*(sp[2])))
@@ -413,12 +413,12 @@ summary {
   for(p in 2:Pops){
     population_effect[p] ~ dnorm(0, 0.1)
   }
-  se[1] ~ dbeta(HPSe[1,1], HPSe[1,2])T(1-sp[1], )
-  sp[1] ~ dbeta(HPSp[1,1], HPSp[1,2])
-  se[2] ~ dbeta(HPSe[2,1], HPSe[2,2])T(1-sp[2], )
-  sp[2] ~ dbeta(HPSp[2,1], HPSp[2,2])
+  se[1] ~ dbeta(1, 1)T(1-sp[1], )
+  sp[1] ~ dbeta(1, 1)
+  se[2] ~ dbeta(1, 1)T(1-sp[2], )
+  sp[2] ~ dbeta(1, 1)
 
-  #data# Status, N, Population, Pops, HPSe, HPSp
+  #data# Status, N, Population, Pops
   #monitor# intercept, population_effect, se, sp
   #inits# intercept, population_effect, se, sp
 }</code></pre>
@@ -442,24 +442,24 @@ simdata &lt;- data.frame(
   )
 simdata$logitprob &lt;- with(simdata, int + pop_eff[Population] + sex_eff[Sex] + age_eff*Age)
 
-simdata$status &lt;- rbinom(N, 1, plogis(simdata$logitprob))
-simdata$Test1 &lt;- rbinom(N, 1, (simdata$status * se1) + ((1-simdata$status) * (1-sp1)))
-simdata$Test2 &lt;- rbinom(N, 1, (simdata$status * se2) + ((1-simdata$status) * (1-sp2)))
+simdata$truestatus &lt;- rbinom(N, 1, plogis(simdata$logitprob))
+simdata$Test1 &lt;- rbinom(N, 1, (simdata$truestatus * se1) + ((1-simdata$truestatus) * (1-sp1)))
+simdata$Test2 &lt;- rbinom(N, 1, (simdata$truestatus * se2) + ((1-simdata$truestatus) * (1-sp2)))
   
 head(simdata)</code></pre>
-<pre><code>##   Population Sex        Age   logitprob status Test1 Test2
-## 1          2   2 -2.9126654 -0.09126654      1     1     1
-## 2          1   1 -2.0484078 -1.70484078      0     0     0
-## 3          2   1  1.9729907  0.19729907      1     1     0
-## 4          2   1  0.3878932  0.03878932      1     1     1
-## 5          1   1 -0.4714362 -1.54714362      0     0     0
-## 6          1   1  0.7964522 -1.42035478      0     0     0</code></pre>
+<pre><code>##   Population Sex        Age   logitprob truestatus Test1 Test2
+## 1          2   2 -2.9126654 -0.09126654          1     1     1
+## 2          1   1 -2.0484078 -1.70484078          0     0     0
+## 3          2   1  1.9729907  0.19729907          1     1     0
+## 4          2   1  0.3878932  0.03878932          1     1     1
+## 5          1   1 -0.4714362 -1.54714362          0     0     0
+## 6          1   1  0.7964522 -1.42035478          0     0     0</code></pre>
 <hr />
 <p>We can cheat a bit and use template.jags to help set up part of the model:</p>
 <pre class="r"><code>simdata$Population &lt;- factor(simdata$Population, levels=seq_along(pop_eff), labels=paste0(&#39;Pop_&#39;, seq_along(pop_eff)))
 simdata$Sex &lt;- factor(simdata$Sex, levels=seq_along(sex_eff), labels=c(&#39;female&#39;,&#39;male&#39;))
 
-runjags::template.jags(status ~ Population + Sex + Age, data=simdata, file=&#39;glmtemplate.bug&#39;, family=&#39;binomial&#39;, effect.prior = &#39;dnorm(0, 0.1)&#39;, write.data=FALSE)</code></pre>
+runjags::template.jags(truestatus ~ Population + Sex + Age, data=simdata, file=&#39;glmtemplate.bug&#39;, family=&#39;binomial&#39;, effect.prior = &#39;dnorm(0, 0.1)&#39;, write.data=FALSE)</code></pre>
 <pre><code>## Your model template was created at &quot;glmtemplate.bug&quot; - it is highly advisable to examine the model syntax to be sure it is as intended
 ## You can then run the model using run.jags(&quot;glmtemplate.bug&quot;, data=data) - where &quot;data&quot; is the same data frame specified to the template.jags function</code></pre>
 <p>The lines you need from this auto-generated model are #17:</p>
@@ -493,7 +493,7 @@ runjags::template.jags(status ~ Population + Sex + Age, data=simdata, file=&#39;
 ## &quot;Sex_effect&quot; &lt;- c(NA, -1)
 ## }</code></pre>
 <hr />
-<p>Combine the two models, add initial values for se and sp, and also add a `#data# N, Status, Age, Population, Sex´ block, and modify the priors for test1 se/sp.</p>
+<p>Combine the two models, add initial values for se and sp, and also add a `#data# N, Status, Age, Population, Sex´ block, and modify the priors for test1 se/sp as estimated from session 1.</p>
 <pre><code>## model{
 ## 
 ##   for(i in 1:N){

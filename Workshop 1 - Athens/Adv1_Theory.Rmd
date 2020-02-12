@@ -708,6 +708,8 @@ curve(dbeta(x, 240.03, 12.63), from=0, to=1)
 
 ## Summary
 
+TODO
+
 ```{r cleanup, include=FALSE}
 unlink('basicjags.bug')
 unlink('basicjags2.bug')

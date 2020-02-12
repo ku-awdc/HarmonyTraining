@@ -184,8 +184,9 @@ This allows the test to be useless, but not worse than useless
 
 ## Simulating data
 
-How to simulate data for this and checking we can recover parameter values
+Analysing simulated data is useful to check that we can recover parameter values.
 
+Some simultion code:
 
 ```{r}
 se1 <- 0.9
@@ -195,9 +196,9 @@ se2 <- 0.8
 prevalence <- 0.5
 N <- 100
 
-status <- rbinom(N, 1, prevalence)
-Test1 <- rbinom(N, 1, (status * se1) + ((1-status) * (1-sp1)))
-Test2 <- rbinom(N, 1, (status * se2) + ((1-status) * (1-sp2)))
+truestatus <- rbinom(N, 1, prevalence)
+Test1 <- rbinom(N, 1, (truestatus * se1) + ((1-truestatus) * (1-sp1)))
+Test2 <- rbinom(N, 1, (truestatus * se2) + ((1-truestatus) * (1-sp2)))
 
 twoXtwo <- table(Test1, Test2)
 twoXtwo
@@ -207,16 +208,16 @@ Tally <- as.numeric(twoXtwo)
 
 ## Exercise
 
-Modify code to force tests to be better than useless
+Modify JAGS code to force tests to be better than useless
 
-Simulate data and recover parameters
+Simulate data and recover parameters for:
 
   * N=10, N=100, N=1000
 
 
 ## Optional Exercise
 
-Use priors for test1 taken from session 1 and look again at the results
+Use priors for test1 taken from session 1 and compare the results
 
 
 ## Solution
@@ -268,9 +269,9 @@ prevalence <- 0.5
 
 N <- 100
 
-status <- rbinom(N, 1, prevalence)
-Test1 <- rbinom(N, 1, (status * se1) + ((1-status) * (1-sp1)))
-Test2 <- rbinom(N, 1, (status * se2) + ((1-status) * (1-sp2)))
+truestatus <- rbinom(N, 1, prevalence)
+Test1 <- rbinom(N, 1, (truestatus * se1) + ((1-truestatus) * (1-sp1)))
+Test2 <- rbinom(N, 1, (truestatus * se2) + ((1-truestatus) * (1-sp2)))
 
 twoXtwo <- table(Test1, Test2)
 twoXtwo
@@ -307,68 +308,185 @@ results
 
 # Session 2b:  Hui-Walter models for 2 tests and N populations
 
-## Model specification 1
+## Independent intercepts for populations
 
-Independent intercepts for populations (standard)
-
-
-## Model specification 2
-
-GLM-style with fixed effects of populations
-
-Or random effects of populations
+```{r eval=FALSE}
+model{
+  for(p in 1:Populations){
+    Tally[1:4, p] ~ dmulti(prob[1:4, p], TotalTests[p])
   
-  * Or covariates
+    # Test1- Test2- Pop1
+	  prob[1, p] <- (prev[p] * ((1-se[1])*(1-se[2]))) + ((1-prev[p]) * ((sp[1])*(sp[2])))
 
-Note it runs slower
+    ## etc ##
 
+    prev[p] ~ dbeta(1, 1)
+  }
 
-## Practicalities
+  se[1] ~ dbeta(HPSe[1,1], HPSe[1,2])T(1-sp[1], )
+  sp[1] ~ dbeta(HPSp[1,1], HPSp[1,2])
+  se[2] ~ dbeta(HPSe[2,1], HPSe[2,2])T(1-sp[2], )
+  sp[2] ~ dbeta(HPSp[2,1], HPSp[2,2])
 
-Need to be very careful with tabulating the data
+  #data# Tally, TotalTests, Populations, HPSe, HPSp
+  #monitor# prev, prob, se, sp
+  #inits# prev, se, sp
+}
+```
 
-Works best when populations have very different prevalences
+...
+
+Data and initial values start to get complicated...
 
 
 ## Auto Hui-Walter
 
-Show autohuiwalter.R
-
-Disable correlations by default
-
-Modify so it allows Se/Sp priors to be defined as matrices?
-
-And correlations on/off as matrices?
-
-Will be in runjags at some point
-
-Add force tests to be better than useless
+We would usually start with individual-level data in a dataframe e.g.:
 
 ```{r}
 se1 <- 0.9
 sp1 <- 0.95
 sp2 <- 0.99
 se2 <- 0.8
-prevalences <- 0.5#c(0.1, 0.5, 0.9)
+prevalences <- c(0.1, 0.5, 0.9)
 N <- 100
 
-simdata <- data.frame(
-  Population = rep(seq_along(prevalences), each=N),
-  probability = rep(prevalences, each=N)
-  )
-simdata$status <- rbinom(N, 1, simdata$probability)
-simdata$Test1 <- rbinom(N, 1, (simdata$status * se1) + ((1-simdata$status) * (1-sp1)))
-simdata$Test2 <- rbinom(N, 1, (simdata$status * se2) + ((1-simdata$status) * (1-sp2)))
+simdata <- data.frame(Population = sample(seq_along(prevalences), N, replace=TRUE))
+simdata$probability <- prevalences[simdata$Population]
+simdata$truestatus <- rbinom(N, 1, simdata$probability)
+simdata$Test1 <- rbinom(N, 1, (simdata$truestatus * se1) + ((1-simdata$truestatus) * (1-sp1)))
+simdata$Test2 <- rbinom(N, 1, (simdata$truestatus * se2) + ((1-simdata$truestatus) * (1-sp2)))
   
 head(simdata)
 ```
 
+[Except that probability and truestatus would not normally be known!]
+
 ---
 
+The model code and data format for an arbitrary number of populations (and tests) can be determined automatically
+
+There is a function (soon to be included in the runjags package, but for now provided in the GitHub repo) that can do this for us:
+
 ```{r}
+simdata$Population <- factor(simdata$Population, levels=seq_along(prevalences), labels=paste0('Pop_', seq_along(prevalences)))
+
 source("autohuiwalter.R")
-auto_huiwalter(simdata[,c('Population','Test1','Test2')], outfile='automodel.bug')
+auto_huiwalter(simdata[,c('Population','Test1','Test2')], outfile='autohw.bug')
 ```
+
+---
+
+This generates self-contained model/data/initial values etc (ignore covse and covsp for now):
+
+```{r echo=FALSE}
+cat(readLines('autohw.bug'), sep='\n')
+```
+
+---
+
+And can be run directly from R:
+
+```{r}
+results <- run.jags('autohw.bug')
+```
+
+---
+```{r}
+results
+```
+
+
+## Observation-level model specification
+
+```{r include=FALSE}
+glmhw_definition <- "model{
+
+  for(i in 1:N){
+    Status[i] ~ dcat(prob[i, ])
+  
+	  prob[i,1] <- (prev[i] * ((1-se[1])*(1-se[2]))) + 
+	              ((1-prev[i]) * ((sp[1])*(sp[2])))
+	  prob[i,2] <- (prev[i] * ((se[1])*(1-se[2]))) + 
+	              ((1-prev[i]) * ((1-sp[1])*(sp[2])))
+	  prob[i,3] <- (prev[i] * ((1-se[1])*(se[2]))) + 
+	              ((1-prev[i]) * ((sp[1])*(1-sp[2])))
+	  prob[i,4] <- (prev[i] * ((se[1])*(se[2]))) + 
+	              ((1-prev[i]) * ((1-sp[1])*(1-sp[2])))
+	  
+	  logit(prev[i]) <- intercept + population_effect[Population[i]]
+  }
+
+  intercept ~ dnorm(0, 0.33)
+  population_effect[1] <- 0
+  for(p in 2:Pops){
+    population_effect[p] ~ dnorm(0, 0.1)
+  }
+  se[1] ~ dbeta(1, 1)T(1-sp[1], )
+  sp[1] ~ dbeta(1, 1)
+  se[2] ~ dbeta(1, 1)T(1-sp[2], )
+  sp[2] ~ dbeta(1, 1)
+
+  #data# Status, N, Population, Pops
+  #monitor# intercept, population_effect, se, sp
+  #inits# intercept, population_effect, se, sp
+}
+"
+cat(glmhw_definition, file='glm_hw.bug')
+```
+
+
+```{r comment='', echo=FALSE}
+cat(glmhw_definition, sep='\n')
+```
+
+---
+
+Just like in session 1, the main difference is the prior for prevalence (this time in each population)
+
+We also need to give initial values for intercept and population_effect rather than prev, and tell run.jags the data frame from which to extract the data (except N and Pops):
+
+```{r}
+intercept <- list(chain1=-1, chain2=1)
+population_effect <- list(chain1=c(NA, 1, -1), chain2=c(NA, -1, 1))
+se <- list(chain1=c(0.5,0.99), chain2=c(0.99,0.5))
+sp <- list(chain1=c(0.5,0.99), chain2=c(0.99,0.5))
+
+simdata$Status <- with(simdata, factor(interaction(Test1, Test2), levels=c('0.0','1.0','0.1','1.1')))
+N <- nrow(simdata)
+Pops <- length(levels(simdata$Population))
+glm_results <- run.jags('glm_hw.bug', n.chains=2, data=simdata)
+```
+
+---
+
+Also like in session 1, the estimates for se/sp should be similar, although this model runs more slowly.
+
+```{r echo=FALSE}
+if(!params$presentation){
+  cat('Results from the HW model:\n\n\n')
+  results
+}
+```
+
+```{r echo=FALSE}
+if(!params$presentation){
+  cat('Results from the GLM model:\n\n\n')
+  glm_results
+}
+```
+
+Note:  this model could be used as the basis for adding covariates
+
+For a handy way to generate a GLM model see runjags::template.jags
+
+  * Look out for integration with autohuiwalter in the near (ish) future...
+
+## Practicalities
+
+Need to be very careful with tabulating the data, or use automatically generated code
+
+Works best when populations have very different prevalences
 
 
 ## Exercise
@@ -379,8 +497,3 @@ Notice the model and data and initial values are in a self contained file
 
 Ignore the covse and covsp for now
 
-
-What would be useful to add to the function?
-
-
-## Summary

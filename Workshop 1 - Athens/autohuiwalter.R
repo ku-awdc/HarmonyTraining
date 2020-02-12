@@ -168,7 +168,7 @@ auto_huiwalter <- function(testdata, outfile='huiwalter_model.txt', covon=FALSE,
 	cat('\n',file=outfile, append=TRUE)
 
 	for(t in 1:length(testcols)){
-		cat('\n\t# Sensitivity of ', testcols[t], ' test:\n\tse[', t, '] ~ ', se_priors[t], '\n', sep='', file=outfile, append=TRUE)
+		cat('\n\t# Sensitivity of ', testcols[t], ' test:\n\tse[', t, '] ~ ', se_priors[t], 'T(1-sp[', t, '], )\n', sep='', file=outfile, append=TRUE)
 		cat('\t# Specificity of ', testcols[t], ' test:\n\tsp[', t, '] ~ ', sp_priors[t], '\n', sep='', file=outfile, append=TRUE)
 	}
 
@@ -186,9 +186,6 @@ auto_huiwalter <- function(testdata, outfile='huiwalter_model.txt', covon=FALSE,
 	## Monitors:
 	cat('\n#monitor# se, sp, prev', apply(expand.grid(c('covse','covsp'), apply(testcombos,1,paste,collapse='')),1,paste,collapse=''), sep=', ', file=outfile, append=TRUE)
 
-
-	# TODO: Inits for prev are wrong - follows ntests not npops??
-
 	## Initial values:
 	alternate <- function(x,len){
 		x <- rep(x,times=ceiling(len/length(x)))
@@ -203,14 +200,14 @@ auto_huiwalter <- function(testdata, outfile='huiwalter_model.txt', covon=FALSE,
 		covinits <- gsub('\"cov', '# \"cov', covinits, fixed=TRUE)
 	}
 
-	initblock <- c(dump.format(list(se=alternate(c(0.5,0.99), length(testcols)), sp=alternate(c(0.99,0.75), length(testcols)), prev=alternate(c(0.05,0.95), length(testcols)))), covinits[1])
+	initblock <- c(dump.format(list(se=alternate(c(0.5,0.99), length(testcols)), sp=alternate(c(0.99,0.75), length(testcols)), prev=alternate(c(0.05,0.95), length(levels(testdata$Population))))), covinits[1])
 	cat('\n\n## Inits:\ninits{\n', initblock, '}', sep='', file=outfile, append=TRUE)
-	initblock <- c(dump.format(list(se=alternate(c(0.5,0.99)[2:1], length(testcols)), sp=alternate(c(0.99,0.75)[2:1], length(testcols)), prev=alternate(c(0.05,0.95)[2:1], length(testcols)))), covinits[2])
+	initblock <- c(dump.format(list(se=alternate(c(0.5,0.99)[2:1], length(testcols)), sp=alternate(c(0.99,0.75)[2:1], length(testcols)), prev=alternate(c(0.05,0.95)[2:1], length(levels(testdata$Population))))), covinits[2])
 	cat('\ninits{\n', initblock, '}', sep='', file=outfile, append=TRUE)
 
 	## Data:
 
-	cat('\n\n## Data:\ndata{\n', datablock, '}', sep='', file=outfile, append=TRUE)
+	cat('\n\n## Data:\ndata{\n', datablock, '}\n\n', sep='', file=outfile, append=TRUE)
 
 	cat('The model and data have been written to', outfile, 'in the current working directory\nYou should check and alter priors before running the model\n')
 

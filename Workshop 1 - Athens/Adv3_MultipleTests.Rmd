@@ -68,23 +68,23 @@ What do we mean by "conditionally independent?"
 
 Example:  three antibody tests
 
-Rabbits and hats 2
+The latent status is actually 'producing antibodies' not 'diseased'
+
+We're actually pulling **something** out of a hat, and deciding to call it a rabbit
 
 ## Model specification
 
-Extreme care with multinomial tabulation
+If doing this manually, take **extreme** care with multinomial tabulation
 
-Use autohuiwalter!
+Or use autohuiwalter!
 
-## Missing data in test results
+  * This will also deal gracefully with missing data in one or more test results
 
-Use autohuiwalter!
 
-## GLM specification
+## Simulating data
 
-Combining Hui-Walter part with template.jags
+Show how to simulate data for arbitrary numbers of test results
 
-Will likely be included in template.jags in future
 
 ## Exercise
 
@@ -93,7 +93,9 @@ Simulate data from 3 or 4 tests and analyse
 
 ## Optional Exercise
 
-What happens if some data is missing for 1 (or more) tests?
+Make some data missing for one or more tests and re-generate the model
+
+  * Can you see what has changed in the code?
 
 
 # Session 3b:  Hui-Walter models for multiple tests with conditional depdendence
@@ -106,7 +108,15 @@ Or three antibody tests where one has a different target to the others
 
 ## Model specification
 
+Introduce correlations between se and sp
+
 Use autohuiwalter!
+
+## Simulating data
+
+Show how to simulate data using an explicit branching process, and correct Se/Sp estimates
+
+[Steal code from ABME course:  ABME_hui_walter_complete.R]
 
 
 ## Exercise
@@ -120,7 +130,17 @@ Model with conditional depdendence has bigger CI but unbiased
 
 # Session 3c:  Model selection
 
-## Methods of selecting models
+## Motivation
+
+[Planning for this session to be a general discussion between all instructors and students, as I am not entirely sure what to recommend in terms of model selection - except that I dislike DIC!!!]
+
+## Background to DIC
+
+[Some theory slides stolen from ABME course:  ABME_Model selection.pptx]
+
+
+
+## Other methods
 
 DIC works fine for hierarchical normal models
 
@@ -135,5 +155,34 @@ Models tend to be sensitive to priors
 
 Simulating data and testing that your model recovers the parameters is a good idea
 
+## Calculating DIC
+
+Add dic and ped to the monitors in runjags
+
+But don't trust the results
+
+Also bear in mind you can't parallelise
+
+## Calculating WAIC
+
+Currently a pain - steal code from ABME course:  ABME_waic_example.R
+
+
+## Future Updates
+
+Model criticism will get better in JAGS 5, and the next update of runjags
+
+Installing development version of runjags:
+
+```{r}
+# Put on drat server and supply code here
+```
+
+WAIC is also calculable from Stan models (easily?)
+
 ## Discussion and free practical time
 
+What would be useful to add to the autohuiwalter function?
+
+  * Modify so it allows Se/Sp priors to be defined as matrices?
+  * And correlations on/off as matrices?
