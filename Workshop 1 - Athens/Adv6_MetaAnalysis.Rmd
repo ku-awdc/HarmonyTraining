@@ -1,10 +1,9 @@
 ---
 title: Hands-on training session 6
-subtitle: Meta-analysis for studies that use BLCMs
+subtitle: Meta-analyses with imperfect reference test
 date: "`r Sys.Date()`"
 author:
   - Paolo Eusebi
-  - Giles Innocent
 theme: metropolis
 aspectratio: 43
 colortheme: seahorse
@@ -23,38 +22,199 @@ output:
 # To render this as PDF (beamer) slides run:
 rmarkdown::render('Adv6_MetaAnalysis.Rmd', 'beamer_presentation', params=list(presentation=TRUE))
 # And for html:
-rmarkdown::render('Adv6_MetaAnalysis.Rmd', 'html_document', params=list(presentation=FALSE))
+rmarkdown::render('Adv6_MetaAnalysis.html', 'html_document', params=list(presentation=FALSE))
 ```
 
 ```{r setup, include=FALSE}
 # Reduce the width of R code output for PDF only:
 if(params$presentation) options(width=60)
 knitr::opts_chunk$set(echo = TRUE)
-
 library('runjags')
 runjags.options(silent.jags=TRUE)
 ```
 
 
-# Session 6:  Meta-analysis for studies that use BLCMs
+# Introduction
 
 ## Overview
 
 Date/time:
 
-  - 21st February 2020
-  - 16.00 - 17.00
+  - 20th February 2020
+  - 14.00 - 15.30
 
 Teachers:
 
   - Paolo Eusebi (presenter)
   - Giles Innocent
 
+## Recap
 
-## Slide
+- Important points from previous sessions
+
+# Session 6a: Meta-Analysis of Diagnostic Test Accuracy Studies
+
+## DTA-MA: perfect reference test
+
+- There is an increasing interest in meta-analyzing data from diagnostic accuracy studies
+
+- The data from the primary studies are summarized in a 2-by-2 cross-tabulation of the dichotomized test result against the true disease status
+
+```{r, echo=FALSE, message=FALSE}
+library(kableExtra)
+library(tidyverse)
+d = matrix(c("TP", "FN","FP", "TN"), nrow = 2,
+           dimnames = list(c("T+","T-"),c("D+","D-")))
+
+d %>%
+  kable() %>%
+  kable_styling(full_width = F, font_size = 10)
+```
+
+## DTA-MA: perfect reference test
+
+- Data on magnetic resonance (MR) imaging from 10 studies on evaluation of lymph node metastases in patients with cervical cancer (Scheidler et al 1997).
+
+```{r, echo=FALSE, message=FALSE}
+library(HSROC)
+library(MCMCpack)
+library(mada)
+
+data("MRI")
+
+MRI2 <- MRI # data for mada package
+names(MRI2)[1] <- "TP"
+names(MRI2)[2] <- "FP"
+names(MRI2)[3] <- "FN"
+names(MRI2)[4] <- "TN"
+
+MRI2 %>%
+  mutate(StudyID = paste("Study",1:10)) %>%
+  dplyr::select(StudyID, TP, FP, FN, TN) %>%
+  kable() %>%
+  kable_styling(full_width = F, font_size = 10) 
+```
+
+## DTA-MA: perfect reference test
+
+- Forest plot of sensitivity
+
+```{r, echo=FALSE}
+forest(madad(MRI2),
+       type = "sens",
+       main = "Sensitivity")
+```
+
+## DTA-MA: perfect reference test
+
+- Forest plot of specificity
+
+```{r, echo=FALSE}
+forest(madad(MRI2),
+       type = "spec",
+       main = "Specificity")
+```
+
+## DTA-MA: perfect reference test
+
+- Data points with confidence ellipses on a ROC space
+
+```{r, fig.width=5, fig.height=5, echo=FALSE}
+ROCellipse(MRI2, pch = "")
+points(fpr(MRI2), sens(MRI2))
+```
+
+## DTA Meta-analysis
+
+Two main framework:
+
+- Hierarchical Summary ROC (Rutter and Gatsonis 2001) 
+
+- Bivariate analysis of sensitivity and specificity (Reitsma et al. 2005)
 
 
-## Exercise
+## DTA-MA: bivariate analysis of sensitivity and specificity
 
-Instructions here
+```{r}
+fit.reitsma <- reitsma(MRI2)
+print(summary(fit.reitsma)[1], digits = 2)
+```
+
+## DTA-MA: bivariate analysis of sensitivity and specificity
+
+```{r, fig.width=5, fig.height=5, echo=FALSE}
+plot(fit.reitsma, cex = 2,
+     sroclwd = 2, plotsumm = T,predict = T,pch = 19,
+     main = "")
+points(fpr(MRI2),
+       sens(MRI2), pch = 1)
+legend("bottomright",
+       c("data points", "summary estimate", "SROC", "95% conf. region", "95% pred.region"),
+       pch = c(1, 19, NA, NA, NA),
+       lwd = c(NA, 2, 2, 1, 1),
+       lty = c(NA, NA, 1,1,3),
+       bty = "n")
+```
+
+## DTA-MA: bivariate analysis of sensitivity and specificity
+
+The function returns also HSROC parameters
+
+```{r}
+print(summary(fit.reitsma)[20], digits = 2)
+```
+
+## DTA-MA: bivariate analysis of sensitivity and specificity
+
+This is because Bivariate and HSROC approaches are equivalent when covariates are not included (Harbord et al. 2007)
+
+- Parameter estimates from either model can be used to produce a summary operating
+point, an SROC curve, confidence regions, or prediction regions. 
+
+- The choice between these parameterizations depends partly on the degrees of and reasons for between-study heterogeneity and the treshold effect.
+
+## DTA-MA: bivariate analysis of sensitivity and specificity
+
+![Alt text](/Users/paoloeusebi/Desktop/Lavoro/Harmony/Athens2020/DTA Meta-analysis/images/bivariate.png)
+
+## DTA-MA: hierarchical summary ROC (HSROC)
+
+![Alt text](/Users/paoloeusebi/Desktop/Lavoro/Harmony/Athens2020/DTA Meta-analysis/images/hsroc.png)
+
+
+## DTA-MA: hierarchical summary ROC (HSROC)
+
+Use of HSROC package
+
+```{r, eval=F, echo=T}
+HSROC(data = MRI,
+      iter.num = 5000,
+      init = init)
+
+HSROCSummary(data = MRI,
+             burn_in = 1000,
+             Thin = 2,
+             print_plot = T)
+```
+
+
+## DTA-MA: hierarchical summary ROC (HSROC)
+
+- The HSROC package allows to run multiple chains
+
+```{r, eval=FALSE, echo=TRUE}
+HSROCSummary(data = MRI,
+             burn_in = 1000,
+             Thin = 2,
+             print_plot = T, 
+             chain = list(dir.chain1, dir.chain2, dir.chain3))
+```
+
+A single call to the function HSROCSummary will summarize all chains (3 in our example).
+
+## Exercise 
+
+Fit a HSROC model assuming imperfect reference for the data on Tibsit
+
+Use rjags and HSROC 
 
