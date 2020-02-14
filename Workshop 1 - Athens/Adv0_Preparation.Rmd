@@ -60,7 +60,7 @@ We will primarily be using GitHub as a way to disseminate the lecture notes and 
 
 ## Simple Web Usage
 
-We have created a public repository containing the teaching material for the training workshop.  This means that anyone can view the teaching material at any time via the following website: [https://github.com/ku-awdc/HarmonyTraining]()
+We have created a public repository containing the teaching material for the training workshop.  This means that anyone can view the teaching material at any time via the following website: https://github.com/ku-awdc/HarmonyTraining
 
 First click on the "Workshop 1 - Athens" folder, then you should see a number of files listed with names like "Adv1_Theory.Rmd", "Adv1_Theory.pdf" etc.  Each of the sessions for the advanced training workshop (including this preparation document) has a series of files:  the .Rmd is the original Rmarkdown document, and the .pdf and .html files are created from these.  You can click on any of these files to view them, although of the different file formats the .pdf version is probably easiest to download directly from the website.  There are two problems with this:
 
@@ -72,12 +72,12 @@ We therefore recommend that you follow the instructions below to clone the repos
 
 ## Creating an Account
 
-If you have never used GitHub before, you should create an account via [http://github.com]() - it is free and easy. Remember to make a note of the username and password that you just created!
+If you have never used GitHub before, you should create an account via http://github.com - it is free and easy. Remember to make a note of the username and password that you just created!
 
 
 ## GitHub Desktop
 
-The easiest way to use GitHub is via GitHub desktop.  Go to [https://desktop.github.com]() and download/install the software. Then open it and sign in using your GitHub account (the username and password that you just created).  This should become the primary way in which you interact with GitHub, rather than via your browser.
+The easiest way to use GitHub is via GitHub desktop.  Go to https://desktop.github.com and download/install the software. Then open it and sign in using your GitHub account (the username and password that you just created).  This should become the primary way in which you interact with GitHub, rather than via your browser.
 
 The first step is to clone the `HarmonyTraining` repository on to your computer. From inside GitHub Desktop, go to the File menu then Clone Respository, then click on the URL tab.  Then type/paste `ku-awdc/HarmonyTraining` into the box under `Repository URL or GitHub username and repository`. A suggested local path folder will be created automatically at the bottom but feel free to change this. Then click on Clone and wait for the files to download.
 
@@ -93,7 +93,7 @@ An important advantage of GitHub is that we can update a file online (for exampl
 
 ## More information
 
-That is pretty much all you need to know for the training workshop but there are some good tutorials available, for example:  [https://happygitwithr.com]().
+That is pretty much all you need to know for the training workshop but there are some good tutorials available, for example:  https://happygitwithr.com.
 
 
 # Revision of Basic Principles
