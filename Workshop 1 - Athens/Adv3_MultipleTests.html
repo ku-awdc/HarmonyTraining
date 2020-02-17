@@ -13,7 +13,7 @@
 <meta name="author" content="Giles Innocent" />
 <meta name="author" content="Sonja Hartnack" />
 
-<meta name="date" content="2020-02-12" />
+<meta name="date" content="2020-02-17" />
 
 <title>Hands-on training session 3</title>
 
@@ -370,7 +370,7 @@ summary {
 <h4 class="author">Matt Denwood</h4>
 <h4 class="author">Giles Innocent</h4>
 <h4 class="author">Sonja Hartnack</h4>
-<h4 class="date">2020-02-12</h4>
+<h4 class="date">2020-02-17</h4>
 
 </div>
 
@@ -415,11 +415,38 @@ summary {
 </div>
 <div id="simulating-data" class="section level2">
 <h2>Simulating data</h2>
-<p>Show how to simulate data for arbitrary numbers of test results</p>
+<p>Simulating data using an arbitrary number of independent tests is quite straightforward.</p>
+<pre class="r"><code># Parameter values to simulate:
+N &lt;- 200
+se1 &lt;- 0.8
+se2 &lt;- 0.9
+se3 &lt;- 0.95
+sp1 &lt;- 0.95
+sp2 &lt;- 0.99
+sp3 &lt;- 0.95
+
+Populations &lt;- 2
+prevalence &lt;- c(0.25,0.75)
+Group &lt;- rep(1:Populations, each=N)
+
+# Ensure replicable data:
+set.seed(2017-11-21)
+
+# Simulate the true latent state (which is unobserved in real life):
+true &lt;- rbinom(N*Populations, 1, prevalence[Group])
+# Simulate test results for test 1:
+test1 &lt;- rbinom(N*Populations, 1, se1*true + (1-sp1)*(1-true))
+# Simulate test results for test 2:
+test2 &lt;- rbinom(N*Populations, 1, se2*true + (1-sp2)*(1-true))
+# Simulate test results for test 3:
+test3 &lt;- rbinom(N*Populations, 1, se3*true + (1-sp3)*(1-true))
+
+testdata &lt;- data.frame(Population=Group, Test1=test1, Test2=test2, Test3=test3)</code></pre>
 </div>
 <div id="exercise" class="section level2">
 <h2>Exercise</h2>
-<p>Simulate data from 3 or 4 tests and analyse</p>
+<p>Simulate data from 3 tests and analyse using the autohuiwalter function</p>
+<p>Do the estimates of Se/Sp correspond to the simulation parameters?</p>
 </div>
 <div id="optional-exercise" class="section level2">
 <h2>Optional Exercise</h2>
@@ -434,17 +461,368 @@ summary {
 <div id="branching-of-processes-leading-to-test-results" class="section level2">
 <h2>Branching of processes leading to test results</h2>
 <p>Example: two antibody tests and one antigen test</p>
-<p>Or three antibody tests where one has a different target to the others</p>
+<p>Or three antibody tests where one has a different target to the other two</p>
 </div>
 <div id="model-specification-1" class="section level2">
 <h2>Model specification</h2>
-<p>Introduce correlations between se and sp</p>
-<p>Use autohuiwalter!</p>
+<pre class="r"><code>        # Probability of observing ELISA1- ELISA2- WesternBlot- from a true positive::
+        se_prob[1,p] &lt;- prev[p] * ((1-se[1])*(1-se[2])*(1-se[3]) +covse12 +covse13 +covse23)
+        # Probability of observing ELISA1- ELISA2- WesternBlot- from a true negative::
+        sp_prob[1,p] &lt;- (1-prev[p]) * (sp[1]*sp[2]*sp[3] +covsp12 +covsp13 +covsp23)
+
+        # Probability of observing ELISA1+ ELISA2- WesternBlot- from a true positive::
+        se_prob[2,p] &lt;- prev[p] * (se[1]*(1-se[2])*(1-se[3]) -covse12 -covse13 +covse23)
+        # Probability of observing ELISA1+ ELISA2- WesternBlot- from a true negative::
+        sp_prob[2,p] &lt;- (1-prev[p]) * ((1-sp[1])*sp[2]*sp[3] -covsp12 -covsp13 +covsp23)
+
+        ...
+        
+    # Covariance in sensitivity between ELISA1 and ELISA2 tests:
+    covse12 ~ dunif( (se[1]-1)*(1-se[2]) , min(se[1],se[2]) - se[1]*se[2] )
+    # Covariance in specificity between ELISA1 and ELISA2 tests:
+    covsp12 ~ dunif( (sp[1]-1)*(1-sp[2]) , min(sp[1],sp[2]) - sp[1]*sp[2] )
+    
+    ...</code></pre>
 </div>
 <div id="simulating-data-1" class="section level2">
 <h2>Simulating data</h2>
-<p>Show how to simulate data using an explicit branching process, and correct Se/Sp estimates</p>
-<p>[Steal code from ABME course: ABME_hui_walter_complete.R]</p>
+<p>It helps to consider the data simulation as a biological process.</p>
+<pre class="r"><code># Parameter values to simulate:
+N &lt;- 200
+se1 &lt;- 0.8
+se2 &lt;- 0.9
+se3 &lt;- 0.95
+sp1 &lt;- 0.95
+sp2 &lt;- 0.99
+sp3 &lt;- 0.95
+
+Populations &lt;- 2
+prevalence &lt;- c(0.25,0.75)
+Group &lt;- rep(1:Populations, each=N)
+
+# Ensure replicable data:
+set.seed(2017-11-21)
+
+# We will assume test 1 is dependent of the others, but tests 2&amp;3
+# are not independent (e.g. they are both antibody tests)
+# The probability of an antibody response given disease positive:
+abse &lt;- 0.8
+# (One minus) the probability of an antibody response given disease negative:
+absp &lt;- 1 - 0.2
+
+# Simulate the true latent state (which is unobserved in real life):
+true &lt;- rbinom(N*Populations, 1, prevalence[Group])
+# Simulate test results for test 1:
+test1 &lt;- rbinom(N*Populations, 1, se1*true + (1-sp1)*(1-true))
+# Tests 2&amp;3 will be non-independent, so simulate another biological step 
+# e.g. antibody response:
+antibody &lt;- rbinom(N*Populations, 1, abse*true + (1-absp)*(1-true))
+# Simulate test 2&amp;3 results based on this other latent state:
+test2 &lt;- rbinom(N*Populations, 1, se2*antibody + (1-sp2)*(1-antibody))
+test3 &lt;- rbinom(N*Populations, 1, se3*antibody + (1-sp3)*(1-antibody))
+
+ind3tests &lt;- data.frame(Population=Group, Test1=test1, Test2=test2, Test3=test3)
+
+# The overall sensitivity of the correlated tests is effectively this:
+abse*se2 + (1-abse)*(1-sp2)</code></pre>
+<pre><code>## [1] 0.722</code></pre>
+<pre class="r"><code>abse*se3 + (1-abse)*(1-sp3)</code></pre>
+<pre><code>## [1] 0.77</code></pre>
+<pre class="r"><code># The overall specificity of the correlated tests is effectively this:
+absp*sp2 + (1-absp)*(1-se2)</code></pre>
+<pre><code>## [1] 0.812</code></pre>
+<pre class="r"><code>absp*sp3 + (1-absp)*(1-se3)</code></pre>
+<pre><code>## [1] 0.77</code></pre>
+</div>
+<div id="verifying-simulation-results" class="section level2">
+<h2>Verifying simulation results</h2>
+<pre class="r"><code>library(&#39;tidyverse&#39;)</code></pre>
+<pre><code>## ── Attaching packages ─────────────────────────────────────── tidyverse 1.3.0 ──</code></pre>
+<pre><code>## ✔ ggplot2 3.2.1     ✔ purrr   0.3.3
+## ✔ tibble  2.1.3     ✔ dplyr   0.8.3
+## ✔ tidyr   1.0.2     ✔ stringr 1.4.0
+## ✔ readr   1.3.1     ✔ forcats 0.4.0</code></pre>
+<pre><code>## ── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──
+## ✖ tidyr::extract() masks runjags::extract()
+## ✖ dplyr::filter()  masks stats::filter()
+## ✖ dplyr::lag()     masks stats::lag()</code></pre>
+<pre class="r"><code>## Parameters
+
+# True prevalence:
+prev &lt;- 0.2
+
+# Probability of antibody response conditional on disease status:
+se_antibody &lt;- 0.95
+sp_antibody &lt;- 0.99
+
+# Probability of ELISA target presence conditional on antibody status:
+se_target &lt;- 0.95
+sp_target &lt;- 0.99
+
+# Probability of ELISA test positive conditional on target presence:
+se_elisa_cond &lt;- 0.99
+sp_elisa_cond &lt;- 0.99
+
+# Probability of Western Blot positive conditional on antibody status:
+se_wb_cond &lt;- 0.9
+sp_wb_cond &lt;- 0.99
+
+
+## Derived parameters:
+
+# Overall Se/Sp of Western Blot:
+se_wb &lt;- se_antibody*se_wb_cond + (1-se_antibody)*(1-sp_wb_cond)
+sp_wb &lt;- sp_antibody*sp_wb_cond + (1-sp_antibody)*(1-se_wb_cond)
+
+# Overall Se/Sp of ELISA:
+se_abtg &lt;- se_antibody*se_target + (1-se_antibody)*(1-sp_target)
+sp_abtg &lt;- sp_antibody*sp_target + (1-sp_antibody)*(1-se_target)
+se_elisa &lt;- se_abtg*se_elisa_cond + (1-se_abtg)*(1-sp_target)
+sp_elisa &lt;- sp_abtg*sp_elisa_cond + (1-sp_abtg)*(1-se_target)
+
+se_wb</code></pre>
+<pre><code>## [1] 0.8555</code></pre>
+<pre class="r"><code>sp_wb</code></pre>
+<pre><code>## [1] 0.9811</code></pre>
+<pre class="r"><code>se_elisa</code></pre>
+<pre><code>## [1] 0.89494</code></pre>
+<pre class="r"><code>sp_elisa</code></pre>
+<pre><code>## [1] 0.971764</code></pre>
+<pre class="r"><code>## Simulation
+
+iters &lt;- 10^6
+
+simdata &lt;- data.frame(TrueStatus = rbinom(iters, 1, prev)) %&gt;%
+    mutate(AntibodyStatus = rbinom(iters, 1, TrueStatus*se_antibody + (1-TrueStatus)*(1-sp_antibody))) %&gt;%
+    mutate(TargetStatus = rbinom(iters, 1, AntibodyStatus*se_target + (1-AntibodyStatus)*(1-sp_target))) %&gt;%
+    mutate(ELISA1 = rbinom(iters, 1, TargetStatus*se_elisa_cond + (1-TargetStatus)*(1-sp_elisa_cond))) %&gt;%
+    mutate(ELISA2 = rbinom(iters, 1, TargetStatus*se_elisa_cond + (1-TargetStatus)*(1-sp_elisa_cond))) %&gt;%
+    mutate(WesternBlot = rbinom(iters, 1, AntibodyStatus*se_wb_cond + (1-AntibodyStatus)*(1-sp_wb_cond)))
+
+str(simdata)</code></pre>
+<pre><code>## &#39;data.frame&#39;:    1000000 obs. of  6 variables:
+##  $ TrueStatus    : int  0 0 0 0 1 0 0 1 0 0 ...
+##  $ AntibodyStatus: int  0 0 0 0 1 0 0 1 0 0 ...
+##  $ TargetStatus  : int  0 0 0 0 1 0 0 1 0 0 ...
+##  $ ELISA1        : int  0 0 0 0 1 0 0 1 0 0 ...
+##  $ ELISA2        : int  0 0 0 0 1 0 0 1 0 0 ...
+##  $ WesternBlot   : int  0 0 0 0 1 0 0 0 0 0 ...</code></pre>
+<pre class="r"><code># Verify that the tests are correlated:
+table(simdata$ELISA1, simdata$ELISA2)</code></pre>
+<pre><code>##    
+##          0      1
+##   0 787184   9961
+##   1   9748 193107</code></pre>
+<pre class="r"><code>table(simdata$ELISA1, simdata$WesternBlot)</code></pre>
+<pre><code>##    
+##          0      1
+##   0 778999  18146
+##   1  34263 168592</code></pre>
+<pre class="r"><code>## Look at results:
+
+# The individual test-level Se and Sp are as expected:
+simdata %&gt;%
+    group_by(TrueStatus) %&gt;%
+    mutate(Total = n()) %&gt;%
+    gather(Test, Result, -Total, -TrueStatus) %&gt;%
+    group_by(TrueStatus, Test, Total) %&gt;%
+    summarise(PercentPositive = sum(Result)/Total[1] *100) %&gt;%
+    filter(Test %in% c(&#39;ELISA1&#39;,&#39;ELISA2&#39;,&#39;WesternBlot&#39;))</code></pre>
+<pre><code>## # A tibble: 6 x 4
+## # Groups:   TrueStatus, Test [6]
+##   TrueStatus Test         Total PercentPositive
+##        &lt;int&gt; &lt;chr&gt;        &lt;int&gt;           &lt;dbl&gt;
+## 1          0 ELISA1      799215            2.88
+## 2          0 ELISA2      799215            2.90
+## 3          0 WesternBlot 799215            1.88
+## 4          1 ELISA1      200785           89.6 
+## 5          1 ELISA2      200785           89.6 
+## 6          1 WesternBlot 200785           85.5</code></pre>
+<pre class="r"><code># Compare to:
+(1-sp_elisa)*100</code></pre>
+<pre><code>## [1] 2.8236</code></pre>
+<pre class="r"><code>(1-sp_wb)*100</code></pre>
+<pre><code>## [1] 1.89</code></pre>
+<pre class="r"><code>se_elisa*100</code></pre>
+<pre><code>## [1] 89.494</code></pre>
+<pre class="r"><code>se_wb*100</code></pre>
+<pre><code>## [1] 85.55</code></pre>
+<pre class="r"><code># Serial testing with all 3 tests:
+simdata %&gt;%
+    # Define positive as needing to be positive for all tests
+    mutate(Combined = ELISA1 * ELISA2 * WesternBlot) %&gt;%
+    group_by(TrueStatus) %&gt;%
+    mutate(Total = n()) %&gt;%
+    gather(Test, Result, -Total, -TrueStatus) %&gt;%
+    group_by(TrueStatus, Test, Total) %&gt;%
+    summarise(PercentPositive = sum(Result)/Total[1] *100) %&gt;%
+    filter(Test %in% c(&#39;ELISA1&#39;,&#39;ELISA2&#39;,&#39;WesternBlot&#39;,&#39;Combined&#39;))</code></pre>
+<pre><code>## # A tibble: 8 x 4
+## # Groups:   TrueStatus, Test [8]
+##   TrueStatus Test         Total PercentPositive
+##        &lt;int&gt; &lt;chr&gt;        &lt;int&gt;           &lt;dbl&gt;
+## 1          0 Combined    799215           0.847
+## 2          0 ELISA1      799215           2.88 
+## 3          0 ELISA2      799215           2.90 
+## 4          0 WesternBlot 799215           1.88 
+## 5          1 Combined    200785          79.7  
+## 6          1 ELISA1      200785          89.6  
+## 7          1 ELISA2      200785          89.6  
+## 8          1 WesternBlot 200785          85.5</code></pre>
+<pre class="r"><code># So serial testing has sensitivity of ~80% and specificity of ~99.1%
+
+# You could also try other testing procedures
+# But note that the overall sensitivity/specificity is sensitive to all 8 of the se/sp parameters at the top!</code></pre>
+</div>
+<div id="generating-the-model" class="section level2">
+<h2>Generating the model</h2>
+<p>Extreme care needed</p>
+<p>Use autohuiwalter with argument covon=TRUE</p>
+<pre class="r"><code>source(&#39;autohuiwalter.R&#39;)
+auto_huiwalter(ind3tests, &#39;ind3tests.bug&#39;, covon=TRUE)</code></pre>
+<pre><code>## The model and data have been written to ind3tests.bug in the current working directory
+## You should check and alter priors before running the model</code></pre>
+<pre><code>## Auto-generated Hui-Walter model created by script version 0.1 on 2020-02-17
+
+model{
+
+    ## Observation layer:
+
+    # Complete observations (N=400):
+    for(p in 1:Populations){
+        Tally_RRR[1:8,p] ~ dmulti(prob_RRR[1:8,p], N_RRR[p])
+
+        prob_RRR[1:8,p] &lt;- se_prob[1:8,p] + sp_prob[1:8,p]
+    }
+
+
+    ## Observation probabilities:
+
+    for(p in 1:Populations){
+
+        # Probability of observing Test1- Test2- Test3- from a true positive::
+        se_prob[1,p] &lt;- prev[p] * ((1-se[1])*(1-se[2])*(1-se[3]) +covse12 +covse13 +covse23)
+        # Probability of observing Test1- Test2- Test3- from a true negative::
+        sp_prob[1,p] &lt;- (1-prev[p]) * (sp[1]*sp[2]*sp[3] +covsp12 +covsp13 +covsp23)
+
+        # Probability of observing Test1+ Test2- Test3- from a true positive::
+        se_prob[2,p] &lt;- prev[p] * (se[1]*(1-se[2])*(1-se[3]) -covse12 -covse13 +covse23)
+        # Probability of observing Test1+ Test2- Test3- from a true negative::
+        sp_prob[2,p] &lt;- (1-prev[p]) * ((1-sp[1])*sp[2]*sp[3] -covsp12 -covsp13 +covsp23)
+
+        # Probability of observing Test1- Test2+ Test3- from a true positive::
+        se_prob[3,p] &lt;- prev[p] * ((1-se[1])*se[2]*(1-se[3]) -covse12 +covse13 -covse23)
+        # Probability of observing Test1- Test2+ Test3- from a true negative::
+        sp_prob[3,p] &lt;- (1-prev[p]) * (sp[1]*(1-sp[2])*sp[3] -covsp12 +covsp13 -covsp23)
+
+        # Probability of observing Test1+ Test2+ Test3- from a true positive::
+        se_prob[4,p] &lt;- prev[p] * (se[1]*se[2]*(1-se[3]) +covse12 -covse13 -covse23)
+        # Probability of observing Test1+ Test2+ Test3- from a true negative::
+        sp_prob[4,p] &lt;- (1-prev[p]) * ((1-sp[1])*(1-sp[2])*sp[3] +covsp12 -covsp13 -covsp23)
+
+        # Probability of observing Test1- Test2- Test3+ from a true positive::
+        se_prob[5,p] &lt;- prev[p] * ((1-se[1])*(1-se[2])*se[3] +covse12 -covse13 -covse23)
+        # Probability of observing Test1- Test2- Test3+ from a true negative::
+        sp_prob[5,p] &lt;- (1-prev[p]) * (sp[1]*sp[2]*(1-sp[3]) +covsp12 -covsp13 -covsp23)
+
+        # Probability of observing Test1+ Test2- Test3+ from a true positive::
+        se_prob[6,p] &lt;- prev[p] * (se[1]*(1-se[2])*se[3] -covse12 +covse13 -covse23)
+        # Probability of observing Test1+ Test2- Test3+ from a true negative::
+        sp_prob[6,p] &lt;- (1-prev[p]) * ((1-sp[1])*sp[2]*(1-sp[3]) -covsp12 +covsp13 -covsp23)
+
+        # Probability of observing Test1- Test2+ Test3+ from a true positive::
+        se_prob[7,p] &lt;- prev[p] * ((1-se[1])*se[2]*se[3] -covse12 -covse13 +covse23)
+        # Probability of observing Test1- Test2+ Test3+ from a true negative::
+        sp_prob[7,p] &lt;- (1-prev[p]) * (sp[1]*(1-sp[2])*(1-sp[3]) -covsp12 -covsp13 +covsp23)
+
+        # Probability of observing Test1+ Test2+ Test3+ from a true positive::
+        se_prob[8,p] &lt;- prev[p] * (se[1]*se[2]*se[3] +covse12 +covse13 +covse23)
+        # Probability of observing Test1+ Test2+ Test3+ from a true negative::
+        sp_prob[8,p] &lt;- (1-prev[p]) * ((1-sp[1])*(1-sp[2])*(1-sp[3]) +covsp12 +covsp13 +covsp23)
+
+    }
+
+
+    ## Priors:
+
+    # Prevalence in population 1:
+    prev[1] ~ dbeta(1,1)
+
+    # Prevalence in population 2:
+    prev[2] ~ dbeta(1,1)
+
+
+    # Sensitivity of Test1 test:
+    se[1] ~ dbeta(1,1)T(1-sp[1], )
+    # Specificity of Test1 test:
+    sp[1] ~ dbeta(1,1)
+
+    # Sensitivity of Test2 test:
+    se[2] ~ dbeta(1,1)T(1-sp[2], )
+    # Specificity of Test2 test:
+    sp[2] ~ dbeta(1,1)
+
+    # Sensitivity of Test3 test:
+    se[3] ~ dbeta(1,1)T(1-sp[3], )
+    # Specificity of Test3 test:
+    sp[3] ~ dbeta(1,1)
+
+
+    # Covariance in sensitivity between Test1 and Test2 tests:
+    covse12 ~ dunif( (se[1]-1)*(1-se[2]) , min(se[1],se[2]) - se[1]*se[2] )  ## if the sensitivity of these tests may be correlated
+    #  covse12 &lt;- 0  ## if the sensitivity of these tests can be assumed to be independent
+    # Covariance in specificity between Test1 and Test2 tests:
+    covsp12 ~ dunif( (sp[1]-1)*(1-sp[2]) , min(sp[1],sp[2]) - sp[1]*sp[2] )  ## if the specificity of these tests may be correlated
+    #  covsp12 &lt;- 0  ## if the specificity of these tests can be assumed to be independent
+
+    # Covariance in sensitivity between Test1 and Test3 tests:
+    covse13 ~ dunif( (se[1]-1)*(1-se[3]) , min(se[1],se[3]) - se[1]*se[3] )  ## if the sensitivity of these tests may be correlated
+    #  covse13 &lt;- 0  ## if the sensitivity of these tests can be assumed to be independent
+    # Covariance in specificity between Test1 and Test3 tests:
+    covsp13 ~ dunif( (sp[1]-1)*(1-sp[3]) , min(sp[1],sp[3]) - sp[1]*sp[3] )  ## if the specificity of these tests may be correlated
+    #  covsp13 &lt;- 0  ## if the specificity of these tests can be assumed to be independent
+
+    # Covariance in sensitivity between Test2 and Test3 tests:
+    covse23 ~ dunif( (se[2]-1)*(1-se[3]) , min(se[2],se[3]) - se[2]*se[3] )  ## if the sensitivity of these tests may be correlated
+    #  covse23 &lt;- 0  ## if the sensitivity of these tests can be assumed to be independent
+    # Covariance in specificity between Test2 and Test3 tests:
+    covsp23 ~ dunif( (sp[2]-1)*(1-sp[3]) , min(sp[2],sp[3]) - sp[2]*sp[3] )  ## if the specificity of these tests may be correlated
+    #  covsp23 &lt;- 0  ## if the specificity of these tests can be assumed to be independent
+
+}
+
+#monitor# se, sp, prev, covse12, covsp12, covse13, covsp13, covse23, covsp23
+
+## Inits:
+inits{
+&quot;se&quot; &lt;- c(0.5, 0.99, 0.5)
+&quot;sp&quot; &lt;- c(0.99, 0.75, 0.99)
+&quot;prev&quot; &lt;- c(0.05, 0.95)
+&quot;covse12&quot; &lt;- 0
+&quot;covse13&quot; &lt;- 0
+&quot;covse23&quot; &lt;- 0
+&quot;covsp12&quot; &lt;- 0
+&quot;covsp13&quot; &lt;- 0
+&quot;covsp23&quot; &lt;- 0
+}
+inits{
+&quot;se&quot; &lt;- c(0.99, 0.5, 0.99)
+&quot;sp&quot; &lt;- c(0.75, 0.99, 0.75)
+&quot;prev&quot; &lt;- c(0.95, 0.05)
+&quot;covse12&quot; &lt;- 0
+&quot;covse13&quot; &lt;- 0
+&quot;covse23&quot; &lt;- 0
+&quot;covsp12&quot; &lt;- 0
+&quot;covsp13&quot; &lt;- 0
+&quot;covsp23&quot; &lt;- 0
+}
+
+## Data:
+data{
+&quot;Populations&quot; &lt;- 2
+&quot;N_RRR&quot; &lt;- c(200, 200)
+&quot;Tally_RRR&quot; &lt;- structure(c(109, 18, 2, 4, 7, 5, 34, 21, 40, 27, 1, 5, 9, 10, 22, 86), .Dim = c(8, 2))
+}</code></pre>
 </div>
 <div id="exercise-1" class="section level2">
 <h2>Exercise</h2>
@@ -462,13 +840,14 @@ summary {
 <div id="background-to-dic" class="section level2">
 <h2>Background to DIC</h2>
 <p>[Some theory slides stolen from ABME course: ABME_Model selection.pptx]</p>
+<p>DIC works fine for hierarchical normal models but not others</p>
 </div>
 <div id="other-methods" class="section level2">
 <h2>Other methods</h2>
-<p>DIC works fine for hierarchical normal models</p>
 <p>Bayes factors work well if you can count them</p>
 <p>WAIC works better for a wide range of models</p>
-<pre><code>* Probably won&#39;t work for Hui-Walter though due to lack of independent data
+<pre><code>* An approximation to LOO with general applicability
+* Probably won&#39;t work for Hui-Walter though due to lack of independent data
 * Could be useful if using the GLM version (untested!)</code></pre>
 <p>Models tend to be sensitive to priors</p>
 <p>Simulating data and testing that your model recovers the parameters is a good idea</p>
@@ -481,7 +860,117 @@ summary {
 </div>
 <div id="calculating-waic" class="section level2">
 <h2>Calculating WAIC</h2>
-<p>Currently a pain - steal code from ABME course: ABME_waic_example.R</p>
+<p>Currently a pain</p>
+<pre class="r"><code>## This is an example of extracting WAIC from runjags/jags objects
+# Matt Denwood, 2019-11-11
+# Note that this will all get much easier with the release of JAGS 5 and the next verison of runjags!!
+
+## A function to return the WAIC
+# Also returns the effective number of parameters (p_waic), elpd and lpd as described by:
+# www.stat.columbia.edu/~gelman/research/unpublished/waic_stan.pdf
+# Note:     mean_lik is the log of the (exponentiated) likelihoods
+#           var_log_lik is the variance of the log likelihoods
+#           these need separate monitors in JAGS
+get_waic &lt;- function(mean_lik, var_log_lik){
+    
+    stopifnot(length(mean_lik)==length(var_log_lik))
+    stopifnot(all(mean_lik &gt; 0))
+    N &lt;- length(mean_lik)
+    
+    lpd &lt;- log(mean_lik)
+    elpd &lt;- lpd - var_log_lik
+    waic &lt;- -2 * elpd
+    se &lt;- (var(waic) / N)^0.5
+    
+    return(list(waic=-2*sum(elpd), p_waic=sum(var_log_lik), elpd=sum(elpd), lpd=sum(lpd), se_waic=se, pointwise=cbind(waic=waic, elpd=elpd, lpd=lpd)))
+}
+
+
+## An example based on Andrew Gelman&#39;s 8 schools data, to match that used in the Vehtari and Gelman (2014) paper
+
+# Data as used by Gelman:
+schools &lt;-
+structure(list(school = structure(1:8, .Label = c(&quot;A&quot;, &quot;B&quot;, &quot;C&quot;,
+&quot;D&quot;, &quot;E&quot;, &quot;F&quot;, &quot;G&quot;, &quot;H&quot;), class = &quot;factor&quot;), estimate = c(28L,
+8L, -3L, 7L, -1L, 1L, 18L, 12L), sd = c(15L, 10L, 16L, 11L, 9L,
+11L, 10L, 18L)), .Names = c(&quot;school&quot;, &quot;estimate&quot;, &quot;sd&quot;), class = &quot;data.frame&quot;, row.names = c(NA,
+-8L))
+
+# Model definition:
+model &lt;- &quot;
+model {
+    for (j in 1:J){                         # J = the number of schools 
+        y[j] ~ dnorm (theta[j], tau.y[j])   # data model: the likelihood
+        theta[j] &lt;- mu.theta + eta[j]
+        tau.y[j] &lt;- pow(sigma.y[j], -2)
+        
+        # These are required to monitor the variance of the log likelihood:
+        log_lik[j] &lt;- logdensity.norm(y[j], theta[j], tau.y[j])
+        # And the mean of the likelihood:
+        lik[j] &lt;- exp(log_lik[j])
+    }
+    for (j in 1:J){
+        eta[j] ~ dnorm (0, tau.theta)
+    }
+    tau.theta &lt;- pow(sigma.theta, -2)
+    sigma.theta ~ dhalfcauchy(prior.scale)  # The dhalfcauchy distribution is also implemented in runjags
+    mu.theta ~ dnorm (0.0, 1.0E-6)          # noninformative prior on mu
+    #data# J, y, sigma.y, prior.scale
+    #monitor# theta, mu.theta, sigma.theta
+}&quot;
+
+
+## Run the model:
+library(&#39;runjags&#39;)
+library(&#39;rjags&#39;)</code></pre>
+<pre><code>## Loading required package: coda</code></pre>
+<pre><code>## Linked to JAGS 4.4.0</code></pre>
+<pre><code>## Loaded modules: basemod,bugs</code></pre>
+<pre class="r"><code># Calculate the data:
+J &lt;- nrow(schools)
+y &lt;- schools$estimate
+sigma.y &lt;- schools$sd
+prior.scale &lt;- 25
+
+# Initial run for main parameter monitoring:
+results &lt;- run.jags(model, sample=10000)</code></pre>
+<pre><code>## Warning: No initial value blocks found and n.chains not specified: 2 chains were
+## used</code></pre>
+<pre><code>## Warning: You should update the rjags package to version 5.x - if the version on CRAN is not currently up to date, try downloading from https://sourceforge.net/projects/mcmc-jags/files/rjags/ instead 
+## (This warning is given once per R session)</code></pre>
+<pre><code>## Warning: No initial values were provided - JAGS will use the same initial values
+## for all chains</code></pre>
+<pre><code>## module runjags loaded</code></pre>
+<pre><code>## Finished running the simulation</code></pre>
+<pre class="r"><code># Second run for WAIC monitors:
+ll &lt;- jags.samples(as.jags(results), c(&#39;lik&#39;, &#39;log_lik&#39;), type=c(&#39;mean&#39;,&#39;variance&#39;), 10000)
+# Calculate the WAIC statistic and effective parameters etc:
+get_waic(as.mcmc(ll$mean$lik)[,1], as.mcmc(ll$variance$log_lik)[,1])</code></pre>
+<pre><code>## $waic
+## [1] 61.83872
+## 
+## $p_waic
+## [1] 1.296618
+## 
+## $elpd
+## [1] -30.91936
+## 
+## $lpd
+## [1] -29.62274
+## 
+## $se_waic
+## [1] 0.2445773
+## 
+## $pointwise
+##          waic      elpd       lpd
+## [1,] 9.173574 -4.586787 -4.288889
+## [2,] 6.948341 -3.474171 -3.374926
+## [3,] 8.025299 -4.012650 -3.927829
+## [4,] 7.101480 -3.550740 -3.457296
+## [5,] 7.548962 -3.774481 -3.489819
+## [6,] 7.388978 -3.694489 -3.553908
+## [7,] 7.775265 -3.887633 -3.625216
+## [8,] 7.876822 -3.938411 -3.904860</code></pre>
 </div>
 <div id="future-updates" class="section level2">
 <h2>Future Updates</h2>
