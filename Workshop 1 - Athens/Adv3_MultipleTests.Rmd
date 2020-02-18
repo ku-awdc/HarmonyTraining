@@ -57,31 +57,41 @@ Teachers:
 
 ## Recap
 
-Important points from sessions 1 and 2
+- JAGS / runjags is the wasy way to work with complex models
+  * But we *still have to* check convergence and effective sample size!
 
+- Estimating sensitivity and specificity is like pulling a rabbit out of a hat
 
+  * Multiple populations helps **a lot**
+  * Strong priors for one of the tests helps even more!
 
+. . .
+
+- But what if the tests are not independent of each other?
 
 # Session 3a:  Hui-Walter models for multiple tests with conditional indepdendence
 
 ## What exactly is our latent class?
 
-What do we mean by "conditionally independent?"
+- What do we mean by "conditionally independent?"
 
-Example:  three antibody tests
+. . .
 
-The latent status is actually 'producing antibodies' not 'diseased'
+- Example:  we have three antibody tests
+  
+  * The latent status is actually 'producing antibodies' not 'diseased'
+  * We're actually pulling **something** out of a hat, and deciding to call it a rabbit
 
-We're actually pulling **something** out of a hat, and deciding to call it a rabbit
 
 ## Model specification
 
-If doing this manually, take **extreme** care with multinomial tabulation
+- Like for two tests, except it is now a 2x2x2 table
+  
+  * If calculating this manually, take **extreme** care with multinomial tabulation
 
-Or use autohuiwalter!
+- Or use autohuiwalter
 
   * This will also deal gracefully with missing data in one or more test results
-
 
 ## Simulating data
 
@@ -91,31 +101,39 @@ Simulating data using an arbitrary number of independent tests is quite straight
 # Parameter values to simulate:
 N <- 200
 se1 <- 0.8
-se2 <- 0.9
-se3 <- 0.95
 sp1 <- 0.95
+se2 <- 0.9
 sp2 <- 0.99
+se3 <- 0.95
 sp3 <- 0.95
 
 Populations <- 2
 prevalence <- c(0.25,0.75)
-Group <- rep(1:Populations, each=N)
+Group <- sample(1:Populations, N, replace=TRUE)
+```
 
+---
+
+```{r}
 # Ensure replicable data:
-set.seed(2017-11-21)
+set.seed(2020-02-18)
 
 # Simulate the true latent state (which is unobserved in real life):
-true <- rbinom(N*Populations, 1, prevalence[Group])
+true <- rbinom(N, 1, prevalence[Group])
 # Simulate test results for test 1:
-test1 <- rbinom(N*Populations, 1, se1*true + (1-sp1)*(1-true))
+test1 <- rbinom(N, 1, se1*true + (1-sp1)*(1-true))
 # Simulate test results for test 2:
-test2 <- rbinom(N*Populations, 1, se2*true + (1-sp2)*(1-true))
+test2 <- rbinom(N, 1, se2*true + (1-sp2)*(1-true))
 # Simulate test results for test 3:
-test3 <- rbinom(N*Populations, 1, se3*true + (1-sp3)*(1-true))
+test3 <- rbinom(N, 1, se3*true + (1-sp3)*(1-true))
 
 testdata <- data.frame(Population=Group, Test1=test1, Test2=test2, Test3=test3)
-
 ```
+
+
+## Alternative model specification
+
+Can be exactly the same as the model generation code
 
 
 ## Exercise
@@ -124,12 +142,14 @@ Simulate data from 3 tests and analyse using the autohuiwalter function
 
 Do the estimates of Se/Sp correspond to the simulation parameters?
 
-
-## Optional Exercise
-
 Make some data missing for one or more tests and re-generate the model
 
   * Can you see what has changed in the code?
+
+
+## Optional Exercise
+
+Try to write a model that explicitly estimates the latent class for each individual
 
 
 # Session 3b:  Hui-Walter models for multiple tests with conditional depdendence
@@ -166,7 +186,11 @@ Or three antibody tests where one has a different target to the other two
 
 ```
 
+## Alternative model specification
 
+Again, this can be exactly the same as the model generation code
+
+But convergence gets worse
 
 ## Simulating data
 
@@ -352,7 +376,6 @@ Model with conditional depdendence has bigger CI but unbiased
 [Some theory slides stolen from ABME course:  ABME_Model selection.pptx]
 
 DIC works fine for hierarchical normal models but not others
-
 
 
 ## Other methods

@@ -225,14 +225,12 @@ prevalence <- list(chain1=0.05, chain2=0.95)
 
 ---
 
-```{r}
-results <- run.jags('basicjags.bug', n.chains=2, burnin=5000, sample=10000)
-```
-
----
-
 ```{r include=FALSE}
 runjags.options(silent.jags=TRUE)
+```
+
+```{r message=FALSE, warning=FALSE, results='hide'}
+results <- run.jags('basicjags.bug', n.chains=2, burnin=5000, sample=10000)
 ```
 
 
@@ -287,12 +285,10 @@ results
 ```
 
 
-Reminder:  we want psrf < 1.05 and SSeff > 1000.  If these both look OK then you can use the posterior summary statistics.
+Reminder:  we want psrf < 1.05 and SSeff > 1000
 
 
-## Exercise
-
-*If you have problems installing JAGS or accessing GitHub please let us know know!*
+## Exercise {.fragile}
 
 - Run this model yourself in JAGS
 
@@ -302,20 +298,9 @@ Reminder:  we want psrf < 1.05 and SSeff > 1000.  If these both look OK then you
 
 - Change the sample length - does this make a difference?
 
-
-## Optional Exercise
-
-- Change the number of chains to 1 and 4
-  
-  * Remember that you will also need to change the initial values
-  * What affect does having different numbers of chains have?
-
-- Try using the `run.jags` argument `method='parallel'` - what affect does this have?
-
-
 `r if(params$presentation) {"\\begin{comment}"}`
 
-## Solution
+## Solution {.fragile}
 
 ### Run this model yourself in JAGS
 
@@ -395,7 +380,22 @@ This runs much faster, but we have a very small effective sample size so our est
 
 In practice you should be cautious and use a large sample.  The default options for run.jags are 5000 burnin and 10000 samples, which are in practice the smallest we would generally go for.  You will need to increase one or both of these in situations where you have a lot of autocorrelation.
 
-## Optional Solution
+`r if(params$presentation) {"\\end{comment}"}`
+
+
+## Optional Exercise {.fragile}
+
+- Change the number of chains to 1 and 4
+  
+  * Remember that you will also need to change the initial values
+  * What affect does having different numbers of chains have?
+
+- Try using the `run.jags` argument `method='parallel'` - what affect does this have?
+
+
+`r if(params$presentation) {"\\begin{comment}"}`
+
+## Optional Solution {.fragile}
 
 ### Change the number of chains to 1 and 4
 
@@ -993,7 +993,7 @@ results <- run.jags('basicimperfect.bug', n.chains=2, burnin=0, sample=10000)
 results
 ```
 
-Estimates for `prevalence` are more precise.
+Estimates for `prevalence` are a little bit more precise.
 
 Same model with se and sp fixed to one:
 

@@ -13,7 +13,7 @@
 <meta name="author" content="Giles Innocent" />
 <meta name="author" content="Sonja Hartnack" />
 
-<meta name="date" content="2020-02-18" />
+<meta name="date" content="2020-02-19" />
 
 <title>Hands-on training session 3</title>
 
@@ -370,7 +370,7 @@ summary {
 <h4 class="author">Matt Denwood</h4>
 <h4 class="author">Giles Innocent</h4>
 <h4 class="author">Sonja Hartnack</h4>
-<h4 class="date">2020-02-18</h4>
+<h4 class="date">2020-02-19</h4>
 
 </div>
 
@@ -393,24 +393,52 @@ summary {
 </div>
 <div id="recap" class="section level2">
 <h2>Recap</h2>
-<p>Important points from sessions 1 and 2</p>
+<ul>
+<li><p>JAGS / runjags is the wasy way to work with complex models</p>
+<ul>
+<li>But we <em>still have to</em> check convergence and effective sample size!</li>
+</ul></li>
+<li><p>Estimating sensitivity and specificity is like pulling a rabbit out of a hat</p>
+<ul>
+<li>Multiple populations helps <strong>a lot</strong></li>
+<li>Strong priors for one of the tests helps even more!</li>
+</ul></li>
+</ul>
+<div class="incremental">
+<ul>
+<li>But what if the tests are not independent of each other?</li>
+</ul>
+</div>
 </div>
 </div>
 <div id="session-3a-hui-walter-models-for-multiple-tests-with-conditional-indepdendence" class="section level1">
 <h1>Session 3a: Hui-Walter models for multiple tests with conditional indepdendence</h1>
 <div id="what-exactly-is-our-latent-class" class="section level2">
 <h2>What exactly is our latent class?</h2>
-<p>What do we mean by “conditionally independent?”</p>
-<p>Example: three antibody tests</p>
-<p>The latent status is actually ‘producing antibodies’ not ‘diseased’</p>
-<p>We’re actually pulling <strong>something</strong> out of a hat, and deciding to call it a rabbit</p>
+<ul>
+<li>What do we mean by “conditionally independent?”</li>
+</ul>
+<div class="incremental">
+<ul>
+<li><p>Example: we have three antibody tests</p>
+<ul>
+<li>The latent status is actually ‘producing antibodies’ not ‘diseased’</li>
+<li>We’re actually pulling <strong>something</strong> out of a hat, and deciding to call it a rabbit</li>
+</ul></li>
+</ul>
+</div>
 </div>
 <div id="model-specification" class="section level2">
 <h2>Model specification</h2>
-<p>If doing this manually, take <strong>extreme</strong> care with multinomial tabulation</p>
-<p>Or use autohuiwalter!</p>
+<ul>
+<li><p>Like for two tests, except it is now a 2x2x2 table</p>
+<ul>
+<li>If calculating this manually, take <strong>extreme</strong> care with multinomial tabulation</li>
+</ul></li>
+<li><p>Or use autohuiwalter</p>
 <ul>
 <li>This will also deal gracefully with missing data in one or more test results</li>
+</ul></li>
 </ul>
 </div>
 <div id="simulating-data" class="section level2">
@@ -419,41 +447,46 @@ summary {
 <pre class="r"><code># Parameter values to simulate:
 N &lt;- 200
 se1 &lt;- 0.8
-se2 &lt;- 0.9
-se3 &lt;- 0.95
 sp1 &lt;- 0.95
+se2 &lt;- 0.9
 sp2 &lt;- 0.99
+se3 &lt;- 0.95
 sp3 &lt;- 0.95
 
 Populations &lt;- 2
 prevalence &lt;- c(0.25,0.75)
-Group &lt;- rep(1:Populations, each=N)
-
-# Ensure replicable data:
-set.seed(2017-11-21)
+Group &lt;- sample(1:Populations, N, replace=TRUE)</code></pre>
+<hr />
+<pre class="r"><code># Ensure replicable data:
+set.seed(2020-02-18)
 
 # Simulate the true latent state (which is unobserved in real life):
-true &lt;- rbinom(N*Populations, 1, prevalence[Group])
+true &lt;- rbinom(N, 1, prevalence[Group])
 # Simulate test results for test 1:
-test1 &lt;- rbinom(N*Populations, 1, se1*true + (1-sp1)*(1-true))
+test1 &lt;- rbinom(N, 1, se1*true + (1-sp1)*(1-true))
 # Simulate test results for test 2:
-test2 &lt;- rbinom(N*Populations, 1, se2*true + (1-sp2)*(1-true))
+test2 &lt;- rbinom(N, 1, se2*true + (1-sp2)*(1-true))
 # Simulate test results for test 3:
-test3 &lt;- rbinom(N*Populations, 1, se3*true + (1-sp3)*(1-true))
+test3 &lt;- rbinom(N, 1, se3*true + (1-sp3)*(1-true))
 
 testdata &lt;- data.frame(Population=Group, Test1=test1, Test2=test2, Test3=test3)</code></pre>
+</div>
+<div id="alternative-model-specification" class="section level2">
+<h2>Alternative model specification</h2>
+<p>Can be exactly the same as the model generation code</p>
 </div>
 <div id="exercise" class="section level2">
 <h2>Exercise</h2>
 <p>Simulate data from 3 tests and analyse using the autohuiwalter function</p>
 <p>Do the estimates of Se/Sp correspond to the simulation parameters?</p>
-</div>
-<div id="optional-exercise" class="section level2">
-<h2>Optional Exercise</h2>
 <p>Make some data missing for one or more tests and re-generate the model</p>
 <ul>
 <li>Can you see what has changed in the code?</li>
 </ul>
+</div>
+<div id="optional-exercise" class="section level2">
+<h2>Optional Exercise</h2>
+<p>Try to write a model that explicitly estimates the latent class for each individual</p>
 </div>
 </div>
 <div id="session-3b-hui-walter-models-for-multiple-tests-with-conditional-depdendence" class="section level1">
@@ -483,6 +516,11 @@ testdata &lt;- data.frame(Population=Group, Test1=test1, Test2=test2, Test3=test
     covsp12 ~ dunif( (sp[1]-1)*(1-sp[2]) , min(sp[1],sp[2]) - sp[1]*sp[2] )
     
     ...</code></pre>
+</div>
+<div id="alternative-model-specification-1" class="section level2">
+<h2>Alternative model specification</h2>
+<p>Again, this can be exactly the same as the model generation code</p>
+<p>But convergence gets worse</p>
 </div>
 <div id="simulating-data-1" class="section level2">
 <h2>Simulating data</h2>
@@ -682,7 +720,7 @@ simdata %&gt;%
 auto_huiwalter(ind3tests, &#39;ind3tests.bug&#39;, covon=TRUE)</code></pre>
 <pre><code>## The model and data have been written to ind3tests.bug in the current working directory
 ## You should check and alter priors before running the model</code></pre>
-<pre><code>## Auto-generated Hui-Walter model created by script version 0.1 on 2020-02-18
+<pre><code>## Auto-generated Hui-Walter model created by script version 0.1 on 2020-02-19
 
 model{
 
@@ -947,30 +985,30 @@ ll &lt;- jags.samples(as.jags(results), c(&#39;lik&#39;, &#39;log_lik&#39;), typ
 # Calculate the WAIC statistic and effective parameters etc:
 get_waic(as.mcmc(ll$mean$lik)[,1], as.mcmc(ll$variance$log_lik)[,1])</code></pre>
 <pre><code>## $waic
-## [1] 61.66972
+## [1] 61.78034
 ## 
 ## $p_waic
-## [1] 1.213042
+## [1] 1.238281
 ## 
 ## $elpd
-## [1] -30.83486
+## [1] -30.89017
 ## 
 ## $lpd
-## [1] -29.62182
+## [1] -29.65189
 ## 
 ## $se_waic
-## [1] 0.2509228
+## [1] 0.2515458
 ## 
 ## $pointwise
 ##          waic      elpd       lpd
-## [1,] 9.174659 -4.587330 -4.301872
-## [2,] 6.915556 -3.457778 -3.366952
-## [3,] 8.026240 -4.013120 -3.932625
-## [4,] 7.039791 -3.519895 -3.446948
-## [5,] 7.524946 -3.762473 -3.494698
-## [6,] 7.338965 -3.669482 -3.549320
-## [7,] 7.792543 -3.896272 -3.629509
-## [8,] 7.857025 -3.928512 -3.899897</code></pre>
+## [1,] 9.189410 -4.594705 -4.310496
+## [2,] 6.909966 -3.454983 -3.366009
+## [3,] 8.039964 -4.019982 -3.933146
+## [4,] 7.050055 -3.525028 -3.449662
+## [5,] 7.592651 -3.796326 -3.505958
+## [6,] 7.349397 -3.674699 -3.554707
+## [7,] 7.796490 -3.898245 -3.633902
+## [8,] 7.852409 -3.926204 -3.898011</code></pre>
 </div>
 <div id="future-updates" class="section level2">
 <h2>Future Updates</h2>

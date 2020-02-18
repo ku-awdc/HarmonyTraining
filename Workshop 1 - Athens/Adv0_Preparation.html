@@ -12,7 +12,7 @@
 <meta name="author" content="Matt Denwood" />
 <meta name="author" content="Giles Innocent" />
 
-<meta name="date" content="2020-02-18" />
+<meta name="date" content="2020-02-19" />
 
 <title>Workshop preparation</title>
 
@@ -1639,7 +1639,7 @@ summary {
 <h3 class="subtitle">Homework and software installation for the HARMONY advanced training workshop</h3>
 <h4 class="author">Matt Denwood</h4>
 <h4 class="author">Giles Innocent</h4>
-<h4 class="date">2020-02-18</h4>
+<h4 class="date">2020-02-19</h4>
 
 </div>
 
@@ -1663,8 +1663,10 @@ stopifnot(require(&#39;TeachingDemos&#39;))
 stopifnot(require(&#39;HSROC&#39;))
 stopifnot(require(&#39;MCMCpack&#39;))
 stopifnot(require(&#39;mada&#39;))
-stopifnot(testjags()$JAGS.available)
-stopifnot(numeric_version(testjags()$JAGS.version) &gt;= &quot;4.3.0&quot;)
+stopifnot(testjags()$JAGS.available)</code></pre>
+<pre><code>## Warning: You should update the rjags package to version 5.x - if the version on CRAN is not currently up to date, try downloading from https://sourceforge.net/projects/mcmc-jags/files/rjags/ instead 
+## (This warning is given once per R session)</code></pre>
+<pre class="r"><code>stopifnot(numeric_version(testjags()$JAGS.version) &gt;= &quot;4.3.0&quot;)
 stopifnot(testjags()$rjags.found)
 stopifnot(numeric_version(testjags()$rjags.version) &gt;= &quot;4-8&quot;)</code></pre>
 <p>If you have any difficulties installing the software or get errors from the code above, please let us know so that we can resolve these before the start of the course.</p>

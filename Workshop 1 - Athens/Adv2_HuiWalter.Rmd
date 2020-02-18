@@ -131,7 +131,7 @@ twoXtwo
 ```
 
 
-```{r, results='hide'}
+```{r, message=FALSE, warning=FALSE, results='hide'}
 library('runjags')
 
 Tally <- as.numeric(twoXtwo)
@@ -227,7 +227,9 @@ Modify the code in the Hui Walter model to force tests to be no worse than usele
 
 Simulate data and recover parameters for:
 
-  * N=10, N=100, N=1000
+  * N=10
+  * N=100
+  * N=1000
 
 `r if(params$presentation) {"\\begin{comment}"}`
 
@@ -319,7 +321,12 @@ Not that well!
 
 ## Optional Exercise {.fragile}
 
-Use priors for test1 taken from session 1 and compare the results
+Compare results with the following priors for test 1:
+
+  * Sensitivity = 0.9 (95% CI: 0.85 - 0.95)
+  * Specificity = 0.95 (95%CI: 0.92-0.97)
+
+[These are the same as in session 1]
 
 `r if(params$presentation) {"\\begin{comment}"}`
 
@@ -409,11 +416,11 @@ simdata$Test1 <- rbinom(N, 1, (simdata$truestatus * se1) + ((1-simdata$truestatu
 simdata$Test2 <- rbinom(N, 1, (simdata$truestatus * se2) + ((1-simdata$truestatus) * (1-sp2)))
 ```
 
+---
+
 ```{r, eval=FALSE}
 head(simdata)
 ```
-
----
 
 ```{r, echo=FALSE}
 head(simdata)
