@@ -12,6 +12,11 @@ subtitle: Homework and software installation for the HARMONY advanced training w
 fontsize: 12pt
 ---
 
+```{r rendering, eval=FALSE, include=FALSE}
+# To render this as html:
+rmarkdown::render('Adv0_Preparation.Rmd', 'html_document')
+```
+
 ```{r, echo=FALSE}
 set.seed(2020-02-07)
 ```
@@ -214,7 +219,7 @@ Note that $P(Y)$ is rarely calculable except in the simplest of cases, but is a 
 
 $P(\theta|Y) \propto P(\theta)\times P(Y|\theta)$
 
-For frequentist statistics we only had the likelihood, but Bayesian statistics allows us to combine this likelihood with a prior to obtain a posterior.  There are a lot of advantages of working with a prior rather than a likelihood, because it allows us to make much more direct (and useful) inference about the probability of our parameters given the data.  The cost of working with the posterior is that we must also define a prior, and accept that our posterior is affected by prior that we choose.
+For frequentist statistics we only had the likelihood, but Bayesian statistics allows us to combine this likelihood with a prior to obtain a posterior.  There are a lot of advantages of working with a posterior rather than a likelihood, because it allows us to make much more direct (and useful) inference about the probability of our parameters given the data.  The cost of working with the posterior is that we must also define a prior, and accept that our posterior is affected by prior that we choose.
 
 
 ## Profiling a Posterior
@@ -285,6 +290,9 @@ For simple models like the one we have been working with, we can easily profile 
 In order to solve this problem we need a new approach.  Rather than evaluating all possible combinations of parameter values, we can sample the most relevant parameter value combinations by focussing on the areas of parameter space close to parameter values that we already know have a high posterior probability.  This solves the curse of dimensionality but does introduce a couple of new problems.  We can illustrate the approach for our previous example using a very simple form of Markov chain Monte Carlo (MCMC) called a Metropolis algorithm:
 
 ```{r}
+# The coda package has many utilities to work with MCMC objects:
+library('coda')
+
 metropolis <- function(burnin = 0, sample = 10000, sigma = 0.05, 
               initial_value = 0.05, plot=TRUE){
   stopifnot(initial_value > 0, initial_value < 1)
@@ -359,17 +367,22 @@ plot(density(samples), xlim=c(0,1), main='Sampled posterior',
      ylab=NA, xlab=NA)
 ```
 
-They are similar, but not the same.  We can also compare estimates of the mean/median/95% CI based on the samples to the true values that we calculated earlier using posterior profiling:
+They are similar, but not the same.  We can also look at estimates of the mean/median/95% CI based on the samples 
 
 ```{r}
-cat("Mean of samples: ", mean(samples), '\n')
+# Mean of samples:
+mean(samples)
+# Median of samples:
+median(samples)
+# 95% CI of samples:
+HPDinterval(samples)
+```
+
+And compare these to the true values that we calculated earlier using posterior profiling:
+
+```{r, echo=FALSE}
 cat('True posterior mean:', mn, '\n')
-
-cat("Median of samples: ", median(samples), '\n')
 cat('True posterior median:', md, '\n')
-
-sci <- coda::HPDinterval(samples)
-cat("95% CI of samples: ", sci[1,1], '-', sci[1,2], '\n')
 cat('True posterior 95% CI:', ci[1], '-', ci[2], '\n')
 ```
 
@@ -413,23 +426,25 @@ The start of the red parts of the chains look quite differnt (one starts low the
 Another reason that our samples differed to the true posterior is because the samples are random, and therefore there is some sampling noise.  In order to eliminate this we need to make sure we have a sufficient number of samples so that the difference between e.g. the mean of the sample and the true mean of the distribution underlying this sample becomes negligible (or at least small enough for our needs).  In the previous example we had 1000 iterations, but this does not equal 1000 independent samples because of the autocorrelation.  Instead we need to look at the effective sample size:
 
 ```{r}
-cat("Effective sample size: ", coda::effectiveSize(samples), '\n')
+# Effective sample size:
+effectiveSize(samples)
 ```
 
-So we have the equivalent of approximately 50 independent samples from this posterior, which is not nearly enough to be a good approximation.  Ideally we would like at least 500 (or even 1000) independent samples, which means running the simulation for a lot more than 1000 iterations.  For example:
+So we have the equivalent of approximately 41 independent samples from this posterior, which is not nearly enough to be a good approximation.  Ideally we would like at least 500 (or even 1000) independent samples, which means running the simulation for a lot more than 1000 iterations.  For example:
 
 ```{r, echo=FALSE}
 set.seed(2020-02-08)
 ```
 
 ```{r}
-samples <- metropolis(burnin = 100, sample = 20000, initial_value=0.05)
-cat("Effective sample size: ", coda::effectiveSize(samples), '\n')
+samples <- metropolis(burnin = 1000, sample = 20000, initial_value=0.05)
+# Effective sample size:
+effectiveSize(samples)
 ```
 
-We now have 20000 iterations, which equates to around 550 independent samples (i.e. we need almost 40 iterations to get 1 independent sample).  This should be enough to get a decent approximation to the true posterior:
+We now have 20000 iterations, which equates to around 667 independent samples (i.e. we need around 30 iterations to get 1 independent sample).  This should be enough to get a decent approximation to the true posterior:
 
-```{r, fig.width=6, fig.height=8}
+```{r, fig.width=6, fig.height=8, echo=FALSE}
 par(mfrow=c(2,1))
 with(results, plot(parameter, posterior, type='l', 
       xlim=c(0,1), main='True posterior', ylab=NA, xlab=NA))
@@ -441,7 +456,7 @@ cat('True posterior mean:', mn, '\n')
 cat("Median of samples: ", median(samples), '\n')
 cat('True posterior median:', md, '\n')
 
-sci <- coda::HPDinterval(samples)
+sci <- HPDinterval(samples)
 cat("95% CI of samples: ", sci[1,1], '-', sci[1,2], '\n')
 cat('True posterior 95% CI:', ci[1], '-', ci[2], '\n')
 ```
@@ -449,15 +464,25 @@ cat('True posterior 95% CI:', ci[1], '-', ci[2], '\n')
 Our sampled posterior is now much closer to the true posterior, although there is still a small difference due to the inherent randomness of the Monte Carlo integration.  This also means that every time we run this simulation we will get a slightly different answer - if we want to ensure we get precisely the same result then we need to set the random number generator seed in R using the set seed function before running the simulation:
 
 ```{r}
-set.seed(2020-02-08)
-samples <- metropolis(burnin = 100, sample = 1000, initial_value=0.99, plot=FALSE)
-cat("Mean of samples: ", mean(samples), '\n')
+set.seed(2020-02-18)
+samples <- metropolis(burnin = 1000, sample = 20000, initial_value=0.99, plot=FALSE)
+# Mean of samples:
+mean(samples)
 
-set.seed(2020-02-08)
-samples <- metropolis(burnin = 100, sample = 1000, initial_value=0.99, plot=FALSE)
-cat("Mean of samples: ", mean(samples), '\n')
+set.seed(2020-02-18)
+samples <- metropolis(burnin = 1000, sample = 20000, initial_value=0.99, plot=FALSE)
+# Mean of samples:
+mean(samples)
 ```
 
+These two results are numerically identical because the same seed was used.  But the following simulation uses a different seed so gives slightly different results:
+
+```{r}
+set.seed(2020-02-19)
+samples <- metropolis(burnin = 1000, sample = 20000, initial_value=0.99, plot=FALSE)
+# Mean of samples:
+mean(samples)
+```
 
 *Important point:*  MCMC is a numerical approximation to the posterior, so if we want a good approximation then we need to be sure our effective sample size is sufficient.
 
@@ -467,15 +492,22 @@ cat("Mean of samples: ", mean(samples), '\n')
 Run the code below with different values of $sample$.  Make sure you understand the relationship between the number of samples, the effective sample size, and the accuracy of your estimates from the sampled posterior:
 
 ```{r, eval=FALSE}
-samples <- metropolis(burnin = 100, sample = 10000)
-cat("Mean of samples: ", mean(samples), '\n')
+samples <- metropolis(burnin = 1000, sample = 10000)
+# Effective sample size:
+effectiveSize(samples)
+# Mean of samples:
+mean(samples)
+# Median of samples:
+median(samples)
+# 95% CI of samples:
+HPDinterval(samples)
+```
+
+Remember the true values for comparison:
+
+```{r, echo=FALSE}
 cat('True posterior mean:', mn, '\n')
-
-cat("Median of samples: ", median(samples), '\n')
 cat('True posterior median:', md, '\n')
-
-sci <- coda::HPDinterval(samples)
-cat("95% CI of samples: ", sci[1,1], '-', sci[1,2], '\n')
 cat('True posterior 95% CI:', ci[1], '-', ci[2], '\n')
 ```
 
@@ -491,21 +523,33 @@ Up to now we have not changed the parameter $sigma$.  For the Metropolis algorit
 Run the following code with different values of sigma and see how it affects the autocorrelation.  Make sure you understand the relationship between autocorrelation, the length of the burnin period, and the effective sample size.  Here are some examples to get you started:
 
 ```{r, eval=FALSE}
+# Large sigma:
 samples <- metropolis(sigma=10)
-cat("Autocorrelation: ", coda::autocorr(samples, lags=1)[1,1,1], '\n')
-cat("Effective sample size: ", coda::effectiveSize(samples), '\n')
+# Autocorrelation:
+autocorr(samples, lags=1)
+# Effective sample size:
+effectiveSize(samples)
 
+# Moderately large sigma:
 samples <- metropolis(sigma=1)
-cat("Autocorrelation: ", coda::autocorr(samples, lags=1)[1,1,1], '\n')
-cat("Effective sample size: ", coda::effectiveSize(samples), '\n')
+# Autocorrelation:
+autocorr(samples, lags=1)
+# Effective sample size:
+effectiveSize(samples)
 
+# Moderately small sigma:
 samples <- metropolis(sigma=0.1)
-cat("Autocorrelation: ", coda::autocorr(samples, lags=1)[1,1,1], '\n')
-cat("Effective sample size: ", coda::effectiveSize(samples), '\n')
+# Autocorrelation:
+autocorr(samples, lags=1)
+# Effective sample size:
+effectiveSize(samples)
 
+# Small sigma:
 samples <- metropolis(sigma=0.01)
-cat("Autocorrelation: ", coda::autocorr(samples, lags=1)[1,1,1], '\n')
-cat("Effective sample size: ", coda::effectiveSize(samples), '\n')
+# Autocorrelation:
+autocorr(samples, lags=1)
+# Effective sample size:
+effectiveSize(samples)
 ```
 
 See if you can find the optimal value of $sigma$ for this exercise.
