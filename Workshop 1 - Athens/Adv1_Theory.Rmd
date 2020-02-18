@@ -47,70 +47,97 @@ Teachers:
   - Giles Innocent
 
 
-## Preparation
-
-- Have we all looked at the preparation material?
-
-- Do we all have R and JAGS installed?
-
-- Brief demonstration of GitHub and where the files are...
-
 
 # Revision
 
 ## Bayes Rule
 
-Bayes' theorem is at the heart of Bayesian statistics.  This states that:
+Bayes' theorem is at the heart of Bayesian statistics:
 
 $$P(\theta|Y) = \frac{P(\theta)\times P(Y|\theta)}{P(Y)}$$
 
 . . .
 
-Where:
-$\theta$ is our parameter value(s);
+Where:  $\theta$ is our parameter value(s);
+
 $Y$ is the data that we have observed;
-$P(\theta|Y)$ is the posterior probability of the parameter value(s) given the data and priors;
-$P(\theta)$ is the prior probability of the parameters BEFORE we had observed the data;
-$P(Y|\theta)$ is the likelihood of the data given the parameters value(s), as discussed above; and
-$P(Y)$ is the probability of the data, integrated over all parameter space.
+
+$P(\theta|Y)$ is the posterior probability of the parameter value(s);
+
+$P(\theta)$ is the prior probability of the parameters;
+
+$P(Y|\theta)$ is the likelihood of the data given the parameters value(s);
+
+$P(Y)$ is the probability of the data, integrated over parameter space.
 
 ---
 
-Note that $P(Y)$ is rarely calculable except in the simplest of cases, but is a constant for a given model.  So in practice we usually work with the following:
+- In practice we usually work with the following:
 
-$P(\theta|Y) \propto P(\theta)\times P(Y|\theta)$
+$$P(\theta|Y) \propto P(\theta)\times P(Y|\theta)$$
 
 . . .
 
-Our Bayesian posterior is therefore always a combination of the likelihood of the data, and the parameter priors
+- Our Bayesian posterior is therefore always a combination of the likelihood of the data, and the parameter priors
 
-But for more complex models the distinction between what is 'data' and 'parameters' can get blurred!
+- But for more complex models the distinction between what is 'data' and 'parameters' can get blurred!
 
 ## MCMC
 
-TODO
+- A way of obtaining a numerical approximation of the posterior
 
-- Brief highlight of important points re convergence and effective sample size
+- Highly flexible
+
+- Not inherently Bayesian but most widely used in this context
+
+- Assessing convergence is essential, otherwise we may not be summarising the true posterior
+
+- Our chains are correlated so we need to consider the effective sample size
+
+
+## Preparation
+
+- Any questions so far?  Anything unclear?
+
+- Do we all have R and JAGS installed?
+
+- Can we all access the teaching material from GitHub?
+
+. . .
+
+*Any problems: see us during the first practical session!*
+
 
 
 # Session 1a:  Theory and application of MCMC
 
 ## MCMC in Practice
 
-We have seen that we can write a Metropolis algorithm but this is complex and inefficient
+- We can write a Metropolis algorithm but this is complex and inefficient
 
-There are a number of general purpose langauages that allow us to define the problem in a faily intuitive manner and leave the details to the software. Among the latter are BUGS (Bayesian inference Using Gibbs Sampling) JAGS (Just another Gibbs Sampler) and STAN (named in honour of Stanislaw Ulam, pioneer of the Monte Carlo method).
+- There are a number of general purpose langauages that allow us to define the problem and leave the details to the software:
+
+  * WinBUGS/OpenBUGS
+    * Bayesian inference Using Gibbs Sampling
+  * JAGS
+    * Just another Gibbs Sampler
+  * Stan
+    * Named in honour of Stanislaw Ulam, pioneer of the Monte Carlo method
 
 ## JAGS
 
-JAGS is a declarative (non-procedural) programming language. That is the order of statements does not matter. When implemented the interpreted just considers the appropriate line of code to interpret in terms of likelihood and prior. That is why you can only define each variable (LHS) once.
+- JAGS uses the BUGS language
 
-Different ways to run JAGS from R:
+  * This is a declarative (non-procedural) language
+  * The order of statements does not matter
+  * The compiler converts our model syntax into an MCMC algorithm with appropriately defined likelihood and prior
+  * You can only define each variable once!!!
 
-  - rjags
-  - runjags
-  - R2jags
-  - jagsUI
+. . .
+
+- Different ways to run JAGS from R:
+
+  - rjags, runjags, R2jags, jagsUI
 
 - See http://runjags.sourceforge.net/quickjags.html (also in the GitHub folder)
 
@@ -147,28 +174,43 @@ There are two model statements:
 Positives ~ dbinom(prevalence, TotalTests)
 ```
 
-states that the number of $Positive$ test samples is Binomially distributed with probability parameter $prevalence$ and total trials $TotalTests$
+- states that the number of $Positive$ test samples is Binomially distributed with probability parameter $prevalence$ and total trials $TotalTests$
+
+. . .
 
 ```{r eval=FALSE}
 prevalence ~ dbeta(2,2)
 ```
 
-states that our prior probability distribution for the parameter $prevalence$ is Beta(2,2)
+- states that our prior probability distribution for the parameter $prevalence$ is Beta(2,2)
+
+. . .
 
 These are very similar to the likelihood and prior functions defined in the preparatory exercise
 
 ---
 
-The other lines in this model are automated hooks to allow the runjags package to make sure that the correct R objects are passed to R as data, and that we get samples for the parameter we want to monitor. These statements are ignored by JAGS.
+The other lines in this model:
 
-One of the advantages of using something like JAGS or STANis that much of the detail of the coding is shielded from us which means that the code is accessible to a wider variety of audiences. Running this model is much easier (and more efficient) than the Metropolis algorithm code.
+```{r eval=FALSE}
+#data# Positives, TotalTests
+#monitor# prevalence
+#inits# prevalence
+```
+
+are automated hooks that are only used by runjags
+
+. . .
+
+Compared to our Metropolis algorithm, this JAGS model is:
+
+  * Eaiser to write and understand
+  * More efficient (lower autocorrelation)
+  * Faster to run
 
 ---
 
-To run this model, copy/paste the code above into a new text file called "basicjags.bug" in the same folder as your current working directory.
-
-
-Then run:
+To run this model, copy/paste the code above into a new text file called "basicjags.bug" in the same folder as your current working directory.  Then run:
 
 ```{r}
 library('runjags')
@@ -187,13 +229,12 @@ prevalence <- list(chain1=0.05, chain2=0.95)
 results <- run.jags('basicjags.bug', n.chains=2, burnin=5000, sample=10000)
 ```
 
-You should see some updates then it will be finished
+---
 
 ```{r include=FALSE}
 runjags.options(silent.jags=TRUE)
 ```
 
----
 
 First check the plots for convergence:
 
@@ -251,6 +292,8 @@ Reminder:  we want psrf < 1.05 and SSeff > 1000.  If these both look OK then you
 
 ## Exercise
 
+*If you have problems installing JAGS or accessing GitHub please let us know know!*
+
 - Run this model yourself in JAGS
 
 - Change the initial values for the two chains and make sure it doesn't affect the results
@@ -266,7 +309,8 @@ Reminder:  we want psrf < 1.05 and SSeff > 1000.  If these both look OK then you
   
   * Remember that you will also need to change the initial values
   * What affect does having different numbers of chains have?
-  * Try using the `run.jags` argument `method='parallel'` - what affect does this have?
+
+- Try using the `run.jags` argument `method='parallel'` - what affect does this have?
 
 
 `r if(params$presentation) {"\\begin{comment}"}`
@@ -393,13 +437,13 @@ There are a large number of other options to runjags.  Some highlights:
   - You can use extend.jags to continue running an existing model (e.g. to increase the sample size)
   - You can use coda::as.mcmc.list to extract the underlying MCMC chains
   - Use the summary() method to extract summary statistics
-    * See '?summary.runjags` and `?runjagsclass` for more information
+    * See `?summary.runjags` and `?runjagsclass` for more information
 
 ## Using embedded character strings
 
 - For simple models we might not want to bother with an external text file.  Then we can do:
 
-```{r}
+```{r results='hide'}
 mt <- "
 model{
   Positives ~ dbinom(prevalence, TotalTests)
@@ -414,14 +458,13 @@ model{
 results <- run.jags(mt, n.chains=2)
 ```
 
-- But this makes the model harder to read, so I would generally stick to using a separate text file!
+- But I would advise that you stick to using a separate text file!
 
 ## Setting the RNG seed
 
-- If we want to get numerically replicable results we need to add .RNG.name and .RNG.seed to the initial values, and an additional #modules# lecuyer directive:
+- If we want to get numerically replicable results we need to add `.RNG.name` and `.RNG.seed` to the initial values, and an additional `#modules#` lecuyer hook to our basicjags.bug file:
 
-```{r}
-mt <- "
+```{r, eval=FALSE}
 model{
   Positives ~ dbinom(prevalence, TotalTests)
   prevalence ~ dbeta(2, 2)
@@ -431,32 +474,36 @@ model{
   #inits# prevalence, .RNG.name, .RNG.seed
   #modules# lecuyer
 }
-"
-.RNG.name <- "lecuyer::RngStream"
-.RNG.seed <- list(chain1=1, chain2=2)
-results <- run.jags(mt, n.chains=2)
 ```
 
+
+```{r, eval=FALSE}
+.RNG.name <- "lecuyer::RngStream"
+.RNG.seed <- list(chain1=1, chain2=2)
+results <- run.jags('basicjags.bug', n.chains=2)
+```
 
 - Every time this model is run the results will now be identical
 
 ## A different prior
 
-- A quick way to see what the distribution of a prior looks like is via e.g.:
+- A quick way to see the distribution of a prior:
 
-```{r}
+```{r, fig.width=3, fig.height=3}
 curve(dbeta(x, 2, 2), from=0, to=1)
 ```
 
+---
+
 - A minimally informative prior might be:
 
-```{r}
+```{r, fig.width=3, fig.height=3}
 curve(dbeta(x, 1, 1), from=0, to=1)
 ```
 
 ---
 
-- Let's change the prior we are using to dbeta(1,1):
+- Let's change the prior we are using to `dbeta(1,1)`:
 
 ```{r include=FALSE}
 mininf_definition <- "model{
@@ -512,8 +559,6 @@ Status <- c(rep(0, Positives), rep(1, TotalTests-Positives))
 
 
 ## A GLM Model
-
-- Another option is:
 
 ```{r include=FALSE}
 glm_definition <- "model{
@@ -604,7 +649,7 @@ $$\implies Prev_{true} = \frac{Prev_{obs}-(1-Sp)}{Se-(1-Sp)}$$
 
 ## Model Specification
 
-- We can write this model as:
+- We can incorporate the imperfect sensitivity and specicifity into our model:
 
 ```{r include=FALSE}
 imperfect_definition <- "model{
@@ -644,24 +689,26 @@ results <- run.jags('basicimperfect.bug', n.chains=2, burnin=0, sample=10000)
 
 ---
 
+What do these results tell us?
+
 ```{r echo=FALSE}
 res <- summary(results)[,c(1:3,9,11)]
 res[] <- round(res, 3)
 knitr::kable(res)
 ```
 
-- What do these results tell us?
 
 . . .
 
   * We can estimate the observed prevalence quite well
-  * But not the prevalence, se or sp!  The model is unidentifiable.
+  * But not the prevalence, se or sp!
+    * The model is unidentifiable.
 
 ## Priors
 
-- We cannot estimate se, sp and prevalence simultaneously
-
-- We need strong priors for se and sp
+- We cannot estimate `se`, `sp` and `prevalence` simultaneously
+  
+  * We need strong priors for se and sp
 
 - We can use the PriorGen package to generate Beta priors based on published results, for example:
 
@@ -679,18 +726,26 @@ curve(dbeta(x, 41.82, 4.65), from=0, to=1)
 
 ## Exercise
 
-- Find beta distribution priors for sensitivity = 0.9 (95% CI: 0.85 - 0.95) and specificity = 0.95 (95%CI: 0.92-0.97)
+- Find beta distribution priors for:
+
+  * Sensitivity = 0.9 (95% CI: 0.85 - 0.95)
+  * Specificity = 0.95 (95%CI: 0.92-0.97)
 
 - Look at these distributions using curve and qbeta
 
-- Modify the imperfect test model using these priors and estimate prevalence now
+- Modify the imperfect test model using these priors and re-estimate prevalence
 
 
 ## Optional Exercise
 
-Run the same model with se and sp fixed to the mean estimate - how does this affect CI for prevalence?
+- Run the same model with se and sp fixed to the mean estimate
 
-Run the same model with se and sp fixed to 1 - how does this affect estimates and CI for prevalence?
+  * How does this affect CI for prevalence?
+
+- Run the same model with se and sp fixed to 1
+
+  * How does this affect estimates and CI for prevalence?
+
 
 
 ## Solution
@@ -705,10 +760,27 @@ qbeta(c(0.025, 0.5, 0.975), 240.03, 12.63)
 curve(dbeta(x, 240.03, 12.63), from=0, to=1)
 ```
 
+TODO
+
+## Optional Solution
+
+TODO
+
+
 
 ## Summary
 
-TODO
+- Using JAGS / runjags allows us to work with MCMC more easily, safely and efficiently than writing our own sampling algorithms
+
+- But we must *never forget* to check convergence and effective sample size!
+
+- More complex models become easy to implement
+
+  * For example imperfect diagnostic tests
+
+- But just because a model can be defined does not mean that it will be useful for our data
+
+  * We need to be realistic about the information available in the data, what parameters are feasible to estimate, and where we will need to use strong priors
 
 ```{r cleanup, include=FALSE}
 unlink('basicjags.bug')

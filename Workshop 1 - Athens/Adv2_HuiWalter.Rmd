@@ -51,14 +51,25 @@ Teachers:
 
 ## Recap
 
-Important points from session 1
+- Fitting models using MCMC is easy with JAGS / runjags
 
-TODO
+- But we must *never forget* to check convergence and effective sample size!
+
+- More complex models become easy to implement
+
+  * For example imperfect diagnostic tests
+  * But remember to be realistic about what is possible with your data
+
+. . .
+
+- So how do we extend these models to multiple diagnostic tests?
 
 
 # Session 2a:  Hui-Walter models for 2 tests and 1 population
 
 ## Hui-Walter Model
+
+TODO
 
 Background (not necessarily Bayesian)
 
@@ -68,7 +79,7 @@ Rabbits and hats
 
 
 ```{r include=FALSE}
-hw_definition <- "model{
+hw_definition <- c("model{
   Tally ~ dmulti(prob, TotalTests)
   
   # Test1- Test2-
@@ -82,7 +93,7 @@ hw_definition <- "model{
 
   # Test1+ Test2+
 	prob[4] <- (prev * ((se[1])*(se[2]))) + ((1-prev) * ((1-sp[1])*(1-sp[2])))
- 
+", " 
   prev ~ dbeta(1, 1)
   se[1] ~ dbeta(1, 1)
   sp[1] ~ dbeta(1, 1)
@@ -93,17 +104,21 @@ hw_definition <- "model{
   #monitor# prev, prob, se, sp
   #inits# prev, se, sp
 }
-"
-cat(hw_definition, file='basic_hw.bug')
+")
+cat(hw_definition, sep='', file='basic_hw.bug')
 ```
 
 ```{r comment='', echo=FALSE}
-cat(hw_definition, sep='\n')
+cat(hw_definition[1], sep='\n')
 ```
 
 ---
 
-- And run it:
+```{r comment='', echo=FALSE}
+cat(hw_definition[2], sep='\n')
+```
+
+---
 
 ```{r}
 twoXtwo <- matrix(c(48, 12, 4, 36), ncol=2, nrow=2)
@@ -125,11 +140,9 @@ results <- run.jags('basic_hw.bug', n.chains=2)
 
 ---
 
-```{r}
+```{r, eval=FALSE}
 results
 ```
-
----
 
 ```{r echo=FALSE}
 res <- summary(results)[,c(1:3,9,11)]
@@ -137,10 +150,12 @@ res[] <- round(res, 3)
 knitr::kable(res)
 ```
 
-- Note wide confidence intervals
+- Note the wide confidence intervals!
 
 
 ## Practicalities
+
+TODO
 
 Care with order of combinations in dmultinom
 
@@ -155,11 +170,11 @@ Convergence can be tricky
 
 How to interpret a test with Se=0% and Sp=0%?
 
-...
+. . .
 
-The test is perfect - we are just holding it upside down...
+  * The test is perfect - we are just holding it upside down...
 
-...
+. . .
 
 We can force se+sp >= 1:
 
