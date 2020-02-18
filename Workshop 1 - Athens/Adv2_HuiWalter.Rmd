@@ -69,11 +69,13 @@ Teachers:
 
 ## Hui-Walter Model
 
-TODO
+- A particular model formulation that was originally designed for evaluating diagnostic tests in the absence of a gold standard
 
-Background (not necessarily Bayesian)
+- Not necessarily (or originally) Bayesian but now usually implemented using Bayesian MCMC
+  
+- But evaluating an imperfect test against another imperfect test is a bit like pulling a rabbit out of a hat
+  * If we don't know the true disease status, how can we estimate sensitivity or specificity for either test?
 
-Rabbits and hats
 
 ## Model Specification
 
@@ -155,15 +157,14 @@ knitr::kable(res)
 
 ## Practicalities
 
-TODO
-
-Care with order of combinations in dmultinom
-
-Lots of data needed
-
+- These models need A LOT of data
   * And/or strong priors for one of the tests
 
-Convergence can be tricky
+- Convergence is more problematic than usual
+
+- Be **very** vareful with the order of combinations in dmultinom!
+
+- Check your results carefully to ensure they make sense!
 
 
 ## Label Switching
@@ -183,8 +184,6 @@ We can force se+sp >= 1:
   sp[1] ~ dbeta(1, 1)T(1-se[1], )
 ```
 
-...
-
 Or:
 
 ```{r eval=FALSE}
@@ -201,15 +200,9 @@ This allows the test to be useless, but not worse than useless
 
 Analysing simulated data is useful to check that we can recover parameter values.
 
-Some simultion code:
-
 ```{r}
-se1 <- 0.9
-sp1 <- 0.95
-sp2 <- 0.99
-se2 <- 0.8
-prevalence <- 0.5
-N <- 100
+se1 <- 0.9; sp1 <- 0.95; sp2 <- 0.99; se2 <- 0.8
+prevalence <- 0.5; N <- 100
 
 truestatus <- rbinom(N, 1, prevalence)
 Test1 <- rbinom(N, 1, (truestatus * se1) + ((1-truestatus) * (1-sp1)))
@@ -221,7 +214,7 @@ Tally <- as.numeric(twoXtwo)
 ```
 
 
-## Exercise
+## Exercise {.fragile}
 
 Modify JAGS code to force tests to be better than useless
 
@@ -229,13 +222,9 @@ Simulate data and recover parameters for:
 
   * N=10, N=100, N=1000
 
+`r if(params$presentation) {"\\begin{comment}"}`
 
-## Optional Exercise
-
-Use priors for test1 taken from session 1 and compare the results
-
-
-## Solution
+## Solution {.fragile}
 
 Model definition:
 
@@ -306,8 +295,16 @@ results <- run.jags('basic_hw.bug', n.chains=2)
 results
 ```
 
+`r if(params$presentation) {"\\end{comment}"}`
 
-## Optional Solution
+## Optional Exercise {.fragile}
+
+Use priors for test1 taken from session 1 and compare the results
+
+
+`r if(params$presentation) {"\\begin{comment}"}`
+
+## Optional Solution {.fragile}
 
 ```{r}
 HPSe[1,] <- c(148.43, 16.49)
@@ -320,8 +317,18 @@ results <- run.jags('basic_hw.bug', n.chains=2)
 results
 ```
 
+`r if(params$presentation) {"\\end{comment}"}`
 
 # Session 2b:  Hui-Walter models for 2 tests and N populations
+
+## Hui-Walter models with multiple populations
+
+- Basically an extension of the single-population model
+
+- Works best with multiple populations each with differing prevalences
+  * These could even be subgroups of individuals within the same population if there are e.g. known risk factors for disease status
+  * Remember that the focus is usually to estimate the diagnostic test parameters and not the prevalence in the different populations/subgroups!
+
 
 ## Independent intercepts for populations
 
@@ -329,12 +336,9 @@ results
 model{
   for(p in 1:Populations){
     Tally[1:4, p] ~ dmulti(prob[1:4, p], TotalTests[p])
-  
     # Test1- Test2- Pop1
 	  prob[1, p] <- (prev[p] * ((1-se[1])*(1-se[2]))) + ((1-prev[p]) * ((sp[1])*(sp[2])))
-
     ## etc ##
-
     prev[p] ~ dbeta(1, 1)
   }
 
@@ -349,20 +353,15 @@ model{
 }
 ```
 
-...
-
 Data and initial values start to get complicated...
 
 
 ## Auto Hui-Walter
 
-We would usually start with individual-level data in a dataframe e.g.:
+We would usually start with individual-level data in a dataframe:
 
 ```{r}
-se1 <- 0.9
-sp1 <- 0.95
-sp2 <- 0.99
-se2 <- 0.8
+se1 <- 0.9; sp1 <- 0.95; sp2 <- 0.99; se2 <- 0.8
 prevalences <- c(0.1, 0.5, 0.9)
 N <- 100
 
@@ -371,7 +370,15 @@ simdata$probability <- prevalences[simdata$Population]
 simdata$truestatus <- rbinom(N, 1, simdata$probability)
 simdata$Test1 <- rbinom(N, 1, (simdata$truestatus * se1) + ((1-simdata$truestatus) * (1-sp1)))
 simdata$Test2 <- rbinom(N, 1, (simdata$truestatus * se2) + ((1-simdata$truestatus) * (1-sp2)))
-  
+```
+
+```{r, eval=FALSE}
+head(simdata)
+```
+
+---
+
+```{r, echo=FALSE}
 head(simdata)
 ```
 
@@ -379,9 +386,9 @@ head(simdata)
 
 ---
 
-The model code and data format for an arbitrary number of populations (and tests) can be determined automatically
+- The model code and data format for an arbitrary number of populations (and tests) can be determined automatically
 
-There is a function (soon to be included in the runjags package, but for now provided in the GitHub repo) that can do this for us:
+- There is a function (provided in the GitHub repo) that can do this for us:
 
 ```{r}
 simdata$Population <- factor(simdata$Population, levels=seq_along(prevalences), labels=paste0('Pop_', seq_along(prevalences)))
@@ -392,7 +399,8 @@ auto_huiwalter(simdata[,c('Population','Test1','Test2')], outfile='autohw.bug')
 
 ---
 
-This generates self-contained model/data/initial values etc (ignore covse and covsp for now):
+- This generates self-contained model/data/initial values etc:
+  * [ignore covse and covsp for now]
 
 ```{r echo=FALSE}
 cat(readLines('autohw.bug'), sep='\n')
@@ -411,11 +419,23 @@ results <- run.jags('autohw.bug')
 results
 ```
 
+---
+
+- Modifying priors must still be done directly in the model file
+
+- The model needs to be re-generated if the data changes
+  * But remember that your modified priors will be reset
+
+- There must be a single column for the population (as a factor), and all of the other columns (either factor, logical or numeric) are interpreted as being test results
+
+- The function will soon be included in the runjags package
+  * Feedback welcome!
+
 
 ## Observation-level model specification
 
 ```{r include=FALSE}
-glmhw_definition <- "model{
+glmhw_definition <- c("model{
 
   for(i in 1:N){
     Status[i] ~ dcat(prob[i, ])
@@ -431,7 +451,7 @@ glmhw_definition <- "model{
 	  
 	  logit(prev[i]) <- intercept + population_effect[Population[i]]
   }
-
+", "
   intercept ~ dnorm(0, 0.33)
   population_effect[1] <- 0
   for(p in 2:Pops){
@@ -446,20 +466,26 @@ glmhw_definition <- "model{
   #monitor# intercept, population_effect, se, sp
   #inits# intercept, population_effect, se, sp
 }
-"
-cat(glmhw_definition, file='glm_hw.bug')
+")
+cat(glmhw_definition, sep='', file='glm_hw.bug')
 ```
 
 
 ```{r comment='', echo=FALSE}
-cat(glmhw_definition, sep='\n')
+cat(glmhw_definition[1], sep='\n')
 ```
 
 ---
 
-Just like in session 1, the main difference is the prior for prevalence (this time in each population)
+```{r comment='', echo=FALSE}
+cat(glmhw_definition[2], sep='\n')
+```
 
-We also need to give initial values for intercept and population_effect rather than prev, and tell run.jags the data frame from which to extract the data (except N and Pops):
+---
+
+- The main difference is the prior for prevalence in each population
+
+- We also need to give initial values for `intercept` and `population_effect` rather than `prev`, and tell `run.jags` the data frame from which to extract the data (except `N` and `Pops`):
 
 ```{r}
 intercept <- list(chain1=-1, chain2=1)
@@ -512,3 +538,27 @@ Notice the model and data and initial values are in a self contained file
 
 Ignore the covse and covsp for now
 
+[There is no particular solution to this exercise!]
+
+
+## Summary
+
+## Summary
+
+- Using JAGS / runjags allows us to work with MCMC more easily, safely and efficiently than writing our own sampling algorithms
+
+- But we must *never forget* to check convergence and effective sample size!
+
+- More complex models become easy to implement
+
+  * For example imperfect diagnostic tests
+
+- But just because a model can be defined does not mean that it will be useful for our data
+
+  * We need to be realistic about the information available in the data, what parameters are feasible to estimate, and where we will need to use strong priors
+
+```{r cleanup, include=FALSE}
+unlink('autohw.bug')
+unlink('basic_hw.bug')
+unlink('glm_hw.bug')
+```

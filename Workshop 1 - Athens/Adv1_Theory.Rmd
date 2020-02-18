@@ -47,7 +47,6 @@ Teachers:
   - Giles Innocent
 
 
-
 # Revision
 
 ## Bayes Rule
@@ -139,7 +138,8 @@ $$P(\theta|Y) \propto P(\theta)\times P(Y|\theta)$$
 
   - rjags, runjags, R2jags, jagsUI
 
-- See http://runjags.sourceforge.net/quickjags.html (also in the GitHub folder)
+- See http://runjags.sourceforge.net/quickjags.html
+  * This is also in the GitHub folder
 
 ---
 
@@ -393,7 +393,7 @@ results
 
 This runs much faster, but we have a very small effective sample size so our estimates are not very good!  
 
-In practice you should err on the side of caution and go for a large sample.  The default options for run.jags are 5000 burnin and 10000 samples, which are in practice the smallest we would generally go for.  You will need to increase one or both of these in situations where you have a lot of autocorrelation.
+In practice you should be cautious and use a large sample.  The default options for run.jags are 5000 burnin and 10000 samples, which are in practice the smallest we would generally go for.  You will need to increase one or both of these in situations where you have a lot of autocorrelation.
 
 ## Optional Solution
 
@@ -511,12 +511,12 @@ mininf_definition <- "model{
   prevalence ~ dbeta(1, 1)
   
   # Hooks for automatic integration with R:
-  #data# Status, TotalTests
+  #data# Positives, TotalTests
   #monitor# prevalence
   #inits# prevalence
 }
 "
-cat(mininf_definition, file='basicjags2.bug')
+cat(mininf_definition, file='basicjags.bug')
 ```
 
 ```{r comment='', echo=FALSE}
@@ -526,7 +526,7 @@ cat(mininf_definition, sep='\n')
 
 ## An Equivalent Model
 
-- We could equivalently specify the model as:
+- We could equivalently specify an observation-level model:
 
 ```{r include=FALSE}
 loop_definition <- "model{
@@ -554,7 +554,7 @@ cat(loop_definition, sep='\n')
 - But we need the data in a different format:  a vector of 0/1 rather than total positives!
 
 ```{r}
-Status <- c(rep(0, Positives), rep(1, TotalTests-Positives))
+Status <- c(rep(0, TotalTests-Positives), rep(1, Positives))
 ```
 
 
@@ -602,7 +602,7 @@ cat(glm_definition, sep='\n')
 
 ## Exercise
 
-- Run the original version of the model and the GLM version of the model and compare results with the same data
+- Run the original version, the observation-level version, and the GLM version of the model and compare results with the same data
 
 - Now try a larger sample size:  e.g. 70 positives out of 100 tests - are the posteriors from the two models more or less similar than before?
 
@@ -625,11 +625,160 @@ One way to do this is to make all of the response data (i.e. either Positives or
 
 ## Solution
 
-TODO
+In basicjags.bug:
+
+```{r comment='', echo=FALSE}
+cat(mininf_definition, sep='\n')
+```
+
+In basicloop.bug:
+
+```{r comment='', echo=FALSE}
+cat(loop_definition, sep='\n')
+```
+
+In basicglm.bug:
+
+```{r comment='', echo=FALSE}
+cat(glm_definition, sep='\n')
+```
+
+Comparison:
+
+```{r}
+# Data:
+Positives <- 7
+TotalTests <- 10
+
+# initial values for the basic and loop models:
+prevalence <- list(chain1=0.05, chain2=0.95)
+
+# initial values for the glm model:
+intercept <- list(chain1=-2, chain2=2)
+
+basicjags <- run.jags('basicjags.bug', n.chains=2)
+
+# Data for the loop and glm models:
+Status <- c(rep(0, TotalTests-Positives), rep(1, Positives))
+
+basicloop <- run.jags('basicloop.bug', n.chains=2)
+basicglm <- run.jags('basicglm.bug', n.chains=2)
+```
+
+Ensure convergence and sample size, then compare:
+
+```{r}
+basicjags
+basicloop
+basicglm
+```
+
+The GLM model has slightly different results, due to the prior.
+
+What about a larger dataset:
+
+
+```{r}
+# Data:
+Positives <- 70
+TotalTests <- 100
+Status <- c(rep(0, TotalTests-Positives), rep(1, Positives))
+
+basicjags <- run.jags('basicjags.bug', n.chains=2)
+basicloop <- run.jags('basicloop.bug', n.chains=2)
+basicglm <- run.jags('basicglm.bug', n.chains=2)
+```
+
+Ensure convergence and sample size, then compare:
+
+```{r}
+basicjags
+basicloop
+basicglm
+```
+
+The results are more similar, as the posterior is more dominated by the data.
+
+What about a different prior for the GLM model?  In basicglm2.bug:
+
+```{r include=FALSE}
+glm_definition <- "model{
+  # Likelihood part:
+  for(i in 1:TotalTests){
+    Status[i] ~ dbern(predicted[i])
+    logit(predicted[i]) <- intercept
+  }
+
+  # Prior part:
+  intercept ~ dnorm(0, 0.33)
+  
+  # Derived parameter:
+  prevalence <- ilogit(intercept)
+  
+  # Hooks for automatic integration with R:
+  #data# Status, TotalTests
+  #monitor# intercept, prevalence
+  #inits# intercept
+}
+"
+cat(glm_definition, file='basicglm2.bug')
+```
+
+```{r comment='', echo=FALSE}
+cat(glm_definition, sep='\n')
+```
+
+```{r}
+# Data:
+Positives <- 7
+TotalTests <- 10
+Status <- c(rep(0, Positives), rep(1, TotalTests-Positives))
+
+basicjags <- run.jags('basicjags.bug', n.chains=2)
+basicloop <- run.jags('basicloop.bug', n.chains=2)
+basicglm2 <- run.jags('basicglm2.bug', n.chains=2)
+```
+
+Ensure convergence and sample size, then compare:
+
+```{r}
+basicjags
+basicloop
+basicglm2
+```
+
+The GLM model is now more similar to the others, because the prior for prevalence is more similar.
 
 ## Optional Solution
 
-TODO
+This is the easiest way to remove data from the model without adjusting the model code itself:
+
+```{r}
+Positives <- NA
+Positives
+Status[] <- NA
+Status
+```
+
+Then we can run the models:
+
+```{r}
+basicjags <- run.jags('basicjags.bug', n.chains=2)
+basicloop <- run.jags('basicloop.bug', n.chains=2)
+basicglm <- run.jags('basicglm.bug', n.chains=2)
+basicglm2 <- run.jags('basicglm2.bug', n.chains=2)
+```
+
+No need to ensure convergence and sample size as we have no data!  Just compare the priors directly:
+
+```{r}
+basicjags
+basicloop
+basicglm
+basicglm2
+```
+
+You could also look at plots (particularly the histogram plot) if you wanted to.
 
 `r if(params$presentation) {"\\end{comment}"}`
 
@@ -724,7 +873,7 @@ curve(dbeta(x, 41.82, 4.65), from=0, to=1)
 ```
 
 
-## Exercise
+## Exercise {.fragile}
 
 - Find beta distribution priors for:
 
@@ -736,7 +885,68 @@ curve(dbeta(x, 41.82, 4.65), from=0, to=1)
 - Modify the imperfect test model using these priors and re-estimate prevalence
 
 
-## Optional Exercise
+`r if(params$presentation) {"\\begin{comment}"}`
+
+## Solution {.fragile}
+
+Parameters for Sensitivity = 0.9 (95% CI: 0.85 - 0.95):
+
+
+```{r}
+PriorGen::findbeta(themean=0.9, percentile = 0.975, percentile.value = 0.85)
+qbeta(c(0.025, 0.5, 0.975), 148.43, 16.49)
+curve(dbeta(x, 148.43, 16.49), from=0, to=1)
+```
+
+Parameters for Specificity = 0.95 (95%CI: 0.92-0.97):
+
+```{r}
+PriorGen::findbeta(themean=0.95, percentile = 0.975, percentile.value = 0.92)
+qbeta(c(0.025, 0.5, 0.975), 240.03, 12.63)
+curve(dbeta(x, 240.03, 12.63), from=0, to=1)
+```
+
+Updated model:
+
+
+```{r include=FALSE}
+imperfect_definition <- "model{
+  Positives ~ dbinom(obsprev, TotalTests)
+  obsprev <- (prevalence * se) + ((1-prevalence) * (1-sp))
+  
+  prevalence ~ dbeta(1, 1)
+  se ~ dbeta(148.43, 16.49)
+  sp ~ dbeta(240.03, 12.63)
+  
+  #data# Positives, TotalTests
+  #monitor# prevalence, obsprev, se, sp
+  #inits# prevalence, se, sp
+}
+"
+cat(imperfect_definition, file='basicimperfect.bug')
+```
+
+```{r comment='', echo=FALSE}
+cat(imperfect_definition, sep='\n')
+```
+
+Results:
+
+```{r}
+prevalence <- list(chain1=0.05, chain2=0.95)
+se <- list(chain1=0.5, chain2=0.99)
+sp <- list(chain1=0.5, chain2=0.99)
+Positives <- 70
+TotalTests <- 100
+results <- run.jags('basicimperfect.bug', n.chains=2, burnin=0, sample=10000)
+results
+```
+
+This time we get sensible estimates for `prevalence`.
+
+`r if(params$presentation) {"\\end{comment}"}`
+
+## Optional Exercise {.fragile}
 
 - Run the same model with se and sp fixed to the mean estimate
 
@@ -747,25 +957,79 @@ curve(dbeta(x, 41.82, 4.65), from=0, to=1)
   * How does this affect estimates and CI for prevalence?
 
 
+`r if(params$presentation) {"\\begin{comment}"}`
 
-## Solution
+## Optional Solution {.fragile}
 
-```{r}
-PriorGen::findbeta(themean=0.9, percentile = 0.975, percentile.value = 0.85)
-qbeta(c(0.025, 0.5, 0.975), 148.43, 16.49)
-curve(dbeta(x, 148.43, 16.49), from=0, to=1)
+Same model with se and sp fixed to the mean estimates:
 
-PriorGen::findbeta(themean=0.95, percentile = 0.975, percentile.value = 0.92)
-qbeta(c(0.025, 0.5, 0.975), 240.03, 12.63)
-curve(dbeta(x, 240.03, 12.63), from=0, to=1)
+```{r include=FALSE}
+imperfect_definition <- "model{
+  Positives ~ dbinom(obsprev, TotalTests)
+  obsprev <- (prevalence * se) + ((1-prevalence) * (1-sp))
+  
+  prevalence ~ dbeta(1, 1)
+  se <- 0.9
+  # se ~ dbeta(148.43, 16.49)
+  sp <- 0.95
+  # sp ~ dbeta(240.03, 12.63)
+  
+  #data# Positives, TotalTests
+  #monitor# prevalence, obsprev, se, sp
+  #inits# prevalence
+}
+"
+cat(imperfect_definition, file='basicimperfect.bug')
 ```
 
-TODO
+```{r comment='', echo=FALSE}
+cat(imperfect_definition, sep='\n')
+```
 
-## Optional Solution
+Note that we have to remove se and sp from the initial values.  Results:
 
-TODO
+```{r}
+results <- run.jags('basicimperfect.bug', n.chains=2, burnin=0, sample=10000)
+results
+```
 
+Estimates for `prevalence` are more precise.
+
+Same model with se and sp fixed to one:
+
+```{r include=FALSE}
+imperfect_definition <- "model{
+  Positives ~ dbinom(obsprev, TotalTests)
+  obsprev <- (prevalence * se) + ((1-prevalence) * (1-sp))
+  
+  prevalence ~ dbeta(1, 1)
+  se <- 1
+  # se ~ dbeta(148.43, 16.49)
+  sp <- 1
+  # sp ~ dbeta(240.03, 12.63)
+  
+  #data# Positives, TotalTests
+  #monitor# prevalence, obsprev, se, sp
+  #inits# prevalence
+}
+"
+cat(imperfect_definition, file='basicimperfect.bug')
+```
+
+```{r comment='', echo=FALSE}
+cat(imperfect_definition, sep='\n')
+```
+
+Results:
+
+```{r}
+results <- run.jags('basicimperfect.bug', n.chains=2, burnin=0, sample=10000)
+results
+```
+
+Biased estimates for `prevalence`!
+
+`r if(params$presentation) {"\\end{comment}"}`
 
 
 ## Summary
@@ -786,6 +1050,7 @@ TODO
 unlink('basicjags.bug')
 unlink('basicjags2.bug')
 unlink('basicglm.bug')
+unlink('basicglm2.bug')
 unlink('basicimperfect.bug')
 unlink('basicloop.bug')
 ```
