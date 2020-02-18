@@ -33,6 +33,8 @@ knitr::opts_chunk$set(echo = TRUE)
 
 library('runjags')
 runjags.options(silent.jags=TRUE)
+
+set.seed(2020-02-18)
 ```
 
 # Introduction
@@ -53,7 +55,7 @@ Teachers:
 
 - Fitting models using MCMC is easy with JAGS / runjags
 
-- But we must *never forget* to check convergence and effective sample size!
+- But we must **never forget** to check convergence and effective sample size!
 
 - More complex models become easy to implement
 
@@ -92,10 +94,10 @@ hw_definition <- c("model{
 
   # Test1- Test2+
 	prob[3] <- (prev * ((1-se[1])*(se[2]))) + ((1-prev) * ((sp[1])*(1-sp[2])))
-
+", " 
   # Test1+ Test2+
 	prob[4] <- (prev * ((se[1])*(se[2]))) + ((1-prev) * ((1-sp[1])*(1-sp[2])))
-", " 
+
   prev ~ dbeta(1, 1)
   se[1] ~ dbeta(1, 1)
   sp[1] ~ dbeta(1, 1)
@@ -109,6 +111,7 @@ hw_definition <- c("model{
 ")
 cat(hw_definition, sep='', file='basic_hw.bug')
 ```
+
 
 ```{r comment='', echo=FALSE}
 cat(hw_definition[1], sep='\n')
@@ -125,7 +128,10 @@ cat(hw_definition[2], sep='\n')
 ```{r}
 twoXtwo <- matrix(c(48, 12, 4, 36), ncol=2, nrow=2)
 twoXtwo
+```
 
+
+```{r, results='hide'}
 library('runjags')
 
 Tally <- as.numeric(twoXtwo)
@@ -201,7 +207,8 @@ This allows the test to be useless, but not worse than useless
 Analysing simulated data is useful to check that we can recover parameter values.
 
 ```{r}
-se1 <- 0.9; sp1 <- 0.95; sp2 <- 0.99; se2 <- 0.8
+se1 <- 0.9; sp1 <- 0.95;
+se2 <- 0.8; sp2 <- 0.99
 prevalence <- 0.5; N <- 100
 
 truestatus <- rbinom(N, 1, prevalence)
@@ -209,14 +216,14 @@ Test1 <- rbinom(N, 1, (truestatus * se1) + ((1-truestatus) * (1-sp1)))
 Test2 <- rbinom(N, 1, (truestatus * se2) + ((1-truestatus) * (1-sp2)))
 
 twoXtwo <- table(Test1, Test2)
-twoXtwo
 Tally <- as.numeric(twoXtwo)
 ```
 
+Can we recover these parameter values?
 
 ## Exercise {.fragile}
 
-Modify JAGS code to force tests to be better than useless
+Modify the code in the Hui Walter model to force tests to be no worse than useless
 
 Simulate data and recover parameters for:
 
@@ -267,10 +274,11 @@ Note that we specify the prior hyperparameters as data so we can change these fr
 ```{r}
 se1 <- 0.9
 sp1 <- 0.95
-sp2 <- 0.99
 se2 <- 0.8
+sp2 <- 0.99
 prevalence <- 0.5
 
+# Change N to be 10, 100 or 1000:
 N <- 100
 
 truestatus <- rbinom(N, 1, prevalence)
@@ -295,12 +303,23 @@ results <- run.jags('basic_hw.bug', n.chains=2)
 results
 ```
 
+How well do we recover our parameters?
+
+```{r}
+se1
+se2
+sp1
+sp2
+```
+
+Not that well!
+
 `r if(params$presentation) {"\\end{comment}"}`
+
 
 ## Optional Exercise {.fragile}
 
 Use priors for test1 taken from session 1 and compare the results
-
 
 `r if(params$presentation) {"\\begin{comment}"}`
 
@@ -316,6 +335,26 @@ HPSp
 results <- run.jags('basic_hw.bug', n.chains=2)
 results
 ```
+
+How well do we recover our parameters for test 2?
+
+```{r}
+se1
+se2
+sp1
+sp2
+```
+
+A bit better!  But note that the confidence interval for test 1 is not much narrower than that of the prior:
+
+```{r}
+# Sensitivity:
+qbeta(c(0.025, 0.5, 0.975), 148.43, 16.49)
+# Specificity:
+qbeta(c(0.025, 0.5, 0.975), 240.03, 12.63)
+```
+
+So we have not gained any additional information about test 1.
 
 `r if(params$presentation) {"\\end{comment}"}`
 
@@ -353,8 +392,6 @@ model{
 }
 ```
 
-Data and initial values start to get complicated...
-
 
 ## Auto Hui-Walter
 
@@ -386,11 +423,11 @@ head(simdata)
 
 ---
 
-- The model code and data format for an arbitrary number of populations (and tests) can be determined automatically
+The model code and data format for an arbitrary number of populations (and tests) can be determined automatically
 
-- There is a function (provided in the GitHub repo) that can do this for us:
+There is a function (provided in the GitHub repo) that can do this for us:
 
-```{r}
+```{r, results='hide'}
 simdata$Population <- factor(simdata$Population, levels=seq_along(prevalences), labels=paste0('Pop_', seq_along(prevalences)))
 
 source("autohuiwalter.R")
@@ -399,24 +436,25 @@ auto_huiwalter(simdata[,c('Population','Test1','Test2')], outfile='autohw.bug')
 
 ---
 
-- This generates self-contained model/data/initial values etc:
-  * [ignore covse and covsp for now]
+This generates self-contained model/data/initial values etc (ignore covse and covsp for now):
 
-```{r echo=FALSE}
-cat(readLines('autohw.bug'), sep='\n')
+```{r echo=FALSE, comment=''}
+cat(readLines('autohw.bug')[-(1:2)], sep='\n')
 ```
 
 ---
 
 And can be run directly from R:
 
-```{r}
+```{r, results='hide'}
 results <- run.jags('autohw.bug')
+results
 ```
 
----
-```{r}
-results
+```{r echo=FALSE}
+res <- summary(results)[,c(1:3,9,11)]
+res[] <- round(res, 3)
+knitr::kable(res)
 ```
 
 ---
@@ -487,7 +525,7 @@ cat(glmhw_definition[2], sep='\n')
 
 - We also need to give initial values for `intercept` and `population_effect` rather than `prev`, and tell `run.jags` the data frame from which to extract the data (except `N` and `Pops`):
 
-```{r}
+```{r, results='hide'}
 intercept <- list(chain1=-1, chain2=1)
 population_effect <- list(chain1=c(NA, 1, -1), chain2=c(NA, -1, 1))
 se <- list(chain1=c(0.5,0.99), chain2=c(0.99,0.5))
@@ -523,12 +561,6 @@ For a handy way to generate a GLM model see runjags::template.jags
 
   * Look out for integration with autohuiwalter in the near (ish) future...
 
-## Practicalities
-
-Need to be very careful with tabulating the data, or use automatically generated code
-
-Works best when populations have very different prevalences
-
 
 ## Exercise
 
@@ -543,19 +575,14 @@ Ignore the covse and covsp for now
 
 ## Summary
 
-## Summary
+- Estimating sensitivity and specificity is like pulling a rabbit out of a hat
 
-- Using JAGS / runjags allows us to work with MCMC more easily, safely and efficiently than writing our own sampling algorithms
+- Multiple populations helps **a lot**
 
-- But we must *never forget* to check convergence and effective sample size!
+- Strong priors for one of the tests helps even more!
 
-- More complex models become easy to implement
+- Make sure you tabulate the data correctly ... or use the automated model generator!
 
-  * For example imperfect diagnostic tests
-
-- But just because a model can be defined does not mean that it will be useful for our data
-
-  * We need to be realistic about the information available in the data, what parameters are feasible to estimate, and where we will need to use strong priors
 
 ```{r cleanup, include=FALSE}
 unlink('autohw.bug')

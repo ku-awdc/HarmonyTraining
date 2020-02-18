@@ -13,7 +13,7 @@
 <meta name="author" content="Giles Innocent" />
 <meta name="author" content="Sonja Hartnack" />
 
-<meta name="date" content="2020-02-17" />
+<meta name="date" content="2020-02-18" />
 
 <title>Hands-on training session 3</title>
 
@@ -370,7 +370,7 @@ summary {
 <h4 class="author">Matt Denwood</h4>
 <h4 class="author">Giles Innocent</h4>
 <h4 class="author">Sonja Hartnack</h4>
-<h4 class="date">2020-02-17</h4>
+<h4 class="date">2020-02-18</h4>
 
 </div>
 
@@ -682,7 +682,7 @@ simdata %&gt;%
 auto_huiwalter(ind3tests, &#39;ind3tests.bug&#39;, covon=TRUE)</code></pre>
 <pre><code>## The model and data have been written to ind3tests.bug in the current working directory
 ## You should check and alter priors before running the model</code></pre>
-<pre><code>## Auto-generated Hui-Walter model created by script version 0.1 on 2020-02-17
+<pre><code>## Auto-generated Hui-Walter model created by script version 0.1 on 2020-02-18
 
 model{
 
@@ -947,30 +947,30 @@ ll &lt;- jags.samples(as.jags(results), c(&#39;lik&#39;, &#39;log_lik&#39;), typ
 # Calculate the WAIC statistic and effective parameters etc:
 get_waic(as.mcmc(ll$mean$lik)[,1], as.mcmc(ll$variance$log_lik)[,1])</code></pre>
 <pre><code>## $waic
-## [1] 61.83872
+## [1] 61.66972
 ## 
 ## $p_waic
-## [1] 1.296618
+## [1] 1.213042
 ## 
 ## $elpd
-## [1] -30.91936
+## [1] -30.83486
 ## 
 ## $lpd
-## [1] -29.62274
+## [1] -29.62182
 ## 
 ## $se_waic
-## [1] 0.2445773
+## [1] 0.2509228
 ## 
 ## $pointwise
 ##          waic      elpd       lpd
-## [1,] 9.173574 -4.586787 -4.288889
-## [2,] 6.948341 -3.474171 -3.374926
-## [3,] 8.025299 -4.012650 -3.927829
-## [4,] 7.101480 -3.550740 -3.457296
-## [5,] 7.548962 -3.774481 -3.489819
-## [6,] 7.388978 -3.694489 -3.553908
-## [7,] 7.775265 -3.887633 -3.625216
-## [8,] 7.876822 -3.938411 -3.904860</code></pre>
+## [1,] 9.174659 -4.587330 -4.301872
+## [2,] 6.915556 -3.457778 -3.366952
+## [3,] 8.026240 -4.013120 -3.932625
+## [4,] 7.039791 -3.519895 -3.446948
+## [5,] 7.524946 -3.762473 -3.494698
+## [6,] 7.338965 -3.669482 -3.549320
+## [7,] 7.792543 -3.896272 -3.629509
+## [8,] 7.857025 -3.928512 -3.899897</code></pre>
 </div>
 <div id="future-updates" class="section level2">
 <h2>Future Updates</h2>

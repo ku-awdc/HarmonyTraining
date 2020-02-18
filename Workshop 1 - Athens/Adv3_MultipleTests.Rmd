@@ -34,6 +34,8 @@ knitr::opts_chunk$set(echo = TRUE)
 
 library('runjags')
 runjags.options(silent.jags=TRUE)
+
+set.seed(2020-02-18)
 ```
 
 
@@ -476,3 +478,7 @@ What would be useful to add to the autohuiwalter function?
 
   * Modify so it allows Se/Sp priors to be defined as matrices?
   * And correlations on/off as matrices?
+
+```{r cleanup, include=FALSE}
+unlink('ind3tests.bug')
+```
