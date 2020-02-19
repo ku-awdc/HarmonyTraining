@@ -73,7 +73,7 @@ Teachers:
 
 - A particular model formulation that was originally designed for evaluating diagnostic tests in the absence of a gold standard
 
-- Not necessarily (or originally) Bayesian but now usually implemented using Bayesian MCMC
+- Not necessarily (or originally) Bayesian but often implemented using Bayesian MCMC
   
 - But evaluating an imperfect test against another imperfect test is a bit like pulling a rabbit out of a hat
   * If we don't know the true disease status, how can we estimate sensitivity or specificity for either test?
@@ -372,8 +372,8 @@ So we have not gained any additional information about test 1.
 - Basically an extension of the single-population model
 
 - Works best with multiple populations each with differing prevalences
-  * These could even be subgroups of individuals within the same population if there are e.g. known risk factors for disease status
-  * Remember that the focus is usually to estimate the diagnostic test parameters and not the prevalence in the different populations/subgroups!
+  * Including an unexposed population works well
+  * BUT be wary of assumptions regarding constant sensitivity/specificity across populations with very different types of infections
 
 
 ## Independent intercepts for populations

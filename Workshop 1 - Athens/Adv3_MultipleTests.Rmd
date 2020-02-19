@@ -80,18 +80,17 @@ Teachers:
 - Example:  we have three antibody tests
   
   * The latent status is actually 'producing antibodies' not 'diseased'
-  * We're actually pulling **something** out of a hat, and deciding to call it a rabbit
-
-
-## Model specification
-
-- Like for two tests, except it is now a 2x2x2 table
   
-  * If calculating this manually, take **extreme** care with multinomial tabulation
+. . .
 
-- Or use autohuiwalter
+- Example:  antibody vs egg count tests for liver fluke
 
-  * This will also deal gracefully with missing data in one or more test results
+  * Does the latent state include migrating juvenile fluke?
+
+. . .
+
+- We're actually pulling **something** out of a hat, and deciding to call it a rabbit
+
 
 ## Simulating data
 
@@ -127,14 +126,108 @@ test2 <- rbinom(N, 1, se2*true + (1-sp2)*(1-true))
 # Simulate test results for test 3:
 test3 <- rbinom(N, 1, se3*true + (1-sp3)*(1-true))
 
-testdata <- data.frame(Population=Group, Test1=test1, Test2=test2, Test3=test3)
+simdata <- data.frame(Population=factor(Group), Test1=test1, Test2=test2, Test3=test3)
+```
+
+
+## Model specification
+
+- Like for two tests, except it is now a 2x2x2 table
+  
+  * If calculating this manually, take **extreme** care with multinomial tabulation
+
+- Or use autohuiwalter
+
+  * This will also deal gracefully with missing data in one or more test results
+
+```{r, results='hide'}
+source("autohuiwalter.R")
+auto_huiwalter(simdata[,c('Population','Test1','Test2','Test3')], outfile='auto3thw.bug')
+```
+
+---
+
+```{r, echo=FALSE, comment=''}
+tc <- readLines('auto3thw.bug')[c(8,9,11,12,17,19:22,54:57,59)]
+cat(tc[1:4],'', '\t. . . ', '', tc[5:9],'', '\t\t. . . ', '', tc[10:14], sep='\n')
 ```
 
 
 ## Alternative model specification
 
-Can be exactly the same as the model generation code
+We might want to explicitly model the latent state:
 
+```{r include=FALSE}
+glmhw_definition <- c("model{
+
+  for(i in 1:N){
+    truestatus[i] ~ dbern(prev[Population[i]])
+
+    Status[i] ~ dcat(prob[i, ])
+    prob[1:8,i] <- se_prob[1:8,i] + sp_prob[1:8,i]
+", "
+    se_prob[1,p] <- truestatus[i] * ((1-se[1])*(1-se[2])*(1-se[3]))
+		sp_prob[1,p] <- (1-truestatus[i]) * (sp[1]*sp[2]*sp[3])
+
+		se_prob[2,p] <- truestatus[i] * (se[1]*(1-se[2])*(1-se[3])
+		sp_prob[2,p] <- (1-truestatus[i]) * ((1-sp[1])*sp[2]*sp[3])
+
+		se_prob[3,p] <- truestatus[i] * ((1-se[1])*se[2]*(1-se[3]))
+		sp_prob[3,p] <- (1-truestatus[i]) * (sp[1]*(1-sp[2])*sp[3])
+
+		se_prob[4,p] <- truestatus[i] * (se[1]*se[2]*(1-se[3]))
+		sp_prob[4,p] <- (1-truestatus[i]) * ((1-sp[1])*(1-sp[2])*sp[3])
+		se_prob[5,p] <- truestatus[i] * ((1-se[1])*(1-se[2])*se[3])
+		sp_prob[5,p] <- (1-truestatus[i]) * (sp[1]*sp[2]*(1-sp[3]))
+
+		se_prob[6,p] <- truestatus[i] * (se[1]*(1-se[2])*se[3])
+		sp_prob[6,p] <- (1-truestatus[i]) * ((1-sp[1])*sp[2]*(1-sp[3]))
+
+		se_prob[7,p] <- truestatus[i] * ((1-se[1])*se[2]*se[3])
+		sp_prob[7,p] <- (1-truestatus[i]) * (sp[1]*(1-sp[2])*(1-sp[3]))
+
+		se_prob[8,p] <- truestatus[i] * (se[1]*se[2]*se[3])
+		sp_prob[8,p] <- (1-truestatus[i]) * ((1-sp[1])*(1-sp[2])*(1-sp[3]))
+  }
+", "
+	prev[1] ~ dbeta(1,1)
+	prev[2] ~ dbeta(1,1)
+
+  se[1] ~ dbeta(1, 1)T(1-sp[1], )
+  sp[1] ~ dbeta(1, 1)
+  se[2] ~ dbeta(1, 1)T(1-sp[2], )
+  sp[2] ~ dbeta(1, 1)
+  se[3] ~ dbeta(1, 1)T(1-sp[3], )
+  sp[3] ~ dbeta(1, 1)
+
+  #data# Status, N, Population
+  #monitor# prev, se, sp
+  #inits# prev, se, sp
+}
+")
+cat(glmhw_definition, sep='', file='glm_hw3t.bug')
+```
+
+
+```{r comment='', echo=FALSE}
+cat(glmhw_definition[1], sep='\n')
+```
+
+---
+
+```{r comment='', echo=FALSE}
+cat(glmhw_definition[2], sep='\n')
+```
+
+---
+
+But this is inefficient
+
+There is also no way to distinguish individuals within the same boxes
+
+We could also use the estimated se/sp/prev to post-calculate these status probabilities
+
+This is useful for post-hoc ROC
 
 ## Exercise
 
@@ -149,101 +242,12 @@ Make some data missing for one or more tests and re-generate the model
 
 ## Optional Exercise
 
-Try to write a model that explicitly estimates the latent class for each individual
+Simulate data from 3 antibody tests with ab positive step [give code in solution]
 
+Does the se/sp estimated by a model recover the parameters?
 
-# Session 3b:  Hui-Walter models for multiple tests with conditional depdendence
+Why not?
 
-## Branching of processes leading to test results
-
-Example:  two antibody tests and one antigen test
-
-Or three antibody tests where one has a different target to the other two
-
-
-## Model specification
-
-```{r, eval=FALSE}
-
-		# Probability of observing ELISA1- ELISA2- WesternBlot- from a true positive::
-		se_prob[1,p] <- prev[p] * ((1-se[1])*(1-se[2])*(1-se[3]) +covse12 +covse13 +covse23)
-		# Probability of observing ELISA1- ELISA2- WesternBlot- from a true negative::
-		sp_prob[1,p] <- (1-prev[p]) * (sp[1]*sp[2]*sp[3] +covsp12 +covsp13 +covsp23)
-
-		# Probability of observing ELISA1+ ELISA2- WesternBlot- from a true positive::
-		se_prob[2,p] <- prev[p] * (se[1]*(1-se[2])*(1-se[3]) -covse12 -covse13 +covse23)
-		# Probability of observing ELISA1+ ELISA2- WesternBlot- from a true negative::
-		sp_prob[2,p] <- (1-prev[p]) * ((1-sp[1])*sp[2]*sp[3] -covsp12 -covsp13 +covsp23)
-
-		...
-		
-	# Covariance in sensitivity between ELISA1 and ELISA2 tests:
-	covse12 ~ dunif( (se[1]-1)*(1-se[2]) , min(se[1],se[2]) - se[1]*se[2] )
-	# Covariance in specificity between ELISA1 and ELISA2 tests:
-	covsp12 ~ dunif( (sp[1]-1)*(1-sp[2]) , min(sp[1],sp[2]) - sp[1]*sp[2] )
-	
-	...
-
-```
-
-## Alternative model specification
-
-Again, this can be exactly the same as the model generation code
-
-But convergence gets worse
-
-## Simulating data
-
-It helps to consider the data simulation as a biological process.  
-
-```{r}
-# Parameter values to simulate:
-N <- 200
-se1 <- 0.8
-se2 <- 0.9
-se3 <- 0.95
-sp1 <- 0.95
-sp2 <- 0.99
-sp3 <- 0.95
-
-Populations <- 2
-prevalence <- c(0.25,0.75)
-Group <- rep(1:Populations, each=N)
-
-# Ensure replicable data:
-set.seed(2017-11-21)
-
-# We will assume test 1 is dependent of the others, but tests 2&3
-# are not independent (e.g. they are both antibody tests)
-# The probability of an antibody response given disease positive:
-abse <- 0.8
-# (One minus) the probability of an antibody response given disease negative:
-absp <- 1 - 0.2
-
-# Simulate the true latent state (which is unobserved in real life):
-true <- rbinom(N*Populations, 1, prevalence[Group])
-# Simulate test results for test 1:
-test1 <- rbinom(N*Populations, 1, se1*true + (1-sp1)*(1-true))
-# Tests 2&3 will be non-independent, so simulate another biological step 
-# e.g. antibody response:
-antibody <- rbinom(N*Populations, 1, abse*true + (1-absp)*(1-true))
-# Simulate test 2&3 results based on this other latent state:
-test2 <- rbinom(N*Populations, 1, se2*antibody + (1-sp2)*(1-antibody))
-test3 <- rbinom(N*Populations, 1, se3*antibody + (1-sp3)*(1-antibody))
-
-ind3tests <- data.frame(Population=Group, Test1=test1, Test2=test2, Test3=test3)
-
-# The overall sensitivity of the correlated tests is effectively this:
-abse*se2 + (1-abse)*(1-sp2)
-abse*se3 + (1-abse)*(1-sp3)
-
-# The overall specificity of the correlated tests is effectively this:
-absp*sp2 + (1-absp)*(1-se2)
-absp*sp3 + (1-absp)*(1-se3)
-
-```
-
-## Verifying simulation results
 
 ```{r}
 
@@ -340,6 +344,96 @@ simdata %>%
 # But note that the overall sensitivity/specificity is sensitive to all 8 of the se/sp parameters at the top!
 ```
 
+
+
+# Session 3b:  Hui-Walter models for multiple tests with conditional depdendence
+
+## Branching of processes leading to test results
+
+Example:  two antibody tests and one antigen test
+
+Or three antibody tests where one has a different target to the other two
+
+
+## Simulating data
+
+It helps to consider the data simulation as a biological process.  
+
+```{r}
+# Parameter values to simulate:
+N <- 200
+se1 <- 0.8
+se2 <- 0.9
+se3 <- 0.95
+sp1 <- 0.95
+sp2 <- 0.99
+sp3 <- 0.95
+
+Populations <- 2
+prevalence <- c(0.25,0.75)
+Group <- rep(1:Populations, each=N)
+
+# Ensure replicable data:
+set.seed(2017-11-21)
+
+# We will assume test 1 is dependent of the others, but tests 2&3
+# are not independent (e.g. they are both antibody tests)
+# The probability of an antibody response given disease positive:
+abse <- 0.8
+# (One minus) the probability of an antibody response given disease negative:
+absp <- 1 - 0.2
+
+# Simulate the true latent state (which is unobserved in real life):
+true <- rbinom(N*Populations, 1, prevalence[Group])
+# Simulate test results for test 1:
+test1 <- rbinom(N*Populations, 1, se1*true + (1-sp1)*(1-true))
+# Tests 2&3 will be non-independent, so simulate another biological step 
+# e.g. antibody response:
+antibody <- rbinom(N*Populations, 1, abse*true + (1-absp)*(1-true))
+# Simulate test 2&3 results based on this other latent state:
+test2 <- rbinom(N*Populations, 1, se2*antibody + (1-sp2)*(1-antibody))
+test3 <- rbinom(N*Populations, 1, se3*antibody + (1-sp3)*(1-antibody))
+
+ind3tests <- data.frame(Population=Group, Test1=test1, Test2=test2, Test3=test3)
+
+# The overall sensitivity of the correlated tests is effectively this:
+abse*se2 + (1-abse)*(1-sp2)
+abse*se3 + (1-abse)*(1-sp3)
+
+# The overall specificity of the correlated tests is effectively this:
+absp*sp2 + (1-absp)*(1-se2)
+absp*sp3 + (1-absp)*(1-se3)
+
+```
+
+## Verifying simulation results
+
+## Model specification
+
+```{r, eval=FALSE}
+
+		# Probability of observing ELISA1- ELISA2- WesternBlot- from a true positive::
+		se_prob[1,p] <- prev[p] * ((1-se[1])*(1-se[2])*(1-se[3]) +covse12 +covse13 +covse23)
+		# Probability of observing ELISA1- ELISA2- WesternBlot- from a true negative::
+		sp_prob[1,p] <- (1-prev[p]) * (sp[1]*sp[2]*sp[3] +covsp12 +covsp13 +covsp23)
+
+		# Probability of observing ELISA1+ ELISA2- WesternBlot- from a true positive::
+		se_prob[2,p] <- prev[p] * (se[1]*(1-se[2])*(1-se[3]) -covse12 -covse13 +covse23)
+		# Probability of observing ELISA1+ ELISA2- WesternBlot- from a true negative::
+		sp_prob[2,p] <- (1-prev[p]) * ((1-sp[1])*sp[2]*sp[3] -covsp12 -covsp13 +covsp23)
+
+		...
+		
+	# Covariance in sensitivity between ELISA1 and ELISA2 tests:
+	covse12 ~ dunif( (se[1]-1)*(1-se[2]) , min(se[1],se[2]) - se[1]*se[2] )
+	# Covariance in specificity between ELISA1 and ELISA2 tests:
+	covsp12 ~ dunif( (sp[1]-1)*(1-sp[2]) , min(sp[1],sp[2]) - sp[1]*sp[2] )
+	
+	...
+
+```
+
+
 ## Generating the model
 
 Extreme care needed
@@ -348,11 +442,11 @@ Use autohuiwalter with argument covon=TRUE
 
 ```{r}
 source('autohuiwalter.R')
-auto_huiwalter(ind3tests, 'ind3tests.bug', covon=TRUE)
+auto_huiwalter(ind3tests, 'auto3tihw.bug', covon=TRUE)
 ```
 
 ```{r, echo=FALSE, comment=''}
-cat(readLines('ind3tests.bug'), sep='\n')
+cat(readLines('auto3tihw.bug'), sep='\n')
 ```
 
 
@@ -503,5 +597,6 @@ What would be useful to add to the autohuiwalter function?
   * And correlations on/off as matrices?
 
 ```{r cleanup, include=FALSE}
-unlink('ind3tests.bug')
+unlink('auto3thw.bug')
+unlink('auto3tihw.bug')
 ```
