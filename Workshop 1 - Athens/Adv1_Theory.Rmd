@@ -602,7 +602,7 @@ cat(glm_definition, sep='\n')
 - However, notice that the prior is specified differently...
 
 
-## Exercise
+## Exercise {.fragile}
 
 - Run the original version, the observation-level version, and the GLM version of the model and compare results with the same data
 
@@ -611,21 +611,10 @@ cat(glm_definition, sep='\n')
 - Now try running the GLM model with a prior of `dnorm(0, 0.33)` (and the original data) - does this make a difference?
 
 
-## Optional Exercise
-
-Another way of comparing different priors is to run different models with no data - as there is no influence of a likelihood, the posterior will then be identical to the priors (and the model will run faster).
-
-One way to do this is to make all of the response data (i.e. either Positives or Status) missing.  Try doing this for the following three models, and compare the priors for prevalence:
-
-  - The original model with prior `prevalence ~ dbeta(1,1)`
-  - The GLM model with prior `intercept ~ dnorm(0, 10^-6)`
-  - The GLM model with prior `intercept ~ dnorm(0, 0.33)`
-
-
 `r if(params$presentation) {"\\begin{comment}"}`
 
 
-## Solution
+## Solution {.fragile}
 
 In basicjags.bug:
 
@@ -751,7 +740,23 @@ basicglm2
 
 The GLM model is now more similar to the others, because the prior for prevalence is more similar.
 
-## Optional Solution
+`r if(params$presentation) {"\\end{comment}"}`
+
+
+## Optional Exercise {.fragile}
+
+Another way of comparing different priors is to run different models with no data - as there is no influence of a likelihood, the posterior will then be identical to the priors (and the model will run faster).
+
+One way to do this is to make all of the response data (i.e. either Positives or Status) missing.  Try doing this for the following three models, and compare the priors for prevalence:
+
+  - The original model with prior `prevalence ~ dbeta(1,1)`
+  - The GLM model with prior `intercept ~ dnorm(0, 10^-6)`
+  - The GLM model with prior `intercept ~ dnorm(0, 0.33)`
+
+
+`r if(params$presentation) {"\\begin{comment}"}`
+
+## Optional Solution {.fragile}
 
 This is the easiest way to remove data from the model without adjusting the model code itself:
 
