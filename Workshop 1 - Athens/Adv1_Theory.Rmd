@@ -30,6 +30,8 @@ rmarkdown::render('Adv1_Theory.Rmd', 'html_document', params=list(presentation=F
 # Reduce the width of R code output for PDF only:
 if(params$presentation) options(width=60)
 knitr::opts_chunk$set(echo = TRUE)
+
+set.seed(2020-02-18)
 ```
 
 # Course Outline and Practicalities
@@ -363,7 +365,7 @@ This runs slightly faster than 5000 burnin iterations, but otherwise there is no
 We can use a larger sample of 100000 rather than 10000 iterations:
 
 ```{r}
-results <- run.jags('basicjags.bug', n.chains=2, burnin=0, sample=100000)
+results <- run.jags('basicjags.bug', n.chains=2, burnin=5000, sample=100000)
 results
 ```
 
@@ -372,7 +374,7 @@ This gives us a higher effective sample size and therefore a more precise estima
 Using a very small sample is a bad idea:
 
 ```{r}
-results <- run.jags('basicjags.bug', n.chains=2, burnin=0, sample=100)
+results <- run.jags('basicjags.bug', n.chains=2, burnin=5000, sample=100)
 results
 ```
 
@@ -831,7 +833,7 @@ se <- list(chain1=0.5, chain2=0.99)
 sp <- list(chain1=0.5, chain2=0.99)
 Positives <- 70
 TotalTests <- 100
-results <- run.jags('basicimperfect.bug', n.chains=2, burnin=0, sample=10000)
+results <- run.jags('basicimperfect.bug', n.chains=2)
 ```
 
 [Remember to check convergence and effective sample size!]
