@@ -405,7 +405,7 @@ model{
 We would usually start with individual-level data in a dataframe:
 
 ```{r}
-se1 <- 0.9; sp1 <- 0.95; sp2 <- 0.99; se2 <- 0.8
+se1 <- 0.9; se2 <- 0.8; sp1 <- 0.95; sp2 <- 0.99
 prevalences <- c(0.1, 0.5, 0.9)
 N <- 100
 

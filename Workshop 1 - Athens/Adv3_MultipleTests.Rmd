@@ -136,9 +136,11 @@ simdata <- data.frame(Population=factor(Group), Test1=test1, Test2=test2, Test3=
   
   * If calculating this manually, take **extreme** care with multinomial tabulation
 
+. . .
+
 - Or use autohuiwalter
 
-  * This will also deal gracefully with missing data in one or more test results
+  * This will also handle missing data in one or more test results
 
 ```{r, results='hide'}
 source("autohuiwalter.R")
@@ -148,8 +150,8 @@ auto_huiwalter(simdata[,c('Population','Test1','Test2','Test3')], outfile='auto3
 ---
 
 ```{r, echo=FALSE, comment=''}
-tc <- gsub('\t','',readLines('auto3thw.bug')[c(8,9,11,19:22,54:57,59)])
-cat(tc[1:3],'', tc[4:7],'', '. . . ', '', tc[8:12], sep='\n')
+tc <- gsub('\t','',readLines('auto3thw.bug')[c(9,11,19:22,54:57)])
+cat(tc[1:2],'', tc[3:6],'', '. . . ', '', tc[7:10], sep='\n')
 ```
 
 
@@ -163,34 +165,34 @@ glmhw_definition <- c("model{
   for(i in 1:N){
     truestatus[i] ~ dbern(prev[Population[i]])
 
-    Status[i] ~ dcat(prob[i, ])
+    Status[i] ~ dcat(prob[1:8, i])
     prob[1:8,i] <- se_prob[1:8,i] + sp_prob[1:8,i]
+
+		se_prob[1,i] <- truestatus[i] * ((1-se[1])*(1-se[2])*(1-se[3]))
+		sp_prob[1,i] <- (1-truestatus[i]) * (sp[1]*sp[2]*sp[3])
+
+		se_prob[2,i] <- truestatus[i] * (se[1]*(1-se[2])*(1-se[3]))
+		sp_prob[2,i] <- (1-truestatus[i]) * ((1-sp[1])*sp[2]*sp[3])
 ", "
-		se_prob[1,p] <- truestatus[i] * ((1-se[1])*(1-se[2])*(1-se[3]))
-		sp_prob[1,p] <- (1-truestatus[i]) * (sp[1]*sp[2]*sp[3])
+		se_prob[3,i] <- truestatus[i] * ((1-se[1])*se[2]*(1-se[3]))
+		sp_prob[3,i] <- (1-truestatus[i]) * (sp[1]*(1-sp[2])*sp[3])
 
-		se_prob[2,p] <- truestatus[i] * (se[1]*(1-se[2])*(1-se[3])
-		sp_prob[2,p] <- (1-truestatus[i]) * ((1-sp[1])*sp[2]*sp[3])
+		se_prob[4,i] <- truestatus[i] * (se[1]*se[2]*(1-se[3]))
+		sp_prob[4,i] <- (1-truestatus[i]) * ((1-sp[1])*(1-sp[2])*sp[3])
 
-		se_prob[3,p] <- truestatus[i] * ((1-se[1])*se[2]*(1-se[3]))
-		sp_prob[3,p] <- (1-truestatus[i]) * (sp[1]*(1-sp[2])*sp[3])
+		se_prob[5,i] <- truestatus[i] * ((1-se[1])*(1-se[2])*se[3])
+		sp_prob[5,i] <- (1-truestatus[i]) * (sp[1]*sp[2]*(1-sp[3]))
 
-		se_prob[4,p] <- truestatus[i] * (se[1]*se[2]*(1-se[3]))
-		sp_prob[4,p] <- (1-truestatus[i]) * ((1-sp[1])*(1-sp[2])*sp[3])
+		se_prob[6,i] <- truestatus[i] * (se[1]*(1-se[2])*se[3])
+		sp_prob[6,i] <- (1-truestatus[i]) * ((1-sp[1])*sp[2]*(1-sp[3]))
 
-		se_prob[5,p] <- truestatus[i] * ((1-se[1])*(1-se[2])*se[3])
-		sp_prob[5,p] <- (1-truestatus[i]) * (sp[1]*sp[2]*(1-sp[3]))
-
-		se_prob[6,p] <- truestatus[i] * (se[1]*(1-se[2])*se[3])
-		sp_prob[6,p] <- (1-truestatus[i]) * ((1-sp[1])*sp[2]*(1-sp[3]))
-
-		se_prob[7,p] <- truestatus[i] * ((1-se[1])*se[2]*se[3])
-		sp_prob[7,p] <- (1-truestatus[i]) * (sp[1]*(1-sp[2])*(1-sp[3]))
-
-		se_prob[8,p] <- truestatus[i] * (se[1]*se[2]*se[3])
-		sp_prob[8,p] <- (1-truestatus[i]) * ((1-sp[1])*(1-sp[2])*(1-sp[3]))
+		se_prob[7,i] <- truestatus[i] * ((1-se[1])*se[2]*se[3])
+		sp_prob[7,i] <- (1-truestatus[i]) * (sp[1]*(1-sp[2])*(1-sp[3]))
+", "
+		se_prob[8,i] <- truestatus[i] * (se[1]*se[2]*se[3])
+		sp_prob[8,i] <- (1-truestatus[i]) * ((1-sp[1])*(1-sp[2])*(1-sp[3]))
   }
-", "
+
 	prev[1] ~ dbeta(1,1)
 	prev[2] ~ dbeta(1,1)
 
@@ -202,7 +204,7 @@ glmhw_definition <- c("model{
   sp[3] ~ dbeta(1, 1)
 
   #data# Status, N, Population
-  #monitor# prev, se, sp
+  #monitor# prev, se, sp, truestatus[1:5]
   #inits# prev, se, sp
 }
 ")
@@ -228,13 +230,54 @@ cat(glmhw_definition[3], sep='\n')
 
 ---
 
+```{r, results='hide'}
+Population <- simdata$Population
+Status <- with(simdata, factor(interaction(Test1, Test2, Test3), levels=c('0.0.0','1.0.0','0.1.0','0.0.1','1.1.0','1.0.1','0.1.1','1.1.1')))
+
+prev <- list(chain1=c(0.05,0.95), chain2=c(0.95,0.05))
+se <- list(chain1=c(0.5,0.75,0.99), chain2=c(0.99,0.5,0.75))
+sp <- list(chain1=c(0.5,0.75,0.99), chain2=c(0.99,0.5,0.75))
+```
+
+```{r, eval=FALSE}
+results <- run.jags('glm_hw3t.bug', n.chains=2)
+```
+```{r, echo=FALSE}
+load('glm_hw3t.Rdata')
+```
+
+```{r, echo=FALSE, eval=FALSE}
+# Takes ages to run:
+results <- run.jags('glm_hw3t.bug', n.chains=2)
+save(results, file='glm_hw3t.Rdata')
+```
+
+
+```{r}
+results
+```
+
+---
+
+```{r, echo=FALSE}
+res <- summary(results)[,c(1:3,9,11)]
+res[] <- round(res, 3)
+knitr::kable(res)
+```
+
+---
+
 But this is inefficient
 
-There is also no way to distinguish individuals within the same boxes
+  - Time taken is 1.6 minutes rather than a few seconds
+  - And the barely stochastic nature of some truestatus estimates triggers false convergence warnings
+  - And there is no way to distinguish individuals within the same boxes anyway, as they have the same data!
 
-We could also use the estimated se/sp/prev to post-calculate these status probabilities
+. . .
 
-This is useful for post-hoc ROC
+It is much better to use the estimated se/sp/prev to post-calculate these truestatus probabilities
+
+  - This can be useful for post-hoc ROC
 
 
 ## Exercise {.fragile}
@@ -245,126 +288,231 @@ Do the estimates of Se/Sp correspond to the simulation parameters?
 
 Make some data missing for one or more tests and re-generate the model
 
-  * Can you see what has changed in the code?
+Can you see what has changed in the code?
 
 
 `r if(params$presentation) {"\\begin{comment}"}`
 
 ## Solution {.fragile}
 
+```{r}
+# Parameter values to simulate:
+N <- 200
+se1 <- 0.8
+sp1 <- 0.95
+se2 <- 0.9
+sp2 <- 0.99
+se3 <- 0.95
+sp3 <- 0.95
+
+Populations <- 2
+prevalence <- c(0.25,0.75)
+Group <- sample(1:Populations, N, replace=TRUE)
+
+# Ensure replicable data:
+set.seed(2020-02-18)
+
+# Simulate the true latent state (which is unobserved in real life):
+true <- rbinom(N, 1, prevalence[Group])
+# Simulate test results for test 1:
+test1 <- rbinom(N, 1, se1*true + (1-sp1)*(1-true))
+# Simulate test results for test 2:
+test2 <- rbinom(N, 1, se2*true + (1-sp2)*(1-true))
+# Simulate test results for test 3:
+test3 <- rbinom(N, 1, se3*true + (1-sp3)*(1-true))
+
+simdata <- data.frame(Population=factor(Group), Test1=test1, Test2=test2, Test3=test3)
+
+source("autohuiwalter.R")
+auto_huiwalter(simdata[,c('Population','Test1','Test2','Test3')], outfile='auto3thw.bug')
+```
+
+Run the model:
+
+```{r message=FALSE, warning=FALSE, results='hide'}
+results <- run.jags('auto3thw.bug')
+```
+
+Remember to check convergence in the usual way!
+
+Then look at the results:
+
+```{r}
+results
+```
+
+And compare to the simulation parameters:
+
+```{r}
+prevalence
+se1
+sp1
+se2
+sp2
+se3
+sp3
+```
+
+We do a reasonably good job of recovering the estimates
+
+Now make some data missing and regenerate the model code:
+
+```{r}
+simdata$Test1[1:5] <- NA
+simdata$Test2[1:2] <- NA
+simdata$Test3[1] <- NA
+
+head(simdata)
+
+auto_huiwalter(simdata[,c('Population','Test1','Test2','Test3')], outfile='auto3tmhw.bug')
+```
+
+The top part of the model now has multiple data tallies for every observed combination of data completeness:
+
+```{r, echo=FALSE, comment=''}
+cat(readLines('auto3tmhw.bug')[3:30], sep='\n')
+```
+
+And the bottom part of the data similarly includes different multinomial tallies for each combination:
+
+```{r, echo=FALSE, comment=''}
+cat(readLines('auto3tmhw.bug')[155:163], sep='\n')
+```
+
+We can run the model in the same way as usual:
+
+```{r, results='hide'}
+results <- run.jags('auto3tmhw.bug')
+```
+
 
 `r if(params$presentation) {"\\end{comment}"}`
 
 ## Optional Exercise {.fragile}
 
-Simulate data from 3 antibody tests with ab positive step [give code in solution]
+Modify the simulation code to introduce an antibody response step between the true status and the test results (see below in the HTML file for example R code).
 
-Does the se/sp estimated by a model recover the parameters?
+Simulate data from three antibody tests including the antibody response step
 
-Why not?
-
+Does the sensitivity / specificity estimated by the model recover the true prevalence parameter?
 
 
 `r if(params$presentation) {"\\begin{comment}"}`
 
+## Optional Exercise Code {.fragile}
+
+```{r}
+# Probability of antibody response conditional on disease status (really bad to illustrate the point):
+se_antibody <- 0.5
+sp_antibody <- 0.75
+# Otherwise the parameters are as before
+
+# True latent infection status as before:
+true <- rbinom(N, 1, prevalence[Group])
+
+# Latent class of antibody response conditional on the true status:
+antibody <- rbinom(N, 1, se_antibody*true + (1-sp_antibody)*(1-true))
+
+# Simulate test results for test 1 conditional on antibody status:
+test1 <- rbinom(N, 1, se1*antibody + (1-sp1)*(1-antibody))
+# etc
+
+# Note that the overall sensitivity and specificity of the tests needs to be corrected for the antibody positive step:
+overall_se1 <- se_antibody*se1 + (1-se_antibody)*(1-sp1)
+overall_sp1 <- sp_antibody*sp1 + (1-sp_antibody)*(1-se1)
+# etc
+```
+
+
 ## Optional Solution {.fragile}
 
 
-```{r}
+```{r, results='hide'}
+# Parameter values to simulate:
+N <- 200
+se1 <- 0.8
+sp1 <- 0.95
+se2 <- 0.9
+sp2 <- 0.99
+se3 <- 0.95
+sp3 <- 0.95
 
-## Parameters
+# Probability of antibody response conditional on disease status (really bad to illustrate the point):
+se_antibody <- 0.5
+sp_antibody <- 0.75
 
-# True prevalence:
-prev <- 0.2
+Populations <- 2
+prevalence <- c(0.25,0.75)
+Group <- sample(1:Populations, N, replace=TRUE)
 
-# Probability of antibody response conditional on disease status:
-se_antibody <- 0.95
-sp_antibody <- 0.99
+# Ensure replicable data:
+set.seed(2020-02-18)
 
-# Probability of ELISA target presence conditional on antibody status:
-se_target <- 0.95
-sp_target <- 0.99
+# True latent infection status as before:
+true <- rbinom(N, 1, prevalence[Group])
 
-# Probability of ELISA test positive conditional on target presence:
-se_elisa_cond <- 0.99
-sp_elisa_cond <- 0.99
+# Latent class of antibody response conditional on the true status:
+antibody <- rbinom(N, 1, se_antibody*true + (1-sp_antibody)*(1-true))
 
-# Probability of Western Blot positive conditional on antibody status:
-se_wb_cond <- 0.9
-sp_wb_cond <- 0.99
+# Simulate test results for all tests conditional on antibody status:
+test1 <- rbinom(N, 1, se1*antibody + (1-sp1)*(1-antibody))
+test2 <- rbinom(N, 1, se2*antibody + (1-sp2)*(1-antibody))
+test3 <- rbinom(N, 1, se3*antibody + (1-sp3)*(1-antibody))
 
+# Note that the overall sensitivity and specificity of the tests needs to be corrected for the antibody positive step:
+overall_se1 <- se_antibody*se1 + (1-se_antibody)*(1-sp1)
+overall_sp1 <- sp_antibody*sp1 + (1-sp_antibody)*(1-se1)
 
-## Derived parameters:
+overall_se2 <- se_antibody*se2 + (1-se_antibody)*(1-sp2)
+overall_sp2 <- sp_antibody*sp2 + (1-sp_antibody)*(1-se2)
 
-# Overall Se/Sp of Western Blot:
-se_wb <- se_antibody*se_wb_cond + (1-se_antibody)*(1-sp_wb_cond)
-sp_wb <- sp_antibody*sp_wb_cond + (1-sp_antibody)*(1-se_wb_cond)
+overall_se3 <- se_antibody*se3 + (1-se_antibody)*(1-sp3)
+overall_sp3 <- sp_antibody*sp3 + (1-sp_antibody)*(1-se3)
 
-# Overall Se/Sp of ELISA:
-se_abtg <- se_antibody*se_target + (1-se_antibody)*(1-sp_target)
-sp_abtg <- sp_antibody*sp_target + (1-sp_antibody)*(1-se_target)
-se_elisa <- se_abtg*se_elisa_cond + (1-se_abtg)*(1-sp_target)
-sp_elisa <- sp_abtg*sp_elisa_cond + (1-sp_abtg)*(1-se_target)
+simdata <- data.frame(Population=factor(Group), Test1=test1, Test2=test2, Test3=test3)
 
-se_wb
-sp_wb
-se_elisa
-sp_elisa
+source("autohuiwalter.R")
+auto_huiwalter(simdata[,c('Population','Test1','Test2','Test3')], outfile='auto3abthw.bug')
 
+results <- run.jags('auto3abthw.bug')
 
-
-## Simulation
-
-iters <- 10^6
-
-library('tidyverse')
-
-simdata <- data.frame(TrueStatus = rbinom(iters, 1, prev)) %>%
-	mutate(AntibodyStatus = rbinom(iters, 1, TrueStatus*se_antibody + (1-TrueStatus)*(1-sp_antibody))) %>%
-	mutate(TargetStatus = rbinom(iters, 1, AntibodyStatus*se_target + (1-AntibodyStatus)*(1-sp_target))) %>%
-	mutate(ELISA1 = rbinom(iters, 1, TargetStatus*se_elisa_cond + (1-TargetStatus)*(1-sp_elisa_cond))) %>%
-	mutate(ELISA2 = rbinom(iters, 1, TargetStatus*se_elisa_cond + (1-TargetStatus)*(1-sp_elisa_cond))) %>%
-	mutate(WesternBlot = rbinom(iters, 1, AntibodyStatus*se_wb_cond + (1-AntibodyStatus)*(1-sp_wb_cond)))
-
-str(simdata)
-
-# Verify that the tests are correlated:
-table(simdata$ELISA1, simdata$ELISA2)
-table(simdata$ELISA1, simdata$WesternBlot)
-
-
-## Look at results:
-
-# The individual test-level Se and Sp are as expected:
-
-simdata %>%
-	group_by(TrueStatus) %>%
-	mutate(Total = n()) %>%
-	gather(Test, Result, -Total, -TrueStatus) %>%
-	group_by(TrueStatus, Test, Total) %>%
-	summarise(PercentPositive = sum(Result)/Total[1] *100) %>%
-	filter(Test %in% c('ELISA1','ELISA2','WesternBlot'))
-# Compare to:
-(1-sp_elisa)*100
-(1-sp_wb)*100
-se_elisa*100
-se_wb*100
-
-# Serial testing with all 3 tests:
-simdata %>%
-	# Define positive as needing to be positive for all tests
-	mutate(Combined = ELISA1 * ELISA2 * WesternBlot) %>%
-	group_by(TrueStatus) %>%
-	mutate(Total = n()) %>%
-	gather(Test, Result, -Total, -TrueStatus) %>%
-	group_by(TrueStatus, Test, Total) %>%
-	summarise(PercentPositive = sum(Result)/Total[1] *100) %>%
-	filter(Test %in% c('ELISA1','ELISA2','WesternBlot','Combined'))
-# So serial testing has sensitivity of ~80% and specificity of ~99.1%
-
-# You could also try other testing procedures
-# But note that the overall sensitivity/specificity is sensitive to all 8 of the se/sp parameters at the top!
 ```
+
+Now check the results:
+
+```{r}
+results
+```
+
+We do a horrible job of estimating prevalence in the second population:
+
+```{r}
+prevalence
+```
+
+And the test sensitivity/specificity estimates are nowhere near the overall sensitivity/specificity after correcting for antibody status:
+
+```{r}
+overall_se1
+overall_se2
+overall_se3
+overall_sp1
+overall_sp2
+overall_sp3
+```
+
+But they are close to the sensitivity/specificity values that are conditional on the antibody status:
+
+```{r}
+se1
+se2
+se3
+sp1
+sp2
+sp3
+```
+
+So our model is effectively estimating a latent condition of antibody status, and not a latent condition of true positive status - i.e. the thing that we have pulled out of the hat is not the rabbit that we were hoping for...
 
 `r if(params$presentation) {"\\end{comment}"}`
 
@@ -373,9 +521,16 @@ simdata %>%
 
 ## Branching of processes leading to test results
 
-Example:  two antibody tests and one antigen test
+- Sometimes we have multiple tests that are detecting a similar thing
+  
+  - For example:  two antibody tests and one antigen test
+  - The antibody tests will be correlated
+  
+. . .
 
-Or three antibody tests where one has a different target to the other two
+- Or even three antibody tests where two are primed to detect the same thing, and one has a different target!
+  
+  - In this case all three tests are correlated, but two are more strongly correlated
 
 
 ## Simulating data
@@ -407,13 +562,15 @@ absp <- 1 - 0.2
 ```{r}
 # Simulate the true latent state:
 true <- rbinom(N*Populations, 1, prevalence[Group])
-# Simulate test results for test 1:
-test1 <- rbinom(N*Populations, 1, se1*true + (1-sp1)*(1-true))
-# Tests 2 & 3 will be co-dependent on antibody response:
+
+# Tests 1 & 2 will be co-dependent on antibody response:
 antibody <- rbinom(N*Populations, 1, abse*true + (1-absp)*(1-true))
-# Simulate test 2 & 3 results based on this other latent state:
+# Simulate test 1 & 2 results based on this other latent state:
+test1 <- rbinom(N*Populations, 1, se1*antibody + (1-sp1)*(1-antibody))
 test2 <- rbinom(N*Populations, 1, se2*antibody + (1-sp2)*(1-antibody))
-test3 <- rbinom(N*Populations, 1, se3*antibody + (1-sp3)*(1-antibody))
+
+# Simulate test results for the independent test 3:
+test3 <- rbinom(N*Populations, 1, se3*true + (1-sp3)*(1-true))
 
 ind3tests <- data.frame(Population=Group, Test1=test1, Test2=test2, Test3=test3)
 ```
@@ -422,17 +579,18 @@ ind3tests <- data.frame(Population=Group, Test1=test1, Test2=test2, Test3=test3)
 
 ```{r}
 # The overall sensitivity of the correlated tests is:
+abse*se1 + (1-abse)*(1-sp1)
 abse*se2 + (1-abse)*(1-sp2)
-abse*se3 + (1-abse)*(1-sp3)
 
 # The overall specificity of the correlated tests is:
+absp*sp1 + (1-absp)*(1-se1)
 absp*sp2 + (1-absp)*(1-se2)
-absp*sp3 + (1-absp)*(1-se3)
 ```
 
 . . .
 
 We need to think carefully about what we are conditioning on when interpreting sensitivity and specificity!
+
 
 ## Model specification
 
@@ -450,41 +608,70 @@ We need to think carefully about what we are conditioning on when interpreting s
 	covse12 ~ dunif( (se[1]-1)*(1-se[2]) , min(se[1],se[2]) - se[1]*se[2] )
 	# Covariance in specificity between tests 1 and 2:
 	covsp12 ~ dunif( (sp[1]-1)*(1-sp[2]) , min(sp[1],sp[2]) - sp[1]*sp[2] )
-	
-	...
 
 ```
 
 
 ## Generating the model
 
-Use autohuiwalter with argument covon=TRUE
+First use autohuiwalter to create a model file:
 
 ```{r, results='hide'}
-source('autohuiwalter.R')
-auto_huiwalter(ind3tests, 'auto3tihw.bug', covon=TRUE)
+auto_huiwalter(ind3tests, 'auto3tihw.bug')
 ```
 
+Then find the lines for the covariances that we want to activate:
+
 ```{r, echo=FALSE, comment=''}
-cat(gsub('\t','',readLines('auto3tihw.bug')[87:92]), sep='\n')
+ml <- readLines('auto3tihw.bug')
+cat(gsub('\t','',ml[87:92]), sep='\n')
 ```
 
 ---
 
+And edit so it looks like:
+
 ```{r, echo=FALSE, comment=''}
-cat(gsub('\t','',readLines('auto3tihw.bug')[94:106]), sep='\n')
+ml[87:92] <- c('	# Covariance in sensitivity between Test1 and Test2 tests:', '	covse12 ~ dunif( (se[1]-1)*(1-se[2]) , min(se[1],se[2]) - se[1]*se[2] )  ## if the sensitivity of these tests may be correlated', '	 # covse12 <- 0  ## if the sensitivity of these tests can be assumed to be independent','	# Covariance in specificity between Test1 and Test2 tests:', '	covsp12 ~ dunif( (sp[1]-1)*(1-sp[2]) , min(sp[1],sp[2]) - sp[1]*sp[2] )  ## if the specificity of these tests may be correlated', '	 # covsp12 <- 0  ## if the specificity of these tests can be assumed to be independent')
+cat(ml, file='auto3tihw.bug', sep='\n')
+ml <- readLines('auto3tihw.bug')
+cat(gsub('\t','',ml[87:92]), sep='\n')
+```
+
+[i.e. swap the comments around]
+
+---
+
+You will also need to uncomment out the relevant initial values for BOTH chains (on lines 117-122 and 128-133):
+
+```{r, echo=FALSE, comment=''}
+ml <- readLines('auto3tihw.bug')
+cat(gsub('\t','',ml[128:133]), sep='\n')
+```
+
+So that they look like:
+
+```{r, echo=FALSE, comment=''}
+ml[c(117,120)] <- c('"covse12" <- 0', '"covsp12" <- 0')
+ml[c(128,131)] <- c('"covse12" <- 0', '"covsp12" <- 0')
+cat(ml, file='auto3tihw.bug', sep='\n')
+ml <- readLines('auto3tihw.bug')
+cat(gsub('\t','',ml[128:133]), sep='\n')
+ff <- file.copy('auto3tihw.bug', 'auto3tihw2.bug')
+```
+
+```{r, results='hide'}
+results <- run.jags('auto3tihw.bug')
 ```
 
 
 ## Exercise {.fragile}
 
-Simulate data with a dependence between 2 tests
+Simulate data with N=1000 and dependence between tests 1 and 2
 
-Model assuming conditional independence biases the estimates
+Then fit a model assuming independence between all tests and compare the results to your simulation parameters
 
-Turn on covariance between the two tests
-
-Model with conditional depdendence has bigger CI but unbiased
+Now turn on covariance between tests 1 and 2 and refit the model.  Are the results more reasonable?
 
 
 `r if(params$presentation) {"\\begin{comment}"}`
@@ -492,16 +679,106 @@ Model with conditional depdendence has bigger CI but unbiased
 ## Solution {.fragile}
 
 
+```{r}
+# Parameter values to simulate:
+N <- 1000
+se1 <- 0.8
+se2 <- 0.9
+se3 <- 0.95
+sp1 <- 0.95
+sp2 <- 0.99
+sp3 <- 0.95
+
+# The probability of an antibody response given disease:
+abse <- 0.8
+# The probability of no antibody response given no disease:
+absp <- 1 - 0.2
+
+# Simulate the true latent state:
+true <- rbinom(N*Populations, 1, prevalence[Group])
+
+# Tests 1 & 2 will be co-dependent on antibody response:
+antibody <- rbinom(N*Populations, 1, abse*true + (1-absp)*(1-true))
+# Simulate test 1 & 2 results based on this other latent state:
+test1 <- rbinom(N*Populations, 1, se1*antibody + (1-sp1)*(1-antibody))
+test2 <- rbinom(N*Populations, 1, se2*antibody + (1-sp2)*(1-antibody))
+
+# Simulate test results for the independent test 3:
+test3 <- rbinom(N*Populations, 1, se3*true + (1-sp3)*(1-true))
+
+ind3tests <- data.frame(Population=Group, Test1=test1, Test2=test2, Test3=test3)
+
+# The overall sensitivity of the correlated tests is:
+abse*se1 + (1-abse)*(1-sp1)
+abse*se2 + (1-abse)*(1-sp2)
+
+# The overall specificity of the correlated tests is:
+absp*sp1 + (1-absp)*(1-se1)
+absp*sp2 + (1-absp)*(1-se2)
+
+source("autohuiwalter.R")
+auto_huiwalter(ind3tests, outfile='auto3tihw.bug')
+```
+
+Then change relevant lines in auto3tihw.bug so that it looks like:
+
+```{r, echo=FALSE}
+unlink('auto3tihw.bug')
+ff <- file.copy('auto3tihw2.bug', 'auto3tihw.bug')
+Sys.sleep(1)
+```
+
+```{r, echo=FALSE, comment=''}
+cat(readLines('auto3tihw.bug'), sep='\n')
+```
+
+Then run the model:
+
+```{r, results='hide'}
+results <- run.jags('auto3tihw.bug')
+```
+
+Now check the results:
+
+```{r}
+results
+```
+
+We do a better job of estimating prevalence, and the se/sp for tests 1 and 2 better reflect the overall probability conditional on true status (i.e. corrected for antibody status). But notice that our effective sample size is much smaller than it was! We could run the model for a bit longer:
+
+```{r, results='hide'}
+results <- extend.jags(results)
+```
+
+```{r}
+results
+```
+
+
 `r if(params$presentation) {"\\end{comment}"}`
 
 ## Optional Exercise {.fragile}
 
-Activate covariance between all 3 tests
+Re-fit a model to this data using all three possible covse and covsp parameters
+
+What do you notice about the results?
 
 `r if(params$presentation) {"\\begin{comment}"}`
 
 ## Optional Solution {.fragile}
 
+You can either manually change all 3 covse/covsp from before, or regenerate the model using the covon=TRUE option:
+
+```{r, results='hide'}
+auto_huiwalter(ind3tests, outfile='auto3tichw.bug', covon=TRUE)
+results <- run.jags('auto3tichw.bug')
+```
+
+```{r}
+results
+```
+
+This chains haven't converged (check out the psrf): the model is (or is close to being) unidentifiable.
 
 `r if(params$presentation) {"\\end{comment}"}`
 
@@ -515,6 +792,7 @@ Activate covariance between all 3 tests
   * Bayes Factors
   * BIC
   * WAIC
+  * Effect size spans zero?
 
 . . .
 
@@ -527,7 +805,7 @@ Activate covariance between all 3 tests
 
 . . .
 
-Others?  Discussion!
+Others?
 
 ## DIC and WAIC
 
@@ -535,7 +813,9 @@ Others?  Discussion!
   * Works well for hierarchical normal models
   * To calculate:
     * Add dic and ped to the monitors in runjags
-    * But don't trust the results for these types of models
+    * But be cautious with these types of models
+
+. . .
 
 - WAIC
   * Approximation to LOO
@@ -551,13 +831,38 @@ Others?  Discussion!
 install.packages('runjags', repos=c("https://ku-awdc.github.io/drat/", "https://cran.rstudio.com/"))
 ```
 
+## Some advice
 
-## Discussion and free practical time
+- Always start by simulating data and verifying that you can recover the parameters
+  * The simulation can be more complex than the model!
+  * See the autorun.jags function
+  
+- If you have different candidate models then compare the posteriors between models
 
-Any questions?
+. . .
+
+- A particular issue is test dependence
+  * Is there biological justification for the correlation?
+  * Are the test sensitivity/specificity estimates consistent?
+  * Do the covse / covsp estimates overlap zero?
+  
+. . .
+
+- Any other good advice?!?
+
+
+## Free practical time
+
+- Explore the optional exercises (and solutions) and feel free to ask questions!
+
+- Feedback very welcome!
 
 ```{r cleanup, include=FALSE}
 unlink('glm_hw3t.bug')
 unlink('auto3thw.bug')
+unlink('auto3abthw.bug')
 unlink('auto3tihw.bug')
+unlink('auto3tichw.bug')
+unlink('auto3tihw2.bug')
+unlink('auto3cvhw.bug')
 ```

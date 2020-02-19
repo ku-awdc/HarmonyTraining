@@ -477,16 +477,18 @@ simdata &lt;- data.frame(Population=factor(Group), Test1=test1, Test2=test2, Tes
 <ul>
 <li>If calculating this manually, take <strong>extreme</strong> care with multinomial tabulation</li>
 </ul></li>
+</ul>
+<div class="incremental">
+<ul>
 <li><p>Or use autohuiwalter</p>
 <ul>
-<li>This will also deal gracefully with missing data in one or more test results</li>
+<li>This will also handle missing data in one or more test results</li>
 </ul></li>
 </ul>
 <pre class="r"><code>source(&quot;autohuiwalter.R&quot;)
 auto_huiwalter(simdata[,c(&#39;Population&#39;,&#39;Test1&#39;,&#39;Test2&#39;,&#39;Test3&#39;)], outfile=&#39;auto3thw.bug&#39;)</code></pre>
 <hr />
-<pre><code>for(p in 1:Populations){
-Tally_RRR[1:8,p] ~ dmulti(prob_RRR[1:8,p], N_RRR[p])
+<pre><code>Tally_RRR[1:8,p] ~ dmulti(prob_RRR[1:8,p], N_RRR[p])
 prob_RRR[1:8,p] &lt;- se_prob[1:8,p] + sp_prob[1:8,p]
 
 # Probability of observing Test1- Test2- Test3- from a true positive::
@@ -499,8 +501,8 @@ sp_prob[1,p] &lt;- (1-prev[p]) * (sp[1]*sp[2]*sp[3] +covsp12 +covsp13 +covsp23)
 # Probability of observing Test1+ Test2+ Test3+ from a true positive::
 se_prob[8,p] &lt;- prev[p] * (se[1]*se[2]*se[3] +covse12 +covse13 +covse23)
 # Probability of observing Test1+ Test2+ Test3+ from a true negative::
-sp_prob[8,p] &lt;- (1-prev[p]) * ((1-sp[1])*(1-sp[2])*(1-sp[3]) +covsp12 +covsp13 +covsp23)
-}</code></pre>
+sp_prob[8,p] &lt;- (1-prev[p]) * ((1-sp[1])*(1-sp[2])*(1-sp[3]) +covsp12 +covsp13 +covsp23)</code></pre>
+</div>
 </div>
 <div id="alternative-model-specification" class="section level2">
 <h2>Alternative model specification</h2>
@@ -510,36 +512,36 @@ sp_prob[8,p] &lt;- (1-prev[p]) * ((1-sp[1])*(1-sp[2])*(1-sp[3]) +covsp12 +covsp1
   for(i in 1:N){
     truestatus[i] ~ dbern(prev[Population[i]])
 
-    Status[i] ~ dcat(prob[i, ])
-    prob[1:8,i] &lt;- se_prob[1:8,i] + sp_prob[1:8,i]</code></pre>
+    Status[i] ~ dcat(prob[1:8, i])
+    prob[1:8,i] &lt;- se_prob[1:8,i] + sp_prob[1:8,i]
+
+        se_prob[1,i] &lt;- truestatus[i] * ((1-se[1])*(1-se[2])*(1-se[3]))
+        sp_prob[1,i] &lt;- (1-truestatus[i]) * (sp[1]*sp[2]*sp[3])
+
+        se_prob[2,i] &lt;- truestatus[i] * (se[1]*(1-se[2])*(1-se[3]))
+        sp_prob[2,i] &lt;- (1-truestatus[i]) * ((1-sp[1])*sp[2]*sp[3])</code></pre>
 <hr />
 <pre><code>
-        se_prob[1,p] &lt;- truestatus[i] * ((1-se[1])*(1-se[2])*(1-se[3]))
-        sp_prob[1,p] &lt;- (1-truestatus[i]) * (sp[1]*sp[2]*sp[3])
+        se_prob[3,i] &lt;- truestatus[i] * ((1-se[1])*se[2]*(1-se[3]))
+        sp_prob[3,i] &lt;- (1-truestatus[i]) * (sp[1]*(1-sp[2])*sp[3])
 
-        se_prob[2,p] &lt;- truestatus[i] * (se[1]*(1-se[2])*(1-se[3])
-        sp_prob[2,p] &lt;- (1-truestatus[i]) * ((1-sp[1])*sp[2]*sp[3])
+        se_prob[4,i] &lt;- truestatus[i] * (se[1]*se[2]*(1-se[3]))
+        sp_prob[4,i] &lt;- (1-truestatus[i]) * ((1-sp[1])*(1-sp[2])*sp[3])
 
-        se_prob[3,p] &lt;- truestatus[i] * ((1-se[1])*se[2]*(1-se[3]))
-        sp_prob[3,p] &lt;- (1-truestatus[i]) * (sp[1]*(1-sp[2])*sp[3])
+        se_prob[5,i] &lt;- truestatus[i] * ((1-se[1])*(1-se[2])*se[3])
+        sp_prob[5,i] &lt;- (1-truestatus[i]) * (sp[1]*sp[2]*(1-sp[3]))
 
-        se_prob[4,p] &lt;- truestatus[i] * (se[1]*se[2]*(1-se[3]))
-        sp_prob[4,p] &lt;- (1-truestatus[i]) * ((1-sp[1])*(1-sp[2])*sp[3])
+        se_prob[6,i] &lt;- truestatus[i] * (se[1]*(1-se[2])*se[3])
+        sp_prob[6,i] &lt;- (1-truestatus[i]) * ((1-sp[1])*sp[2]*(1-sp[3]))
 
-        se_prob[5,p] &lt;- truestatus[i] * ((1-se[1])*(1-se[2])*se[3])
-        sp_prob[5,p] &lt;- (1-truestatus[i]) * (sp[1]*sp[2]*(1-sp[3]))
-
-        se_prob[6,p] &lt;- truestatus[i] * (se[1]*(1-se[2])*se[3])
-        sp_prob[6,p] &lt;- (1-truestatus[i]) * ((1-sp[1])*sp[2]*(1-sp[3]))
-
-        se_prob[7,p] &lt;- truestatus[i] * ((1-se[1])*se[2]*se[3])
-        sp_prob[7,p] &lt;- (1-truestatus[i]) * (sp[1]*(1-sp[2])*(1-sp[3]))
-
-        se_prob[8,p] &lt;- truestatus[i] * (se[1]*se[2]*se[3])
-        sp_prob[8,p] &lt;- (1-truestatus[i]) * ((1-sp[1])*(1-sp[2])*(1-sp[3]))
-  }</code></pre>
+        se_prob[7,i] &lt;- truestatus[i] * ((1-se[1])*se[2]*se[3])
+        sp_prob[7,i] &lt;- (1-truestatus[i]) * (sp[1]*(1-sp[2])*(1-sp[3]))</code></pre>
 <hr />
 <pre><code>
+        se_prob[8,i] &lt;- truestatus[i] * (se[1]*se[2]*se[3])
+        sp_prob[8,i] &lt;- (1-truestatus[i]) * ((1-sp[1])*(1-sp[2])*(1-sp[3]))
+  }
+
     prev[1] ~ dbeta(1,1)
     prev[2] ~ dbeta(1,1)
 
@@ -551,181 +553,507 @@ sp_prob[8,p] &lt;- (1-prev[p]) * ((1-sp[1])*(1-sp[2])*(1-sp[3]) +covsp12 +covsp1
   sp[3] ~ dbeta(1, 1)
 
   #data# Status, N, Population
-  #monitor# prev, se, sp
+  #monitor# prev, se, sp, truestatus[1:5]
   #inits# prev, se, sp
 }</code></pre>
 <hr />
+<pre class="r"><code>Population &lt;- simdata$Population
+Status &lt;- with(simdata, factor(interaction(Test1, Test2, Test3), levels=c(&#39;0.0.0&#39;,&#39;1.0.0&#39;,&#39;0.1.0&#39;,&#39;0.0.1&#39;,&#39;1.1.0&#39;,&#39;1.0.1&#39;,&#39;0.1.1&#39;,&#39;1.1.1&#39;)))
+
+prev &lt;- list(chain1=c(0.05,0.95), chain2=c(0.95,0.05))
+se &lt;- list(chain1=c(0.5,0.75,0.99), chain2=c(0.99,0.5,0.75))
+sp &lt;- list(chain1=c(0.5,0.75,0.99), chain2=c(0.99,0.5,0.75))</code></pre>
+<pre class="r"><code>results &lt;- run.jags(&#39;glm_hw3t.bug&#39;, n.chains=2)</code></pre>
+<pre class="r"><code>results</code></pre>
+<pre><code>## 
+## JAGS model summary statistics from 20000 samples (chains = 2; adapt+burnin = 5000):
+##                                                                            
+##               Lower95  Median Upper95    Mean        SD    Mode       MCerr
+## prev[1]       0.21422 0.30021 0.39187 0.30141  0.045606 0.29555  0.00039327
+## prev[2]       0.65574 0.75334 0.84256 0.75111  0.048021 0.75335  0.00045693
+## se[1]         0.75699 0.83684 0.91043 0.83492  0.039756 0.84078  0.00046847
+## se[2]         0.77069  0.8477 0.92018 0.84555  0.038603  0.8539  0.00047605
+## se[3]         0.87382  0.9328 0.98558 0.92966  0.029439 0.93916  0.00039469
+## sp[1]         0.88283   0.939 0.98532 0.93587  0.027311 0.94412    0.000334
+## sp[2]         0.92288 0.97115 0.99999 0.96663  0.023115 0.97924  0.00037714
+## sp[3]         0.91496 0.96918 0.99999 0.96412  0.025753 0.97905  0.00046579
+## truestatus[1]       0       0       0 0.00075  0.027377       0  0.00019358
+## truestatus[2]       1       1       1  0.9998  0.014141       1 0.000099992
+## truestatus[3]       1       1       1 0.99985  0.012247       1  0.00012247
+## truestatus[4]       1       1       1 0.99995 0.0070711       1 0.000070711
+## truestatus[5]       1       1       1 0.99965  0.018705       1  0.00013227
+##                                                 
+##               MC%ofSD SSeff       AC.10     psrf
+## prev[1]           0.9 13448   0.0051741        1
+## prev[2]             1 11045    0.018347  0.99998
+## se[1]             1.2  7202    0.015174   1.0004
+## se[2]             1.2  6576    0.021182   1.0001
+## se[3]             1.3  5564    0.034141    1.001
+## sp[1]             1.2  6686    0.022639   1.0001
+## sp[2]             1.6  3757     0.03608    1.001
+## sp[3]             1.8  3057    0.069474  0.99997
+## truestatus[1]     0.7 20000 -0.00075132   1.0022
+## truestatus[2]     0.7 20000 -0.00020025   1.1055
+## truestatus[3]       1 10000          -- 1.2911 $
+## truestatus[4]       1 10000          --  1.291 $
+## truestatus[5]     0.7 20000 -0.00035048     1.01
+## 
+## Note: parameters marked with &#39;$&#39; were non-stochastic in some chains - these parameters can not be assumed to have converged!
+## Total time taken: 1.6 minutes</code></pre>
+<hr />
+<table>
+<thead>
+<tr class="header">
+<th></th>
+<th align="right">Lower95</th>
+<th align="right">Median</th>
+<th align="right">Upper95</th>
+<th align="right">SSeff</th>
+<th align="right">psrf</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>prev[1]</td>
+<td align="right">0.214</td>
+<td align="right">0.300</td>
+<td align="right">0.392</td>
+<td align="right">13448</td>
+<td align="right">1.000</td>
+</tr>
+<tr class="even">
+<td>prev[2]</td>
+<td align="right">0.656</td>
+<td align="right">0.753</td>
+<td align="right">0.843</td>
+<td align="right">11045</td>
+<td align="right">1.000</td>
+</tr>
+<tr class="odd">
+<td>se[1]</td>
+<td align="right">0.757</td>
+<td align="right">0.837</td>
+<td align="right">0.910</td>
+<td align="right">7202</td>
+<td align="right">1.000</td>
+</tr>
+<tr class="even">
+<td>se[2]</td>
+<td align="right">0.771</td>
+<td align="right">0.848</td>
+<td align="right">0.920</td>
+<td align="right">6576</td>
+<td align="right">1.000</td>
+</tr>
+<tr class="odd">
+<td>se[3]</td>
+<td align="right">0.874</td>
+<td align="right">0.933</td>
+<td align="right">0.986</td>
+<td align="right">5564</td>
+<td align="right">1.001</td>
+</tr>
+<tr class="even">
+<td>sp[1]</td>
+<td align="right">0.883</td>
+<td align="right">0.939</td>
+<td align="right">0.985</td>
+<td align="right">6686</td>
+<td align="right">1.000</td>
+</tr>
+<tr class="odd">
+<td>sp[2]</td>
+<td align="right">0.923</td>
+<td align="right">0.971</td>
+<td align="right">1.000</td>
+<td align="right">3757</td>
+<td align="right">1.001</td>
+</tr>
+<tr class="even">
+<td>sp[3]</td>
+<td align="right">0.915</td>
+<td align="right">0.969</td>
+<td align="right">1.000</td>
+<td align="right">3057</td>
+<td align="right">1.000</td>
+</tr>
+<tr class="odd">
+<td>truestatus[1]</td>
+<td align="right">0.000</td>
+<td align="right">0.000</td>
+<td align="right">0.000</td>
+<td align="right">20000</td>
+<td align="right">1.002</td>
+</tr>
+<tr class="even">
+<td>truestatus[2]</td>
+<td align="right">1.000</td>
+<td align="right">1.000</td>
+<td align="right">1.000</td>
+<td align="right">20000</td>
+<td align="right">1.106</td>
+</tr>
+<tr class="odd">
+<td>truestatus[3]</td>
+<td align="right">1.000</td>
+<td align="right">1.000</td>
+<td align="right">1.000</td>
+<td align="right">10000</td>
+<td align="right">1.291</td>
+</tr>
+<tr class="even">
+<td>truestatus[4]</td>
+<td align="right">1.000</td>
+<td align="right">1.000</td>
+<td align="right">1.000</td>
+<td align="right">10000</td>
+<td align="right">1.291</td>
+</tr>
+<tr class="odd">
+<td>truestatus[5]</td>
+<td align="right">1.000</td>
+<td align="right">1.000</td>
+<td align="right">1.000</td>
+<td align="right">20000</td>
+<td align="right">1.010</td>
+</tr>
+</tbody>
+</table>
+<hr />
 <p>But this is inefficient</p>
-<p>There is also no way to distinguish individuals within the same boxes</p>
-<p>We could also use the estimated se/sp/prev to post-calculate these status probabilities</p>
-<p>This is useful for post-hoc ROC</p>
+<ul>
+<li>Time taken is 1.6 minutes rather than a few seconds</li>
+<li>And the barely stochastic nature of some truestatus estimates triggers false convergence warnings</li>
+<li>And there is no way to distinguish individuals within the same boxes anyway, as they have the same data!</li>
+</ul>
+<div class="incremental">
+<p>It is much better to use the estimated se/sp/prev to post-calculate these truestatus probabilities</p>
+<ul>
+<li>This can be useful for post-hoc ROC</li>
+</ul>
+</div>
 </div>
 <div id="exercise" class="section level2 fragile">
 <h2>Exercise</h2>
 <p>Simulate data from 3 tests and analyse using the autohuiwalter function</p>
 <p>Do the estimates of Se/Sp correspond to the simulation parameters?</p>
 <p>Make some data missing for one or more tests and re-generate the model</p>
-<ul>
-<li>Can you see what has changed in the code?</li>
-</ul>
+<p>Can you see what has changed in the code?</p>
 </div>
 <div id="solution" class="section level2 fragile">
 <h2>Solution</h2>
+<pre class="r"><code># Parameter values to simulate:
+N &lt;- 200
+se1 &lt;- 0.8
+sp1 &lt;- 0.95
+se2 &lt;- 0.9
+sp2 &lt;- 0.99
+se3 &lt;- 0.95
+sp3 &lt;- 0.95
+
+Populations &lt;- 2
+prevalence &lt;- c(0.25,0.75)
+Group &lt;- sample(1:Populations, N, replace=TRUE)
+
+# Ensure replicable data:
+set.seed(2020-02-18)
+
+# Simulate the true latent state (which is unobserved in real life):
+true &lt;- rbinom(N, 1, prevalence[Group])
+# Simulate test results for test 1:
+test1 &lt;- rbinom(N, 1, se1*true + (1-sp1)*(1-true))
+# Simulate test results for test 2:
+test2 &lt;- rbinom(N, 1, se2*true + (1-sp2)*(1-true))
+# Simulate test results for test 3:
+test3 &lt;- rbinom(N, 1, se3*true + (1-sp3)*(1-true))
+
+simdata &lt;- data.frame(Population=factor(Group), Test1=test1, Test2=test2, Test3=test3)
+
+source(&quot;autohuiwalter.R&quot;)
+auto_huiwalter(simdata[,c(&#39;Population&#39;,&#39;Test1&#39;,&#39;Test2&#39;,&#39;Test3&#39;)], outfile=&#39;auto3thw.bug&#39;)</code></pre>
+<pre><code>## The model and data have been written to auto3thw.bug in the current working directory
+## You should check and alter priors before running the model</code></pre>
+<p>Run the model:</p>
+<pre class="r"><code>results &lt;- run.jags(&#39;auto3thw.bug&#39;)</code></pre>
+<p>Remember to check convergence in the usual way!</p>
+<p>Then look at the results:</p>
+<pre class="r"><code>results</code></pre>
+<pre><code>## 
+## JAGS model summary statistics from 20000 samples (chains = 2; adapt+burnin = 5000):
+##                                                                            
+##         Lower95  Median Upper95    Mean       SD    Mode      MCerr MC%ofSD
+## se[1]   0.74786  0.8336 0.90882 0.83137 0.041865 0.83784 0.00038893     0.9
+## se[2]    0.8053 0.88565 0.95496 0.88251 0.039085 0.89226 0.00040125       1
+## se[3]   0.86821 0.93417 0.98498  0.9305  0.03102 0.93839 0.00033172     1.1
+## sp[1]   0.85621 0.91576  0.9649 0.91295 0.028644 0.91902 0.00028978       1
+## sp[2]    0.9194 0.96436 0.99781 0.96114 0.021372 0.97027 0.00023555     1.1
+## sp[3]    0.8957 0.94878 0.99139 0.94547 0.025737 0.95303 0.00028416     1.1
+## prev[1] 0.12563 0.20385    0.29 0.20607  0.04245 0.20115 0.00041664       1
+## prev[2] 0.57211 0.66997   0.763 0.66829 0.049279 0.67267  0.0004516     0.9
+## covse12       0       0       0       0        0       0         --      --
+## covsp12       0       0       0       0        0       0         --      --
+## covse13       0       0       0       0        0       0         --      --
+## covsp13       0       0       0       0        0       0         --      --
+## covse23       0       0       0       0        0       0         --      --
+## covsp23       0       0       0       0        0       0         --      --
+##                                 
+##         SSeff      AC.10    psrf
+## se[1]   11587  0.0079561  1.0001
+## se[2]    9488  0.0024316  1.0004
+## se[3]    8744 -0.0005303       1
+## sp[1]    9771 -0.0058292  1.0005
+## sp[2]    8232   0.002233  1.0002
+## sp[3]    8204   0.015654 0.99995
+## prev[1] 10381 -0.0029295  1.0001
+## prev[2] 11907   0.011866  1.0002
+## covse12    --         --      --
+## covsp12    --         --      --
+## covse13    --         --      --
+## covsp13    --         --      --
+## covse23    --         --      --
+## covsp23    --         --      --
+## 
+## Total time taken: 2.6 seconds</code></pre>
+<p>And compare to the simulation parameters:</p>
+<pre class="r"><code>prevalence</code></pre>
+<pre><code>## [1] 0.25 0.75</code></pre>
+<pre class="r"><code>se1</code></pre>
+<pre><code>## [1] 0.8</code></pre>
+<pre class="r"><code>sp1</code></pre>
+<pre><code>## [1] 0.95</code></pre>
+<pre class="r"><code>se2</code></pre>
+<pre><code>## [1] 0.9</code></pre>
+<pre class="r"><code>sp2</code></pre>
+<pre><code>## [1] 0.99</code></pre>
+<pre class="r"><code>se3</code></pre>
+<pre><code>## [1] 0.95</code></pre>
+<pre class="r"><code>sp3</code></pre>
+<pre><code>## [1] 0.95</code></pre>
+<p>We do a reasonably good job of recovering the estimates</p>
+<p>Now make some data missing and regenerate the model code:</p>
+<pre class="r"><code>simdata$Test1[1:5] &lt;- NA
+simdata$Test2[1:2] &lt;- NA
+simdata$Test3[1] &lt;- NA
+
+head(simdata)</code></pre>
+<pre><code>##   Population Test1 Test2 Test3
+## 1          2    NA    NA    NA
+## 2          2    NA    NA     1
+## 3          1    NA     0     0
+## 4          2    NA     1     1
+## 5          2    NA     0     0
+## 6          1     0     0     0</code></pre>
+<pre class="r"><code>auto_huiwalter(simdata[,c(&#39;Population&#39;,&#39;Test1&#39;,&#39;Test2&#39;,&#39;Test3&#39;)], outfile=&#39;auto3tmhw.bug&#39;)</code></pre>
+<pre><code>## The model and data have been written to auto3tmhw.bug in the current working directory
+## You should check and alter priors before running the model</code></pre>
+<p>The top part of the model now has multiple data tallies for every observed combination of data completeness:</p>
+<pre><code>model{
+
+    ## Observation layer:
+
+    # Complete observations (N=195):
+    for(p in 1:Populations){
+        Tally_RRR[1:8,p] ~ dmulti(prob_RRR[1:8,p], N_RRR[p])
+
+        prob_RRR[1:8,p] &lt;- se_prob[1:8,p] + sp_prob[1:8,p]
+    }
+
+    # Partial observations (Test1: Missing, Test2: Missing, Test3: Recorded; N=1):
+    for(p in 1:Populations){
+        Tally_MMR[1:2,p] ~ dmulti(prob_MMR[1:2,p], N_MMR[p])
+
+        prob_MMR[1:2,p] &lt;-  se_prob[c(1,5),p] + sp_prob[c(1,5),p] +
+                            se_prob[c(2,6),p] + sp_prob[c(2,6),p] +
+                            se_prob[c(3,7),p] + sp_prob[c(3,7),p] +
+                            se_prob[c(4,8),p] + sp_prob[c(4,8),p]
+    }
+
+    # Partial observations (Test1: Missing, Test2: Recorded, Test3: Recorded; N=3):
+    for(p in 1:Populations){
+        Tally_MRR[1:4,p] ~ dmulti(prob_MRR[1:4,p], N_MRR[p])
+
+        prob_MRR[1:4,p] &lt;-  se_prob[c(1,3,5,7),p] + sp_prob[c(1,3,5,7),p] +
+                            se_prob[c(2,4,6,8),p] + sp_prob[c(2,4,6,8),p]
+    }</code></pre>
+<p>And the bottom part of the data similarly includes different multinomial tallies for each combination:</p>
+<pre><code>data{
+&quot;Populations&quot; &lt;- 2
+&quot;N_RRR&quot; &lt;- c(102, 93)
+&quot;Tally_RRR&quot; &lt;- structure(c(68, 7, 2, 1, 4, 5, 2, 13, 28, 1, 2, 3, 1, 4, 9, 45), .Dim = c(8, 2))
+&quot;N_MMR&quot; &lt;- c(0, 1)
+&quot;Tally_MMR&quot; &lt;- structure(c(0, 0, 0, 1), .Dim = c(2, 2))
+&quot;N_MRR&quot; &lt;- c(1, 2)
+&quot;Tally_MRR&quot; &lt;- structure(c(1, 0, 0, 0, 1, 0, 0, 1), .Dim = c(4, 2))
+}</code></pre>
+<p>We can run the model in the same way as usual:</p>
+<pre class="r"><code>results &lt;- run.jags(&#39;auto3tmhw.bug&#39;)</code></pre>
 </div>
 <div id="optional-exercise" class="section level2 fragile">
 <h2>Optional Exercise</h2>
-<p>Simulate data from 3 antibody tests with ab positive step [give code in solution]</p>
-<p>Does the se/sp estimated by a model recover the parameters?</p>
-<p>Why not?</p>
+<p>Modify the simulation code to introduce an antibody response step between the true status and the test results (see below in the HTML file for example R code).</p>
+<p>Simulate data from three antibody tests including the antibody response step</p>
+<p>Does the sensitivity / specificity estimated by the model recover the true prevalence parameter?</p>
+</div>
+<div id="optional-exercise-code" class="section level2 fragile">
+<h2>Optional Exercise Code</h2>
+<pre class="r"><code># Probability of antibody response conditional on disease status (really bad to illustrate the point):
+se_antibody &lt;- 0.5
+sp_antibody &lt;- 0.75
+# Otherwise the parameters are as before
+
+# True latent infection status as before:
+true &lt;- rbinom(N, 1, prevalence[Group])
+
+# Latent class of antibody response conditional on the true status:
+antibody &lt;- rbinom(N, 1, se_antibody*true + (1-sp_antibody)*(1-true))
+
+# Simulate test results for test 1 conditional on antibody status:
+test1 &lt;- rbinom(N, 1, se1*antibody + (1-sp1)*(1-antibody))
+# etc
+
+# Note that the overall sensitivity and specificity of the tests needs to be corrected for the antibody positive step:
+overall_se1 &lt;- se_antibody*se1 + (1-se_antibody)*(1-sp1)
+overall_sp1 &lt;- sp_antibody*sp1 + (1-sp_antibody)*(1-se1)
+# etc</code></pre>
 </div>
 <div id="optional-solution" class="section level2 fragile">
 <h2>Optional Solution</h2>
-<pre class="r"><code>## Parameters
+<pre class="r"><code># Parameter values to simulate:
+N &lt;- 200
+se1 &lt;- 0.8
+sp1 &lt;- 0.95
+se2 &lt;- 0.9
+sp2 &lt;- 0.99
+se3 &lt;- 0.95
+sp3 &lt;- 0.95
 
-# True prevalence:
-prev &lt;- 0.2
+# Probability of antibody response conditional on disease status (really bad to illustrate the point):
+se_antibody &lt;- 0.5
+sp_antibody &lt;- 0.75
 
-# Probability of antibody response conditional on disease status:
-se_antibody &lt;- 0.95
-sp_antibody &lt;- 0.99
+Populations &lt;- 2
+prevalence &lt;- c(0.25,0.75)
+Group &lt;- sample(1:Populations, N, replace=TRUE)
 
-# Probability of ELISA target presence conditional on antibody status:
-se_target &lt;- 0.95
-sp_target &lt;- 0.99
+# Ensure replicable data:
+set.seed(2020-02-18)
 
-# Probability of ELISA test positive conditional on target presence:
-se_elisa_cond &lt;- 0.99
-sp_elisa_cond &lt;- 0.99
+# True latent infection status as before:
+true &lt;- rbinom(N, 1, prevalence[Group])
 
-# Probability of Western Blot positive conditional on antibody status:
-se_wb_cond &lt;- 0.9
-sp_wb_cond &lt;- 0.99
+# Latent class of antibody response conditional on the true status:
+antibody &lt;- rbinom(N, 1, se_antibody*true + (1-sp_antibody)*(1-true))
 
+# Simulate test results for all tests conditional on antibody status:
+test1 &lt;- rbinom(N, 1, se1*antibody + (1-sp1)*(1-antibody))
+test2 &lt;- rbinom(N, 1, se2*antibody + (1-sp2)*(1-antibody))
+test3 &lt;- rbinom(N, 1, se3*antibody + (1-sp3)*(1-antibody))
 
-## Derived parameters:
+# Note that the overall sensitivity and specificity of the tests needs to be corrected for the antibody positive step:
+overall_se1 &lt;- se_antibody*se1 + (1-se_antibody)*(1-sp1)
+overall_sp1 &lt;- sp_antibody*sp1 + (1-sp_antibody)*(1-se1)
 
-# Overall Se/Sp of Western Blot:
-se_wb &lt;- se_antibody*se_wb_cond + (1-se_antibody)*(1-sp_wb_cond)
-sp_wb &lt;- sp_antibody*sp_wb_cond + (1-sp_antibody)*(1-se_wb_cond)
+overall_se2 &lt;- se_antibody*se2 + (1-se_antibody)*(1-sp2)
+overall_sp2 &lt;- sp_antibody*sp2 + (1-sp_antibody)*(1-se2)
 
-# Overall Se/Sp of ELISA:
-se_abtg &lt;- se_antibody*se_target + (1-se_antibody)*(1-sp_target)
-sp_abtg &lt;- sp_antibody*sp_target + (1-sp_antibody)*(1-se_target)
-se_elisa &lt;- se_abtg*se_elisa_cond + (1-se_abtg)*(1-sp_target)
-sp_elisa &lt;- sp_abtg*sp_elisa_cond + (1-sp_abtg)*(1-se_target)
+overall_se3 &lt;- se_antibody*se3 + (1-se_antibody)*(1-sp3)
+overall_sp3 &lt;- sp_antibody*sp3 + (1-sp_antibody)*(1-se3)
 
-se_wb</code></pre>
-<pre><code>## [1] 0.8555</code></pre>
-<pre class="r"><code>sp_wb</code></pre>
-<pre><code>## [1] 0.9811</code></pre>
-<pre class="r"><code>se_elisa</code></pre>
-<pre><code>## [1] 0.89494</code></pre>
-<pre class="r"><code>sp_elisa</code></pre>
-<pre><code>## [1] 0.971764</code></pre>
-<pre class="r"><code>## Simulation
+simdata &lt;- data.frame(Population=factor(Group), Test1=test1, Test2=test2, Test3=test3)
 
-iters &lt;- 10^6
+source(&quot;autohuiwalter.R&quot;)
+auto_huiwalter(simdata[,c(&#39;Population&#39;,&#39;Test1&#39;,&#39;Test2&#39;,&#39;Test3&#39;)], outfile=&#39;auto3abthw.bug&#39;)
 
-library(&#39;tidyverse&#39;)</code></pre>
-<pre><code>## ── Attaching packages ─────────────────────────────────────── tidyverse 1.3.0 ──</code></pre>
-<pre><code>## ✔ ggplot2 3.2.1     ✔ purrr   0.3.3
-## ✔ tibble  2.1.3     ✔ dplyr   0.8.3
-## ✔ tidyr   1.0.2     ✔ stringr 1.4.0
-## ✔ readr   1.3.1     ✔ forcats 0.4.0</code></pre>
-<pre><code>## ── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──
-## ✖ tidyr::extract() masks runjags::extract()
-## ✖ dplyr::filter()  masks stats::filter()
-## ✖ dplyr::lag()     masks stats::lag()</code></pre>
-<pre class="r"><code>simdata &lt;- data.frame(TrueStatus = rbinom(iters, 1, prev)) %&gt;%
-    mutate(AntibodyStatus = rbinom(iters, 1, TrueStatus*se_antibody + (1-TrueStatus)*(1-sp_antibody))) %&gt;%
-    mutate(TargetStatus = rbinom(iters, 1, AntibodyStatus*se_target + (1-AntibodyStatus)*(1-sp_target))) %&gt;%
-    mutate(ELISA1 = rbinom(iters, 1, TargetStatus*se_elisa_cond + (1-TargetStatus)*(1-sp_elisa_cond))) %&gt;%
-    mutate(ELISA2 = rbinom(iters, 1, TargetStatus*se_elisa_cond + (1-TargetStatus)*(1-sp_elisa_cond))) %&gt;%
-    mutate(WesternBlot = rbinom(iters, 1, AntibodyStatus*se_wb_cond + (1-AntibodyStatus)*(1-sp_wb_cond)))
-
-str(simdata)</code></pre>
-<pre><code>## &#39;data.frame&#39;:    1000000 obs. of  6 variables:
-##  $ TrueStatus    : int  0 0 1 0 0 0 0 1 1 1 ...
-##  $ AntibodyStatus: int  0 0 1 0 0 0 0 1 1 1 ...
-##  $ TargetStatus  : int  0 0 1 1 0 0 0 1 1 1 ...
-##  $ ELISA1        : int  0 0 1 1 0 0 0 0 1 1 ...
-##  $ ELISA2        : int  0 0 1 1 0 0 0 1 1 1 ...
-##  $ WesternBlot   : int  0 0 1 0 0 0 0 1 1 1 ...</code></pre>
-<pre class="r"><code># Verify that the tests are correlated:
-table(simdata$ELISA1, simdata$ELISA2)</code></pre>
-<pre><code>##    
-##          0      1
-##   0 788567   9843
-##   1   9932 191658</code></pre>
-<pre class="r"><code>table(simdata$ELISA1, simdata$WesternBlot)</code></pre>
-<pre><code>##    
-##          0      1
-##   0 780019  18391
-##   1  34140 167450</code></pre>
-<pre class="r"><code>## Look at results:
-
-# The individual test-level Se and Sp are as expected:
-
-simdata %&gt;%
-    group_by(TrueStatus) %&gt;%
-    mutate(Total = n()) %&gt;%
-    gather(Test, Result, -Total, -TrueStatus) %&gt;%
-    group_by(TrueStatus, Test, Total) %&gt;%
-    summarise(PercentPositive = sum(Result)/Total[1] *100) %&gt;%
-    filter(Test %in% c(&#39;ELISA1&#39;,&#39;ELISA2&#39;,&#39;WesternBlot&#39;))</code></pre>
-<pre><code>## # A tibble: 6 x 4
-## # Groups:   TrueStatus, Test [6]
-##   TrueStatus Test         Total PercentPositive
-##        &lt;int&gt; &lt;chr&gt;        &lt;int&gt;           &lt;dbl&gt;
-## 1          0 ELISA1      800555            2.88
-## 2          0 ELISA2      800555            2.88
-## 3          0 WesternBlot 800555            1.88
-## 4          1 ELISA1      199445           89.5 
-## 5          1 ELISA2      199445           89.5 
-## 6          1 WesternBlot 199445           85.6</code></pre>
-<pre class="r"><code># Compare to:
-(1-sp_elisa)*100</code></pre>
-<pre><code>## [1] 2.8236</code></pre>
-<pre class="r"><code>(1-sp_wb)*100</code></pre>
-<pre><code>## [1] 1.89</code></pre>
-<pre class="r"><code>se_elisa*100</code></pre>
-<pre><code>## [1] 89.494</code></pre>
-<pre class="r"><code>se_wb*100</code></pre>
-<pre><code>## [1] 85.55</code></pre>
-<pre class="r"><code># Serial testing with all 3 tests:
-simdata %&gt;%
-    # Define positive as needing to be positive for all tests
-    mutate(Combined = ELISA1 * ELISA2 * WesternBlot) %&gt;%
-    group_by(TrueStatus) %&gt;%
-    mutate(Total = n()) %&gt;%
-    gather(Test, Result, -Total, -TrueStatus) %&gt;%
-    group_by(TrueStatus, Test, Total) %&gt;%
-    summarise(PercentPositive = sum(Result)/Total[1] *100) %&gt;%
-    filter(Test %in% c(&#39;ELISA1&#39;,&#39;ELISA2&#39;,&#39;WesternBlot&#39;,&#39;Combined&#39;))</code></pre>
-<pre><code>## # A tibble: 8 x 4
-## # Groups:   TrueStatus, Test [8]
-##   TrueStatus Test         Total PercentPositive
-##        &lt;int&gt; &lt;chr&gt;        &lt;int&gt;           &lt;dbl&gt;
-## 1          0 Combined    800555           0.844
-## 2          0 ELISA1      800555           2.88 
-## 3          0 ELISA2      800555           2.88 
-## 4          0 WesternBlot 800555           1.88 
-## 5          1 Combined    199445          79.6  
-## 6          1 ELISA1      199445          89.5  
-## 7          1 ELISA2      199445          89.5  
-## 8          1 WesternBlot 199445          85.6</code></pre>
-<pre class="r"><code># So serial testing has sensitivity of ~80% and specificity of ~99.1%
-
-# You could also try other testing procedures
-# But note that the overall sensitivity/specificity is sensitive to all 8 of the se/sp parameters at the top!</code></pre>
+results &lt;- run.jags(&#39;auto3abthw.bug&#39;)</code></pre>
+<p>Now check the results:</p>
+<pre class="r"><code>results</code></pre>
+<pre><code>## 
+## JAGS model summary statistics from 20000 samples (chains = 2; adapt+burnin = 5000):
+##                                                                            
+##         Lower95  Median Upper95    Mean       SD    Mode      MCerr MC%ofSD
+## se[1]    0.6858 0.78975 0.88133 0.78732 0.050592 0.79339  0.0004972       1
+## se[2]   0.71877  0.8194 0.91096 0.81702 0.050089 0.82475 0.00051946       1
+## se[3]   0.85334 0.92854  0.9881  0.9236  0.03634 0.93657 0.00039132     1.1
+## sp[1]   0.88925 0.93627 0.97773 0.93402 0.023189 0.93977 0.00022601       1
+## sp[2]   0.95498 0.98406 0.99998 0.98115 0.013796 0.99004 0.00017386     1.3
+## sp[3]   0.94749 0.98366       1 0.97971 0.016607 0.99231 0.00023241     1.4
+## prev[1] 0.15349  0.2327 0.32255 0.23464 0.043323 0.22907 0.00039872     0.9
+## prev[2] 0.37667  0.4759 0.57934 0.47643 0.051857 0.47513 0.00050139       1
+## covse12       0       0       0       0        0       0         --      --
+## covsp12       0       0       0       0        0       0         --      --
+## covse13       0       0       0       0        0       0         --      --
+## covsp13       0       0       0       0        0       0         --      --
+## covse23       0       0       0       0        0       0         --      --
+## covsp23       0       0       0       0        0       0         --      --
+##                                 
+##         SSeff      AC.10    psrf
+## se[1]   10354   0.010385 0.99999
+## se[2]    9298 -0.0016649  1.0009
+## se[3]    8624 -0.0020396       1
+## sp[1]   10527 -0.0036618  1.0001
+## sp[2]    6297 -0.0048711  1.0001
+## sp[3]    5106  0.0039936  1.0001
+## prev[1] 11806 -0.0091549       1
+## prev[2] 10697 -0.0011838       1
+## covse12    --         --      --
+## covsp12    --         --      --
+## covse13    --         --      --
+## covsp13    --         --      --
+## covse23    --         --      --
+## covsp23    --         --      --
+## 
+## Total time taken: 2.1 seconds</code></pre>
+<p>We do a horrible job of estimating prevalence in the second population:</p>
+<pre class="r"><code>prevalence</code></pre>
+<pre><code>## [1] 0.25 0.75</code></pre>
+<p>And the test sensitivity/specificity estimates are nowhere near the overall sensitivity/specificity after correcting for antibody status:</p>
+<pre class="r"><code>overall_se1</code></pre>
+<pre><code>## [1] 0.425</code></pre>
+<pre class="r"><code>overall_se2</code></pre>
+<pre><code>## [1] 0.455</code></pre>
+<pre class="r"><code>overall_se3</code></pre>
+<pre><code>## [1] 0.5</code></pre>
+<pre class="r"><code>overall_sp1</code></pre>
+<pre><code>## [1] 0.7625</code></pre>
+<pre class="r"><code>overall_sp2</code></pre>
+<pre><code>## [1] 0.7675</code></pre>
+<pre class="r"><code>overall_sp3</code></pre>
+<pre><code>## [1] 0.725</code></pre>
+<p>But they are close to the sensitivity/specificity values that are conditional on the antibody status:</p>
+<pre class="r"><code>se1</code></pre>
+<pre><code>## [1] 0.8</code></pre>
+<pre class="r"><code>se2</code></pre>
+<pre><code>## [1] 0.9</code></pre>
+<pre class="r"><code>se3</code></pre>
+<pre><code>## [1] 0.95</code></pre>
+<pre class="r"><code>sp1</code></pre>
+<pre><code>## [1] 0.95</code></pre>
+<pre class="r"><code>sp2</code></pre>
+<pre><code>## [1] 0.99</code></pre>
+<pre class="r"><code>sp3</code></pre>
+<pre><code>## [1] 0.95</code></pre>
+<p>So our model is effectively estimating a latent condition of antibody status, and not a latent condition of true positive status - i.e. the thing that we have pulled out of the hat is not the rabbit that we were hoping for…</p>
 </div>
 </div>
 <div id="session-3b-hui-walter-models-for-multiple-tests-with-conditional-depdendence" class="section level1">
 <h1>Session 3b: Hui-Walter models for multiple tests with conditional depdendence</h1>
 <div id="branching-of-processes-leading-to-test-results" class="section level2">
 <h2>Branching of processes leading to test results</h2>
-<p>Example: two antibody tests and one antigen test</p>
-<p>Or three antibody tests where one has a different target to the other two</p>
+<ul>
+<li><p>Sometimes we have multiple tests that are detecting a similar thing</p>
+<ul>
+<li>For example: two antibody tests and one antigen test</li>
+<li>The antibody tests will be correlated</li>
+</ul></li>
+</ul>
+<div class="incremental">
+<ul>
+<li><p>Or even three antibody tests where two are primed to detect the same thing, and one has a different target!</p>
+<ul>
+<li>In this case all three tests are correlated, but two are more strongly correlated</li>
+</ul></li>
+</ul>
+</div>
 </div>
 <div id="simulating-data-1" class="section level2">
 <h2>Simulating data</h2>
@@ -750,26 +1078,28 @@ absp &lt;- 1 - 0.2</code></pre>
 <hr />
 <pre class="r"><code># Simulate the true latent state:
 true &lt;- rbinom(N*Populations, 1, prevalence[Group])
-# Simulate test results for test 1:
-test1 &lt;- rbinom(N*Populations, 1, se1*true + (1-sp1)*(1-true))
-# Tests 2 &amp; 3 will be co-dependent on antibody response:
+
+# Tests 1 &amp; 2 will be co-dependent on antibody response:
 antibody &lt;- rbinom(N*Populations, 1, abse*true + (1-absp)*(1-true))
-# Simulate test 2 &amp; 3 results based on this other latent state:
+# Simulate test 1 &amp; 2 results based on this other latent state:
+test1 &lt;- rbinom(N*Populations, 1, se1*antibody + (1-sp1)*(1-antibody))
 test2 &lt;- rbinom(N*Populations, 1, se2*antibody + (1-sp2)*(1-antibody))
-test3 &lt;- rbinom(N*Populations, 1, se3*antibody + (1-sp3)*(1-antibody))
+
+# Simulate test results for the independent test 3:
+test3 &lt;- rbinom(N*Populations, 1, se3*true + (1-sp3)*(1-true))
 
 ind3tests &lt;- data.frame(Population=Group, Test1=test1, Test2=test2, Test3=test3)</code></pre>
 <hr />
 <pre class="r"><code># The overall sensitivity of the correlated tests is:
-abse*se2 + (1-abse)*(1-sp2)</code></pre>
+abse*se1 + (1-abse)*(1-sp1)</code></pre>
+<pre><code>## [1] 0.65</code></pre>
+<pre class="r"><code>abse*se2 + (1-abse)*(1-sp2)</code></pre>
 <pre><code>## [1] 0.722</code></pre>
-<pre class="r"><code>abse*se3 + (1-abse)*(1-sp3)</code></pre>
-<pre><code>## [1] 0.77</code></pre>
 <pre class="r"><code># The overall specificity of the correlated tests is:
-absp*sp2 + (1-absp)*(1-se2)</code></pre>
+absp*sp1 + (1-absp)*(1-se1)</code></pre>
+<pre><code>## [1] 0.8</code></pre>
+<pre class="r"><code>absp*sp2 + (1-absp)*(1-se2)</code></pre>
 <pre><code>## [1] 0.812</code></pre>
-<pre class="r"><code>absp*sp3 + (1-absp)*(1-se3)</code></pre>
-<pre><code>## [1] 0.77</code></pre>
 <div class="incremental">
 <p>We need to think carefully about what we are conditioning on when interpreting sensitivity and specificity!</p>
 </div>
@@ -787,52 +1117,365 @@ absp*sp2 + (1-absp)*(1-se2)</code></pre>
     # Covariance in sensitivity between tests 1 and 2:
     covse12 ~ dunif( (se[1]-1)*(1-se[2]) , min(se[1],se[2]) - se[1]*se[2] )
     # Covariance in specificity between tests 1 and 2:
-    covsp12 ~ dunif( (sp[1]-1)*(1-sp[2]) , min(sp[1],sp[2]) - sp[1]*sp[2] )
-    
-    ...</code></pre>
+    covsp12 ~ dunif( (sp[1]-1)*(1-sp[2]) , min(sp[1],sp[2]) - sp[1]*sp[2] )</code></pre>
 </div>
 <div id="generating-the-model" class="section level2">
 <h2>Generating the model</h2>
-<p>Use autohuiwalter with argument covon=TRUE</p>
-<pre class="r"><code>source(&#39;autohuiwalter.R&#39;)
-auto_huiwalter(ind3tests, &#39;auto3tihw.bug&#39;, covon=TRUE)</code></pre>
+<p>First use autohuiwalter to create a model file:</p>
+<pre class="r"><code>auto_huiwalter(ind3tests, &#39;auto3tihw.bug&#39;)</code></pre>
+<p>Then find the lines for the covariances that we want to activate:</p>
+<pre><code># Covariance in sensitivity between Test1 and Test2 tests:
+# covse12 ~ dunif( (se[1]-1)*(1-se[2]) , min(se[1],se[2]) - se[1]*se[2] )  ## if the sensitivity of these tests may be correlated
+ covse12 &lt;- 0  ## if the sensitivity of these tests can be assumed to be independent
+# Covariance in specificity between Test1 and Test2 tests:
+# covsp12 ~ dunif( (sp[1]-1)*(1-sp[2]) , min(sp[1],sp[2]) - sp[1]*sp[2] )  ## if the specificity of these tests may be correlated
+ covsp12 &lt;- 0  ## if the specificity of these tests can be assumed to be independent</code></pre>
+<hr />
+<p>And edit so it looks like:</p>
 <pre><code># Covariance in sensitivity between Test1 and Test2 tests:
 covse12 ~ dunif( (se[1]-1)*(1-se[2]) , min(se[1],se[2]) - se[1]*se[2] )  ## if the sensitivity of these tests may be correlated
-#  covse12 &lt;- 0  ## if the sensitivity of these tests can be assumed to be independent
+ # covse12 &lt;- 0  ## if the sensitivity of these tests can be assumed to be independent
 # Covariance in specificity between Test1 and Test2 tests:
 covsp12 ~ dunif( (sp[1]-1)*(1-sp[2]) , min(sp[1],sp[2]) - sp[1]*sp[2] )  ## if the specificity of these tests may be correlated
-#  covsp12 &lt;- 0  ## if the specificity of these tests can be assumed to be independent</code></pre>
+ # covsp12 &lt;- 0  ## if the specificity of these tests can be assumed to be independent</code></pre>
+<p>[i.e. swap the comments around]</p>
 <hr />
-<pre><code># Covariance in sensitivity between Test1 and Test3 tests:
-covse13 ~ dunif( (se[1]-1)*(1-se[3]) , min(se[1],se[3]) - se[1]*se[3] )  ## if the sensitivity of these tests may be correlated
-#  covse13 &lt;- 0  ## if the sensitivity of these tests can be assumed to be independent
-# Covariance in specificity between Test1 and Test3 tests:
-covsp13 ~ dunif( (sp[1]-1)*(1-sp[3]) , min(sp[1],sp[3]) - sp[1]*sp[3] )  ## if the specificity of these tests may be correlated
-#  covsp13 &lt;- 0  ## if the specificity of these tests can be assumed to be independent
-
-# Covariance in sensitivity between Test2 and Test3 tests:
-covse23 ~ dunif( (se[2]-1)*(1-se[3]) , min(se[2],se[3]) - se[2]*se[3] )  ## if the sensitivity of these tests may be correlated
-#  covse23 &lt;- 0  ## if the sensitivity of these tests can be assumed to be independent
-# Covariance in specificity between Test2 and Test3 tests:
-covsp23 ~ dunif( (sp[2]-1)*(1-sp[3]) , min(sp[2],sp[3]) - sp[2]*sp[3] )  ## if the specificity of these tests may be correlated
-#  covsp23 &lt;- 0  ## if the specificity of these tests can be assumed to be independent</code></pre>
+<p>You will also need to uncomment out the relevant initial values for BOTH chains (on lines 117-122 and 128-133):</p>
+<pre><code># &quot;covse12&quot; &lt;- 0
+# &quot;covse13&quot; &lt;- 0
+# &quot;covse23&quot; &lt;- 0
+# &quot;covsp12&quot; &lt;- 0
+# &quot;covsp13&quot; &lt;- 0
+# &quot;covsp23&quot; &lt;- 0</code></pre>
+<p>So that they look like:</p>
+<pre><code>&quot;covse12&quot; &lt;- 0
+# &quot;covse13&quot; &lt;- 0
+# &quot;covse23&quot; &lt;- 0
+&quot;covsp12&quot; &lt;- 0
+# &quot;covsp13&quot; &lt;- 0
+# &quot;covsp23&quot; &lt;- 0</code></pre>
+<pre class="r"><code>results &lt;- run.jags(&#39;auto3tihw.bug&#39;)</code></pre>
 </div>
 <div id="exercise-1" class="section level2 fragile">
 <h2>Exercise</h2>
-<p>Simulate data with a dependence between 2 tests</p>
-<p>Model assuming conditional independence biases the estimates</p>
-<p>Turn on covariance between the two tests</p>
-<p>Model with conditional depdendence has bigger CI but unbiased</p>
+<p>Simulate data with N=1000 and dependence between tests 1 and 2</p>
+<p>Then fit a model assuming independence between all tests and compare the results to your simulation parameters</p>
+<p>Now turn on covariance between tests 1 and 2 and refit the model. Are the results more reasonable?</p>
 </div>
 <div id="solution-1" class="section level2 fragile">
 <h2>Solution</h2>
+<pre class="r"><code># Parameter values to simulate:
+N &lt;- 1000
+se1 &lt;- 0.8
+se2 &lt;- 0.9
+se3 &lt;- 0.95
+sp1 &lt;- 0.95
+sp2 &lt;- 0.99
+sp3 &lt;- 0.95
+
+# The probability of an antibody response given disease:
+abse &lt;- 0.8
+# The probability of no antibody response given no disease:
+absp &lt;- 1 - 0.2
+
+# Simulate the true latent state:
+true &lt;- rbinom(N*Populations, 1, prevalence[Group])
+
+# Tests 1 &amp; 2 will be co-dependent on antibody response:
+antibody &lt;- rbinom(N*Populations, 1, abse*true + (1-absp)*(1-true))
+# Simulate test 1 &amp; 2 results based on this other latent state:
+test1 &lt;- rbinom(N*Populations, 1, se1*antibody + (1-sp1)*(1-antibody))
+test2 &lt;- rbinom(N*Populations, 1, se2*antibody + (1-sp2)*(1-antibody))
+
+# Simulate test results for the independent test 3:
+test3 &lt;- rbinom(N*Populations, 1, se3*true + (1-sp3)*(1-true))
+
+ind3tests &lt;- data.frame(Population=Group, Test1=test1, Test2=test2, Test3=test3)
+
+# The overall sensitivity of the correlated tests is:
+abse*se1 + (1-abse)*(1-sp1)</code></pre>
+<pre><code>## [1] 0.65</code></pre>
+<pre class="r"><code>abse*se2 + (1-abse)*(1-sp2)</code></pre>
+<pre><code>## [1] 0.722</code></pre>
+<pre class="r"><code># The overall specificity of the correlated tests is:
+absp*sp1 + (1-absp)*(1-se1)</code></pre>
+<pre><code>## [1] 0.8</code></pre>
+<pre class="r"><code>absp*sp2 + (1-absp)*(1-se2)</code></pre>
+<pre><code>## [1] 0.812</code></pre>
+<pre class="r"><code>source(&quot;autohuiwalter.R&quot;)
+auto_huiwalter(ind3tests, outfile=&#39;auto3tihw.bug&#39;)</code></pre>
+<pre><code>## The model and data have been written to auto3tihw.bug in the current working directory
+## You should check and alter priors before running the model</code></pre>
+<p>Then change relevant lines in auto3tihw.bug so that it looks like:</p>
+<pre><code>## Auto-generated Hui-Walter model created by script version 0.1 on 2020-02-19
+
+model{
+
+    ## Observation layer:
+
+    # Complete observations (N=400):
+    for(p in 1:Populations){
+        Tally_RRR[1:8,p] ~ dmulti(prob_RRR[1:8,p], N_RRR[p])
+
+        prob_RRR[1:8,p] &lt;- se_prob[1:8,p] + sp_prob[1:8,p]
+    }
+
+
+    ## Observation probabilities:
+
+    for(p in 1:Populations){
+
+        # Probability of observing Test1- Test2- Test3- from a true positive::
+        se_prob[1,p] &lt;- prev[p] * ((1-se[1])*(1-se[2])*(1-se[3]) +covse12 +covse13 +covse23)
+        # Probability of observing Test1- Test2- Test3- from a true negative::
+        sp_prob[1,p] &lt;- (1-prev[p]) * (sp[1]*sp[2]*sp[3] +covsp12 +covsp13 +covsp23)
+
+        # Probability of observing Test1+ Test2- Test3- from a true positive::
+        se_prob[2,p] &lt;- prev[p] * (se[1]*(1-se[2])*(1-se[3]) -covse12 -covse13 +covse23)
+        # Probability of observing Test1+ Test2- Test3- from a true negative::
+        sp_prob[2,p] &lt;- (1-prev[p]) * ((1-sp[1])*sp[2]*sp[3] -covsp12 -covsp13 +covsp23)
+
+        # Probability of observing Test1- Test2+ Test3- from a true positive::
+        se_prob[3,p] &lt;- prev[p] * ((1-se[1])*se[2]*(1-se[3]) -covse12 +covse13 -covse23)
+        # Probability of observing Test1- Test2+ Test3- from a true negative::
+        sp_prob[3,p] &lt;- (1-prev[p]) * (sp[1]*(1-sp[2])*sp[3] -covsp12 +covsp13 -covsp23)
+
+        # Probability of observing Test1+ Test2+ Test3- from a true positive::
+        se_prob[4,p] &lt;- prev[p] * (se[1]*se[2]*(1-se[3]) +covse12 -covse13 -covse23)
+        # Probability of observing Test1+ Test2+ Test3- from a true negative::
+        sp_prob[4,p] &lt;- (1-prev[p]) * ((1-sp[1])*(1-sp[2])*sp[3] +covsp12 -covsp13 -covsp23)
+
+        # Probability of observing Test1- Test2- Test3+ from a true positive::
+        se_prob[5,p] &lt;- prev[p] * ((1-se[1])*(1-se[2])*se[3] +covse12 -covse13 -covse23)
+        # Probability of observing Test1- Test2- Test3+ from a true negative::
+        sp_prob[5,p] &lt;- (1-prev[p]) * (sp[1]*sp[2]*(1-sp[3]) +covsp12 -covsp13 -covsp23)
+
+        # Probability of observing Test1+ Test2- Test3+ from a true positive::
+        se_prob[6,p] &lt;- prev[p] * (se[1]*(1-se[2])*se[3] -covse12 +covse13 -covse23)
+        # Probability of observing Test1+ Test2- Test3+ from a true negative::
+        sp_prob[6,p] &lt;- (1-prev[p]) * ((1-sp[1])*sp[2]*(1-sp[3]) -covsp12 +covsp13 -covsp23)
+
+        # Probability of observing Test1- Test2+ Test3+ from a true positive::
+        se_prob[7,p] &lt;- prev[p] * ((1-se[1])*se[2]*se[3] -covse12 -covse13 +covse23)
+        # Probability of observing Test1- Test2+ Test3+ from a true negative::
+        sp_prob[7,p] &lt;- (1-prev[p]) * (sp[1]*(1-sp[2])*(1-sp[3]) -covsp12 -covsp13 +covsp23)
+
+        # Probability of observing Test1+ Test2+ Test3+ from a true positive::
+        se_prob[8,p] &lt;- prev[p] * (se[1]*se[2]*se[3] +covse12 +covse13 +covse23)
+        # Probability of observing Test1+ Test2+ Test3+ from a true negative::
+        sp_prob[8,p] &lt;- (1-prev[p]) * ((1-sp[1])*(1-sp[2])*(1-sp[3]) +covsp12 +covsp13 +covsp23)
+
+    }
+
+
+    ## Priors:
+
+    # Prevalence in population 1:
+    prev[1] ~ dbeta(1,1)
+
+    # Prevalence in population 2:
+    prev[2] ~ dbeta(1,1)
+
+
+    # Sensitivity of Test1 test:
+    se[1] ~ dbeta(1,1)T(1-sp[1], )
+    # Specificity of Test1 test:
+    sp[1] ~ dbeta(1,1)
+
+    # Sensitivity of Test2 test:
+    se[2] ~ dbeta(1,1)T(1-sp[2], )
+    # Specificity of Test2 test:
+    sp[2] ~ dbeta(1,1)
+
+    # Sensitivity of Test3 test:
+    se[3] ~ dbeta(1,1)T(1-sp[3], )
+    # Specificity of Test3 test:
+    sp[3] ~ dbeta(1,1)
+
+
+    # Covariance in sensitivity between Test1 and Test2 tests:
+    covse12 ~ dunif( (se[1]-1)*(1-se[2]) , min(se[1],se[2]) - se[1]*se[2] )  ## if the sensitivity of these tests may be correlated
+     # covse12 &lt;- 0  ## if the sensitivity of these tests can be assumed to be independent
+    # Covariance in specificity between Test1 and Test2 tests:
+    covsp12 ~ dunif( (sp[1]-1)*(1-sp[2]) , min(sp[1],sp[2]) - sp[1]*sp[2] )  ## if the specificity of these tests may be correlated
+     # covsp12 &lt;- 0  ## if the specificity of these tests can be assumed to be independent
+
+    # Covariance in sensitivity between Test1 and Test3 tests:
+    # covse13 ~ dunif( (se[1]-1)*(1-se[3]) , min(se[1],se[3]) - se[1]*se[3] )  ## if the sensitivity of these tests may be correlated
+     covse13 &lt;- 0  ## if the sensitivity of these tests can be assumed to be independent
+    # Covariance in specificity between Test1 and Test3 tests:
+    # covsp13 ~ dunif( (sp[1]-1)*(1-sp[3]) , min(sp[1],sp[3]) - sp[1]*sp[3] )  ## if the specificity of these tests may be correlated
+     covsp13 &lt;- 0  ## if the specificity of these tests can be assumed to be independent
+
+    # Covariance in sensitivity between Test2 and Test3 tests:
+    # covse23 ~ dunif( (se[2]-1)*(1-se[3]) , min(se[2],se[3]) - se[2]*se[3] )  ## if the sensitivity of these tests may be correlated
+     covse23 &lt;- 0  ## if the sensitivity of these tests can be assumed to be independent
+    # Covariance in specificity between Test2 and Test3 tests:
+    # covsp23 ~ dunif( (sp[2]-1)*(1-sp[3]) , min(sp[2],sp[3]) - sp[2]*sp[3] )  ## if the specificity of these tests may be correlated
+     covsp23 &lt;- 0  ## if the specificity of these tests can be assumed to be independent
+
+}
+
+#monitor# se, sp, prev, covse12, covsp12, covse13, covsp13, covse23, covsp23
+
+## Inits:
+inits{
+&quot;se&quot; &lt;- c(0.5, 0.99, 0.5)
+&quot;sp&quot; &lt;- c(0.99, 0.75, 0.99)
+&quot;prev&quot; &lt;- c(0.05, 0.95)
+&quot;covse12&quot; &lt;- 0
+# &quot;covse13&quot; &lt;- 0
+# &quot;covse23&quot; &lt;- 0
+&quot;covsp12&quot; &lt;- 0
+# &quot;covsp13&quot; &lt;- 0
+# &quot;covsp23&quot; &lt;- 0
+}
+inits{
+&quot;se&quot; &lt;- c(0.99, 0.5, 0.99)
+&quot;sp&quot; &lt;- c(0.75, 0.99, 0.75)
+&quot;prev&quot; &lt;- c(0.95, 0.05)
+&quot;covse12&quot; &lt;- 0
+# &quot;covse13&quot; &lt;- 0
+# &quot;covse23&quot; &lt;- 0
+&quot;covsp12&quot; &lt;- 0
+# &quot;covsp13&quot; &lt;- 0
+# &quot;covsp23&quot; &lt;- 0
+}
+
+## Data:
+data{
+&quot;Populations&quot; &lt;- 2
+&quot;N_RRR&quot; &lt;- c(200, 200)
+&quot;Tally_RRR&quot; &lt;- structure(c(105, 13, 6, 31, 13, 3, 7, 22, 32, 5, 3, 13, 28, 9, 23, 87), .Dim = c(8, 2))
+}</code></pre>
+<p>Then run the model:</p>
+<pre class="r"><code>results &lt;- run.jags(&#39;auto3tihw.bug&#39;)</code></pre>
+<p>Now check the results:</p>
+<pre class="r"><code>results</code></pre>
+<pre><code>## 
+## JAGS model summary statistics from 20000 samples (chains = 2; adapt+burnin = 5000):
+##                                                                         
+##          Lower95   Median  Upper95     Mean       SD     Mode      MCerr
+## se[1]    0.58899  0.65925  0.73276  0.65965 0.036848  0.65858 0.00063984
+## se[2]    0.67227  0.75465  0.83929  0.75593 0.042349  0.75396  0.0010516
+## se[3]    0.72141  0.83013  0.94251  0.83101 0.056166  0.83033  0.0016761
+## sp[1]    0.69882  0.78068  0.86075  0.78008 0.041462  0.78232 0.00094353
+## sp[2]    0.77757   0.8659  0.94241  0.86305 0.042692  0.87138   0.001175
+## sp[3]    0.82636  0.92761  0.99999  0.92096 0.050446  0.93991  0.0014765
+## prev[1]  0.19254  0.31184  0.41482   0.3089 0.056154  0.31076  0.0015747
+## prev[2]  0.67054  0.78536  0.88388  0.78199 0.055254  0.79179  0.0015933
+## covse12 0.017148  0.03837 0.059016 0.038315 0.010722 0.038353 0.00023325
+## covsp12 0.014634 0.039568 0.063952 0.040007 0.012499 0.038532 0.00028561
+## covse13        0        0        0        0        0        0         --
+## covsp13        0        0        0        0        0        0         --
+## covse23        0        0        0        0        0        0         --
+## covsp23        0        0        0        0        0        0         --
+##                                      
+##         MC%ofSD SSeff   AC.10    psrf
+## se[1]       1.7  3317  0.0848 0.99996
+## se[2]       2.5  1622 0.21707  1.0001
+## se[3]         3  1123 0.35013   1.003
+## sp[1]       2.3  1931 0.17815  1.0007
+## sp[2]       2.8  1320 0.26784  1.0021
+## sp[3]       2.9  1167 0.30083  1.0003
+## prev[1]     2.8  1272 0.27816  1.0005
+## prev[2]     2.9  1203 0.29208  1.0007
+## covse12     2.2  2113 0.14669  1.0026
+## covsp12     2.3  1915 0.16304  1.0047
+## covse13      --    --      --      --
+## covsp13      --    --      --      --
+## covse23      --    --      --      --
+## covsp23      --    --      --      --
+## 
+## Total time taken: 2.7 seconds</code></pre>
+<p>We do a better job of estimating prevalence, and the se/sp for tests 1 and 2 better reflect the overall probability conditional on true status (i.e. corrected for antibody status). But notice that our effective sample size is much smaller than it was! We could run the model for a bit longer:</p>
+<pre class="r"><code>results &lt;- extend.jags(results)</code></pre>
+<pre class="r"><code>results</code></pre>
+<pre><code>## 
+## JAGS model summary statistics from 40000 samples (chains = 2; adapt+burnin = 5000):
+##                                                                         
+##          Lower95   Median  Upper95     Mean       SD     Mode      MCerr
+## se[1]    0.58815  0.65971  0.73301  0.65998 0.037014  0.65923 0.00046459
+## se[2]    0.67716   0.7553  0.84412  0.75678 0.042609  0.75274 0.00076983
+## se[3]    0.72469  0.83137  0.94627  0.83215 0.056207  0.83136  0.0012253
+## sp[1]     0.6972  0.77982  0.85919  0.77925 0.041502  0.78099  0.0006638
+## sp[2]     0.7772  0.86503  0.94026  0.86236 0.042442  0.86963 0.00082819
+## sp[3]    0.82489  0.92588  0.99999  0.91948 0.050861  0.94084  0.0010598
+## prev[1]  0.19383   0.3098  0.41666  0.30718 0.056699  0.31091  0.0011284
+## prev[2]  0.66979   0.7835  0.88388  0.78065 0.055138  0.79163  0.0011441
+## covse12 0.016985  0.03839 0.059096 0.038269 0.010712 0.038891 0.00016516
+## covsp12 0.015442 0.039745  0.06432 0.040082  0.01237  0.03946 0.00019828
+## covse13        0        0        0        0        0        0         --
+## covsp13        0        0        0        0        0        0         --
+## covse23        0        0        0        0        0        0         --
+## covsp23        0        0        0        0        0        0         --
+##                                      
+##         MC%ofSD SSeff    AC.10   psrf
+## se[1]       1.3  6347 0.085182 1.0001
+## se[2]       1.8  3063  0.21702      1
+## se[3]       2.2  2104  0.34456  1.001
+## sp[1]       1.6  3909  0.17149 1.0003
+## sp[2]         2  2626  0.26703 1.0009
+## sp[3]       2.1  2303  0.30334      1
+## prev[1]       2  2525  0.28873      1
+## prev[2]     2.1  2323  0.29937 1.0001
+## covse12     1.5  4207  0.14526 1.0002
+## covsp12     1.6  3892  0.16027 1.0015
+## covse13      --    --       --     --
+## covsp13      --    --       --     --
+## covse23      --    --       --     --
+## covsp23      --    --       --     --
+## 
+## Total time taken: 5.8 seconds</code></pre>
 </div>
 <div id="optional-exercise-1" class="section level2 fragile">
 <h2>Optional Exercise</h2>
-<p>Activate covariance between all 3 tests</p>
+<p>Re-fit a model to this data using all three possible covse and covsp parameters</p>
+<p>What do you notice about the results?</p>
 </div>
 <div id="optional-solution-1" class="section level2 fragile">
 <h2>Optional Solution</h2>
+<p>You can either manually change all 3 covse/covsp from before, or regenerate the model using the covon=TRUE option:</p>
+<pre class="r"><code>auto_huiwalter(ind3tests, outfile=&#39;auto3tichw.bug&#39;, covon=TRUE)
+results &lt;- run.jags(&#39;auto3tichw.bug&#39;)</code></pre>
+<pre class="r"><code>results</code></pre>
+<pre><code>## 
+## JAGS model summary statistics from 20000 samples (chains = 2; adapt+burnin = 5000):
+##                                                                         
+##           Lower95      Median   Upper95        Mean        SD       Mode
+## se[1]     0.48718     0.66435   0.74423     0.61561  0.098115    0.70457
+## se[2]     0.52857     0.73117   0.80937      0.6717    0.1096    0.77119
+## se[3]     0.62942     0.89639   0.95756     0.80193   0.13577    0.92527
+## sp[1]     0.80089     0.84527   0.88392     0.84462   0.02134    0.84685
+## sp[2]     0.82176     0.86644   0.90812     0.86596   0.02263    0.86544
+## sp[3]     0.89914     0.97329         1     0.96181  0.035204    0.99218
+## prev[1]   0.27291     0.34624   0.52347     0.39152   0.08999    0.31153
+## prev[2]   0.65463     0.71765         1     0.82182    0.1505    0.68554
+## covse12  0.018516     0.03602  0.076217     0.04682  0.021733   0.027339
+## covsp12  0.030826    0.045118  0.060982    0.045325 0.0077139   0.044596
+## covse13 -0.020466  -0.0026764  0.043084    0.010454  0.024571  -0.011859
+## covsp13 -0.012319 0.000030662 0.0080536 -0.00096662  0.005031 0.00049669
+## covse23 -0.019979  -0.0047069  0.048527    0.012981  0.027664  -0.012226
+## covsp23 -0.012449 -0.00028335 0.0052902  -0.0018304 0.0045791 0.00030137
+##                                                
+##              MCerr MC%ofSD SSeff   AC.10   psrf
+## se[1]    0.0050756     5.2   374 0.69756 4.9252
+## se[2]     0.006559       6   279 0.74394 4.9741
+## se[3]    0.0064219     4.7   447 0.69523 5.4128
+## sp[1]   0.00065431     3.1  1064 0.27577 1.3775
+## sp[2]   0.00083619     3.7   732 0.28537 1.9167
+## sp[3]    0.0021076       6   279 0.68048 2.3273
+## prev[1]  0.0048814     5.4   340 0.64271 4.6785
+## prev[2]   0.007047     4.7   456 0.65925 3.8389
+## covse12 0.00072786     3.3   892 0.54285 5.0013
+## covsp12 0.00020765     2.7  1380 0.29892 1.0175
+## covse13  0.0011112     4.5   489 0.65502 5.0294
+## covsp13 0.00017257     3.4   850 0.34698  1.437
+## covse23  0.0014935     5.4   343 0.68588 5.2273
+## covsp23 0.00019118     4.2   574 0.43781 1.6282
+## 
+## Total time taken: 3.4 seconds</code></pre>
+<p>This chains haven't converged (check out the psrf): the model is (or is close to being) unidentifiable.</p>
 </div>
 </div>
 <div id="session-3c-model-selection" class="section level1">
@@ -846,6 +1489,7 @@ covsp23 ~ dunif( (sp[2]-1)*(1-sp[3]) , min(sp[2],sp[3]) - sp[2]*sp[3] )  ## if t
 <li>Bayes Factors</li>
 <li>BIC</li>
 <li>WAIC</li>
+<li>Effect size spans zero?</li>
 </ul></li>
 </ul>
 <div class="incremental">
@@ -863,7 +1507,7 @@ covsp23 ~ dunif( (sp[2]-1)*(1-sp[3]) , min(sp[2],sp[3]) - sp[2]*sp[3] )  ## if t
 </ul>
 </div>
 <div class="incremental">
-<p>Others? Discussion!</p>
+<p>Others?</p>
 </div>
 </div>
 <div id="dic-and-waic" class="section level2">
@@ -875,9 +1519,12 @@ covsp23 ~ dunif( (sp[2]-1)*(1-sp[3]) , min(sp[2],sp[3]) - sp[2]*sp[3] )  ## if t
 <li>To calculate:
 <ul>
 <li>Add dic and ped to the monitors in runjags</li>
-<li>But don’t trust the results for these types of models</li>
+<li>But be cautious with these types of models</li>
 </ul></li>
 </ul></li>
+</ul>
+<div class="incremental">
+<ul>
 <li>WAIC
 <ul>
 <li>Approximation to LOO</li>
@@ -892,13 +1539,43 @@ covsp23 ~ dunif( (sp[2]-1)*(1-sp[3]) , min(sp[2],sp[3]) - sp[2]*sp[3] )  ## if t
 </ul></li>
 </ul></li>
 </ul>
+</div>
 <div class="incremental">
 <pre class="r"><code>install.packages(&#39;runjags&#39;, repos=c(&quot;https://ku-awdc.github.io/drat/&quot;, &quot;https://cran.rstudio.com/&quot;))</code></pre>
 </div>
 </div>
-<div id="discussion-and-free-practical-time" class="section level2">
-<h2>Discussion and free practical time</h2>
-<p>Any questions?</p>
+<div id="some-advice" class="section level2">
+<h2>Some advice</h2>
+<ul>
+<li>Always start by simulating data and verifying that you can recover the parameters
+<ul>
+<li>The simulation can be more complex than the model!</li>
+<li>See the autorun.jags function</li>
+</ul></li>
+<li>If you have different candidate models then compare the posteriors between models</li>
+</ul>
+<div class="incremental">
+<ul>
+<li>A particular issue is test dependence
+<ul>
+<li>Is there biological justification for the correlation?</li>
+<li>Are the test sensitivity/specificity estimates consistent?</li>
+<li>Do the covse / covsp estimates overlap zero?</li>
+</ul></li>
+</ul>
+</div>
+<div class="incremental">
+<ul>
+<li>Any other good advice?!?</li>
+</ul>
+</div>
+</div>
+<div id="free-practical-time" class="section level2">
+<h2>Free practical time</h2>
+<ul>
+<li><p>Explore the optional exercises (and solutions) and feel free to ask questions!</p></li>
+<li><p>Feedback very welcome!</p></li>
+</ul>
 </div>
 </div>
 
