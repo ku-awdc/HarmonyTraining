@@ -12,6 +12,14 @@ model {
 	    #dcat <- categorical
 	    #D(-) if T[i] =1, D(+) if T[i]=2
 	    T[i] ~ dcat(P[]) 
+	    
+	    ##### Alternative
+	    # Another option in JAGS is to use dnormmix:
+	    # S[i] ~ dnormmix(mu[1:2], tau[1:2], P[1:2])
+	    # This is more efficient than explicitly simulating the latent class
+	    #modules# mix
+	    #factories# mix::TemperedMix sampler off
+	    ##### /Alternative
   }
 
 	P[1:2] ~ ddirch(alpha[])
