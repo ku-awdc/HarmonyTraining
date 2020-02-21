@@ -10,7 +10,7 @@ output:
     slide_level: 2
   html_document: default
   pdf_document: default
-header-includes: \input{preamble}
+header-includes: \input{../preamble}
 colortheme: seahorse
 params:
   presentation: yes
