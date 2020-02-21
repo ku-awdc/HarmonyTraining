@@ -42,7 +42,11 @@ lambda <- list(chain1=c(-3, 0), chain2=c(-2,-2))
 gamma1 <- list(chain1=c(10, 0.1), chain2=c(30, 5))
 
 results <- run.jags('continuous_model.bug', n.chains = 2)
-results <- add.summary(results, vars=c('AUC', 'S.rep', 'P', 'lambda', 'gamma1', 'sigma'))
+
+plot(results, vars=c('AUC', 'S.rep', 'P', 'lambda', 'gamma1', 'sigma'))
+
+results_summary <- add.summary(results, vars=c('AUC', 'S.rep', 'P', 'lambda', 'gamma1', 'sigma'))
+results_summary
 
 ss <- combine.mcmc(results$mcmc, vars='S.rep[1:2]')
 
@@ -51,17 +55,17 @@ hist(ss[,1], xlim=c(-4,2), breaks=50, col="red", main="Healthy")
 hist(ss[,2], xlim=c(-4,2), breaks=50, col="blue", main="Infected")
 
 
-ses <- combine.mcmc(results, vars='se')
-sps <- combine.mcmc(results, vars='sp')
-ses_mu <- apply(ses, 2, mean)
-sps_mu <- apply(sps, 2, mean)
+se_est <- combine.mcmc(results, vars='se')
+sp_est <- combine.mcmc(results, vars='sp')
+ses_mu <- apply(se_est, 2, mean)
+sps_mu <- apply(sp_est, 2, mean)
 
 par(mfrow=c(1,1))
 plot((1-sps_mu), ses_mu, type="l", col="darkblue", xlab = "1-Sp", ylab = "Se")
 
-auc <- combine.mcmc(results, vars='AUC')
-hist(auc, breaks=50, col="orange", main="AUC")
+auc_est <- combine.mcmc(results, vars='AUC')
+hist(auc_est, breaks=50, col="orange", main="AUC")
 
-lambda <- combine.mcmc(results, vars='lambda')
-boxplot(as.matrix(lambda), col="red")
+lambda_est <- combine.mcmc(results, vars='lambda')
+boxplot(as.matrix(lambda_est), col="red")
 
