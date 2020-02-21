@@ -41,14 +41,14 @@ S <- c(-1.09,-0.69,-1.26,-0.54,-2.09,-0.76,0.13,-1.86,-0.21,-1.48,-0.02,-0.17,-1
 lambda <- list(chain1=c(-3, 0), chain2=c(-2,-2))
 gamma1 <- list(chain1=c(10, 0.1), chain2=c(30, 5))
 
-results <- run.jags('continuous_model.bug', n.chains = 2)
+results <- run.jags('continuous_model.bug', n.chains = 2, method='parallel')
 
 plot(results, vars=c('AUC', 'S.rep', 'P', 'lambda', 'gamma1', 'sigma'))
 
 results_summary <- add.summary(results, vars=c('AUC', 'S.rep', 'P', 'lambda', 'gamma1', 'sigma'))
 results_summary
 
-ss <- combine.mcmc(results$mcmc, vars='S.rep[1:2]')
+ss <- combine.mcmc(results, vars='S.rep')
 
 par(mfrow=c(2,1))
 hist(ss[,1], xlim=c(-4,2), breaks=50, col="red", main="Healthy")
@@ -67,5 +67,52 @@ auc_est <- combine.mcmc(results, vars='AUC')
 hist(auc_est, breaks=50, col="orange", main="AUC")
 
 lambda_est <- combine.mcmc(results, vars='lambda')
+boxplot(as.matrix(lambda_est), col="red")
+
+
+
+
+##########  Streamlined method separating JAGS from post-hoc calculations:
+
+# New initial values:
+ulambda <- list(chain1=c(-3, 0), chain2=c(-2,-2))
+gamma <- list(chain1=c(10, 0.1), chain2=c(30, 5))
+prob <- list(chain1=c(0.1, 0.9), chain2=c(0.9, 0.1))
+
+# Run the streamlined model:
+results <- run.jags('continuous_model_streamlined.bug', n.chains = 2, method='parallel')
+
+# Extract the parameters we need:
+lambda <- combine.mcmc(results, vars='lambda')
+sigma2 <- 1/combine.mcmc(results, vars='gamma')
+# Remember these are vectors of values, not scalars as in JAGS
+
+# The standard normal cdf is pnorm not phi in R:
+AUC <- pnorm(-(lambda[,1]-lambda[,2])/sqrt(sigma2[,2]+sigma2[,1]))
+# We have lambda[,1] not lambda[1] to allow vectorisation
+
+# ROC curve:
+c1=c2=se=sp <- matrix(NA, nrow=coda::niter(lambda), ncol=111)
+for(i in 1:111) {
+  #Sensitivity
+  c1[,i] <-  ((-8.1+0.1*i)-lambda[,2])/sqrt(sigma2[,2]) # grid is from -3 to 8
+  se[,i] <- 1-pnorm(c1[,i])
+  
+  #Specificity
+  c2[,i] <-  ((-8.1+0.1*i)-lambda[,1])/sqrt(sigma2[,1])
+  sp[,i] <- pnorm(c2[,i])
+}
+
+# Get equivalent results
+ses_mu <- apply(se, 2, mean)
+sps_mu <- apply(sp, 2, mean)
+
+par(mfrow=c(1,1))
+plot((1-sps_mu), ses_mu, type="l", col="darkblue", xlab = "1-Sp", ylab = "Se")
+
+auc_est <- AUC
+hist(auc_est, breaks=50, col="orange", main="AUC")
+
+lambda_est <- lambda
 boxplot(as.matrix(lambda_est), col="red")
 

@@ -1,0 +1,46 @@
+model {
+
+  for (i in 1:481) {
+  
+	    #S[i] diagnostic test value for ith individual
+	    #S[i] ~ dnorm(mu[i],tau[i])
+  
+	    #Value of mu & tau depending on the group (diseased or disease-free)
+	    #mu[i] <- lambda[T[i]]           
+	    #tau[i] <- gamma[T[i]]
+  
+	    #dcat <- categorical
+	    #D(-) if T[i] =1, D(+) if T[i]=2
+	    #T[i] ~ dcat(prob[]) 
+	    
+	    ##### Alternative
+	    # Another option in JAGS is to use dnormmix:
+	    S[i] ~ dnormmix(lambda[1:2], gamma[1:2], prob[1:2])
+	    # This is more efficient than explicitly simulating the latent class
+	    # It does require loading the mix module:
+	    #modules# mix
+	    # And turning off the tempering sampler improves speed:
+	    #factories# mix::TemperedMix sampler off
+	    ##### /Alternative
+  }
+
+  # This is equivalent to a beta distribution:
+	prob[1:2] ~ ddirch(alpha[])
+
+	# unordered priors for the mean of both groups:
+	ulambda[1] ~ dnorm(0,0.001)
+	ulambda[2] ~ dnorm(0,0.001)
+	# ensure that the non-disease group mean is higher than the disease group:
+	lambda <- sort(ulambda)
+
+	# prior for the precision of disease group   
+	gamma[1] ~ dgamma(0.001,0.001)
+
+	# prior for the precision of non-disease group
+	gamma[2] ~ dgamma(0.001,0.001)  
+
+	#data# alpha, S
+	#inits# prob, ulambda, gamma
+	#monitor# prob, lambda, gamma
+
+}
