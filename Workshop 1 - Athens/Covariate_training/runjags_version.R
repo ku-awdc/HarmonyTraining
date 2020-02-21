@@ -146,7 +146,38 @@ results_without
 results_cestode
 
 
-# Or we can extract e.g. slope and calculate OR and prevalence with and without covariates etc:
+# Or we can extract specific variables e.g. slope and calculate OR and prevalence with and without covariates etc:
 slope <- combine.mcmc(results_cestode, vars='slope')
 mean(slope)
 mean(exp(as.numeric(slope))) # OR
+
+
+# prevalence in Taenia neg. population
+intercept <- combine.mcmc(results_cestode, vars='intercept')
+mean(intercept)
+mean(exp(as.numeric(intercept))) # OR
+
+PrTneg <- exp(intercept)/(1+exp(intercept))
+mean(PrTneg)
+
+# prevalence in Taenia pos. population
+mean(exp(slope+intercept))
+
+PrTpos <- exp(as.numeric(comb[15])+as.numeric(comb[16]))/(1+exp(as.numeric(comb[15])+as.numeric(comb[16])))
+PrTpos
+
+#############################################################
+
+
+
+#Figure 1 effect of Taenia on prevalence of Echinococcus
+#Plot for effect of taenia on prevalence
+slopd<-cbind(res1.cestode[,"slope"],res2.cestode[,"slope"],res3.cestode[,"slope"]);
+itcp<-cbind(res1.cestode[,"intercept"],res2.cestode[,"intercept"],res3.cestode[,"intercept"]);
+
+
+
+plot(density((exp(itcp)/(1+exp(itcp)))), col="blue",ylim=c(0,15),xlim=c(0,1),xlab="",lwd=2);
+lines(density((exp(itcp+slopd)/(1+exp(itcp+slopd)))), col="red",lwd=2)
+abline(v = PrTneg, col = "blue")
+abline(v = PrTpos, col = "red")

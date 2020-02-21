@@ -1,0 +1,59 @@
+model {
+
+  for (i in 1:481) {
+  
+	    #S[i] diagnostic test value for ith individual
+	    S[i] ~ dnorm(mu[i],tau[i])
+  
+	    #Value of mu & tau depending on the group (diseased or disease-free)
+	    mu[i] <- lambda[T[i]]           
+	    tau[i] <- gamma1[T[i]]
+  
+	    #dcat <- categorical
+	    #D(-) if T[i] =1, D(+) if T[i]=2
+	    T[i] ~ dcat(P[]) 
+  }
+
+	P[1:2] ~ ddirch(alpha[])
+
+	# prior for the mean of non-disease group 
+	lambda[1] ~ dnorm(0,0.001)
+
+	# prior for the mean of disease group 
+	lambda[2] ~ dnorm(0,0.001)I(lambda[1],) 
+
+	# prior for the precision of disease group   
+	gamma1[1] ~ dgamma(0.001,0.001)
+
+	# prior for the precision of non-disease group
+	gamma1[2] ~ dgamma(0.001,0.001)  
+
+	# define the corresponding variances
+	# variance = 1/precision(tau)
+	sigma[1] <- 1/gamma1[1] 	
+	sigma[2] <- 1/gamma1[2]	
+
+
+	# AUC
+	AUC <- phi(-(lambda[1]-lambda[2])/sqrt(sigma[2]+sigma[1]))
+
+	# ROC curve
+	for(i in 1:111) {
+	  #Sensitivity
+	  c1[i] <-  ((-8.1+0.1*i)-lambda[2])/sqrt(sigma[2]) # grid is from -3 to 8
+	  se[i] <- 1-phi(c1[i])
+  
+	  #Specificity
+	  c2[i] <-  ((-8.1+0.1*i)-lambda[1])/sqrt(sigma[1])
+	  sp[i] <- phi(c2[i])
+	}
+
+	#replicate the distribution of the D+ and D- 
+	S.rep[1]~dnorm(lambda[1], gamma1[1])
+	S.rep[2]~dnorm(lambda[2], gamma1[2])
+
+	#data# alpha, S
+	#inits# lambda, gamma1
+	#monitor# AUC, se, sp, S.rep, P, lambda, gamma1, sigma
+
+}
