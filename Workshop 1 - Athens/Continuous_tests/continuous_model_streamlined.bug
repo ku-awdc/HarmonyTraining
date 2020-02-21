@@ -25,21 +25,18 @@ model {
   }
 
   # This is equivalent to a beta distribution:
-	prob[1:2] ~ ddirch(alpha[])
+  prob[1:Groups] ~ ddirch(alpha[])
+  for(g in 1:Groups){
+	  # unordered priors for the mean of both groups:
+  	ulambda[g] ~ dnorm(0,0.001)
+  	# prior for the precision of both groups:
+    gamma[g] ~ dgamma(0.001,0.001)
+  }
 
-	# unordered priors for the mean of both groups:
-	ulambda[1] ~ dnorm(0,0.001)
-	ulambda[2] ~ dnorm(0,0.001)
 	# ensure that the non-disease group mean is higher than the disease group:
 	lambda <- sort(ulambda)
 
-	# prior for the precision of disease group   
-	gamma[1] ~ dgamma(0.001,0.001)
-
-	# prior for the precision of non-disease group
-	gamma[2] ~ dgamma(0.001,0.001)  
-
-	#data# alpha, S
+	#data# alpha, S, Groups
 	#inits# prob, ulambda, gamma
 	#monitor# prob, lambda, gamma
 

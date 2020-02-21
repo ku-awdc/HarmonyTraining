@@ -74,13 +74,30 @@ boxplot(as.matrix(lambda_est), col="red")
 
 ##########  Streamlined method separating JAGS from post-hoc calculations:
 
+hist(S)
+
+# Number of groups to use:
+Groups <- 3
+alpha <- rep(1,Groups)
+
 # New initial values:
-ulambda <- list(chain1=c(-3, 0), chain2=c(-2,-2))
-gamma <- list(chain1=c(10, 0.1), chain2=c(30, 5))
-prob <- list(chain1=c(0.1, 0.9), chain2=c(0.9, 0.1))
+ulambda <- list(chain1=runif(Groups,-5,5), chain2=runif(Groups,-5,5))
+gamma <- list(chain1=runif(Groups,0.1,5), chain2=runif(Groups,0.1,5))
+prob <- list(chain1=runif(Groups,0.1,0.9), chain2=runif(Groups,0.1,0.9))
 
 # Run the streamlined model:
 results <- run.jags('continuous_model_streamlined.bug', n.chains = 2, method='parallel')
+plot(results)
+results
+
+# The estimated mean of each group
+boxplot(as.matrix(combine.mcmc(results, vars='lambda')))
+# This is VERY sensitive to the number of groups, and the priors for the means and precisions
+# e.g. try dunif(-5,2) rather than dnorm(0,10^-6) as a prior for ulambda
+
+
+stopifnot(Groups==2)
+# This would need modifying for more than 2 groups:
 
 # Extract the parameters we need:
 lambda <- combine.mcmc(results, vars='lambda')
