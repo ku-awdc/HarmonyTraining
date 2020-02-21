@@ -1,5 +1,5 @@
 # Please create one folder and setup as your home directory  
-prj.dir <- "/Users/paoloeusebi/Desktop/Lavoro/Harmony/Athens2020/AdvTraining6"
+#prj.dir <- "/Users/paoloeusebi/Desktop/Lavoro/Harmony/Athens2020/AdvTraining6"
 
 library('runjags')
 
@@ -22,7 +22,7 @@ pi = c(0.4422856231386147,0.1323546770728543,0.9361053272154514,0.55612678695681
   0.6356740494799841,0.1393668380217704)
 sigma = c(2.276785798926327,1.294218492545403)
 
-results <- run.jags(file.path(prj.dir, 'dta_imp.txt'), 
+results <- run.jags('dta_imp.txt', 
                     n.chains = 3,
                     burnin = 10000,
                     sample = 110000)
