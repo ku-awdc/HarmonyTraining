@@ -145,36 +145,42 @@ results_cestode <- run.jags('model.cestode.bug', data=list(N=N, m.short=m.short,
 results_without
 results_cestode
 
+# And the density plots as in analysis.R:
+plot(results_without, plot.type='density', vars=c('c2','c3','s1','s2','s3'))
+plot(results_without, plot.type='hist', vars=c('covs12'))
+
+plot(results_cestode, plot.type='density', vars=c('c2','c3','s1','s2','s3'))
+plot(results_cestode, plot.type='hist', vars=c('covs12'))
+
 
 # Or we can extract specific variables e.g. slope and calculate OR and prevalence with and without covariates etc:
-slope <- combine.mcmc(results_cestode, vars='slope')
-mean(slope)
-mean(exp(as.numeric(slope))) # OR
-
+slope_samples <- combine.mcmc(results_cestode, vars='slope')
+mean(slope_samples)  # slope
+exp(mean(slope_samples)) # OR
 
 # prevalence in Taenia neg. population
-intercept <- combine.mcmc(results_cestode, vars='intercept')
-mean(intercept)
-mean(exp(as.numeric(intercept))) # OR
+intercept_samples <- combine.mcmc(results_cestode, vars='intercept')
+mean(intercept_samples) # intercept
+exp(mean(intercept_samples))
 
-PrTneg <- exp(intercept)/(1+exp(intercept))
-mean(PrTneg)
+PrTneg_samples <- exp(intercept_samples)/(1+exp(intercept_samples))
+PrTneg <- mean(PrTneg_samples)
+PrTneg
 
 # prevalence in Taenia pos. population
-mean(exp(slope+intercept))
+mean(exp(slope_samples+intercept_samples))
 
-PrTpos <- exp(as.numeric(comb[15])+as.numeric(comb[16]))/(1+exp(as.numeric(comb[15])+as.numeric(comb[16])))
+PrTpos_samples <- exp(intercept_samples+slope_samples)/(1+exp(intercept_samples+slope_samples))
+PrTpos <- mean(PrTpos_samples)
 PrTpos
 
 #############################################################
 
 
-
 #Figure 1 effect of Taenia on prevalence of Echinococcus
 #Plot for effect of taenia on prevalence
-slopd<-cbind(res1.cestode[,"slope"],res2.cestode[,"slope"],res3.cestode[,"slope"]);
-itcp<-cbind(res1.cestode[,"intercept"],res2.cestode[,"intercept"],res3.cestode[,"intercept"]);
-
+slopd <- slope_samples
+itcp <- intercept_samples
 
 
 plot(density((exp(itcp)/(1+exp(itcp)))), col="blue",ylim=c(0,15),xlim=c(0,1),xlab="",lwd=2);
