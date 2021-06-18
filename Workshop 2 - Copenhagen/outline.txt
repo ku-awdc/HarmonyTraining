@@ -1,0 +1,62 @@
+Session 1: A practical introduction to MCMC (summary of pre-course work and introduction to the rest of the week)
+
+Didactic:
+	- Introduction to teachers
+	- Expectations in terms of prior knowledge and programming
+	- Bayesian vs Frquentist models for diagnostic test evaluation
+	- Introduction to JAGS, demonstration of running simple models
+	- Reinforce convergence and effective sample size
+	- Plot and summary methods
+
+Exercise:
+	- Use JAGS for apparent prevalence model
+	
+Discussion:
+	- Likely to be mostly coding questions
+
+Session 2: Basic Hui-Walter models (the influence of data quantity and priors)
+
+Didactic:
+	- Paired tests where neither is perfect
+	- One population
+	- Label switching, convergence
+	- Introduction to simulating data to check model function
+
+Exercise:
+	- Simulate data from one population and analyse
+
+Discussion:
+	- 
+
+Session 3: Multi-population Hui-Walter models (how and why to select different populations)
+
+Didactic:
+	- Adaptation of
+
+Multiple populations when Se and Sp are not constant - Toft paper to illustrate when it goes wrong
+
+
+Session 4: Multi-test, multi-population models (correlation between tests)
+
+Session 5: How to interpret the latent class (a practical exploration of test correlations)
+
+Mostly discussion
+
+Session 6: Coping with missing data
+
+Standard test for surveillance, then add research test for some animals, different tests present in different populations
+Passive surveillance data vs prospective studies
+Combined test for screening
+
+Session 7: Incorporating imperfect sensitivity and specificity into more complex models (adapting generalised linear models)
+
+Look for published examples
+Simulated data:
+	- One test - ok to use LR
+	- Two tests with different characteristics (PCR vs Antigen)
+
+Session 8: Working on participants’ own data
+
+New microphone
+
+12 next Friday
